@@ -64,7 +64,7 @@ bool BacnetBbmdHandler::setBroatcastTableToRaw(quint8 *data, quint16 maxLength)
     return true;
 }
 
-void BacnetBbmdHandler::processForwardedMessage(quint8 *data, quint16 length)
+void BacnetBbmdHandler::processForwardedMessage(quint8 *data, quint16 length, BacnetBipAddress &srcAddr)
 {
     Q_ASSERT(0 != data);
     BacnetBipAddress myAddress;
@@ -79,11 +79,67 @@ void BacnetBbmdHandler::processForwardedMessage(quint8 *data, quint16 length)
             the message directly to the remote BBMD, the broadcast distribution mask shall be all 1's.
             */
             if ( entry.mask.mask() == QHostAddress((quint32)0xffffffff) ) {
-                //forward the message to our subnet, since no device has read it yet
+                //forward the message to our subnet, since no device has received it yet
                 _transportHndlr->send(data, length, QHostAddress::Broadcast, _transportHndlr->port());
             }
             break;
         }
     }
 
+    //we have written to our local network. if needed. But still we have to pass this frame to all FDs except source.
+    #warning "Sending to entries in FDT (and entire FDT handling) not implemented"
+    Q_UNUSED(srcAddr);
+}
+
+void BacnetBbmdHandler::sendToBbmds(quint8 *data, quint16 length, bool excludeMyself)
+{
+    BacnetBipAddress myAddress;
+    //get my ip and port from the transport layer and translate it to BacnetBipAddress
+    myAddress.setAddress(_transportHndlr->address(), _transportHndlr->port());
+    //look-up the BDT entries and send to all except from me
+    QHostAddress toSendAddress;
+    quint32 mask_helper, addr_helper;//two helpers for calculations
+    foreach (BbmdTableEntry entry, _bbmdTable) {
+        if (!excludeMyself || !entry.address.isEqual(myAddress)) {
+            mask_helper = entry.mask.mask().toIPv4Address();
+            addr_helper = entry.address.ipAddress().toIPv4Address();
+            /*Calculate address we send message to:
+              J.4.5: "The B/IP address to which the Forwarded-NPDU message is sent
+              is formed by inverting the broadcast distribution mask in the BDT entry
+              and logically ORing it with the BBMD address of the same entry."
+             */
+            mask_helper = ~mask_helper;//negate mask
+            addr_helper |= mask_helper;//logical OR
+
+            //resulting ip address
+            toSendAddress.setAddress(addr_helper);
+            //send to the calculated address
+            _transportHndlr->send(data, length, toSendAddress, entry.address.ipPort());
+        }
+    }
+}
+
+void BacnetBbmdHandler::processBroadcastToNetwork(quint8 *data, quint16 length, BacnetBipAddress &srcAddr)
+{
+    Q_ASSERT(0 != data);
+
+    //forward it locally
+    //! \note remember that we won't get replication, since our UDP layer discards all messages received from itself
+    _transportHndlr->send(data, length, QHostAddress(QHostAddress::Broadcast), _transportHndlr->port());
+
+    sendToBbmds(data, length, true);
+
+    //Message is now sent to BBMDs. But still we have to pass this frame to all FDs except source.
+    #warning "Sending to entries in FDT (and entire FDT handling) not implemented"
+    Q_UNUSED(srcAddr);
+}
+
+void BacnetBbmdHandler::processOriginalBroadcast(quint8 *data, quint16 length, BacnetBipAddress &srcAddr)
+{
+    Q_ASSERT(data);
+    sendToBbmds(data, length, true);
+
+    //Message is now sent to BBMDs. But still we have to pass this frame to all FDs except source.
+    #warning "Sending to entries in FDT (and entire FDT handling) not implemented"
+    Q_UNUSED(srcAddr);
 }

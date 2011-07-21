@@ -13,6 +13,11 @@ class BacnetBbmdHandler;
 /**
     \note I wrap BacnetBvllHandler and it's BacnetUdpTransportLayer into BacnetTransportLayer - kind of proxy class.
     Thanks to that, other layers may use it as if it was normal BacnetTransportLayer.
+
+    \note The behaviour of Foreign Device is not implemented - most probably, it is easiest to exchange this Class,
+    because only Forwarded-NPDU (for reception & transmission) as well as Distribute-Broadcast-To-Network (broadcast write)
+    and Register-Foreign-Device with Result (registration is needed).
+
   */
 class BacnetBvllHandler:
         public BacnetTransportLayer
@@ -73,9 +78,17 @@ public:
 private:
     //! Function creates BVLC-Result frame and pass it to the transport layer to send.
     void sendShortResult(BvlcResultCode result, QHostAddress destAddr, quint16 destPort);
-    //! Helper function for sending BVLC data. Assumes that the specific data is already set and starts at data+BvlcConstHeaderSize
-    void sendBvlcFunction(BvlcFunction functionCode, quint8 *data, quint16 length, QHostAddress destAddr, quint16 port);
-
+    //! Helper function for filling microprotocol, function code and length fields.
+    void setHeadersFields(quint8 *data, BvlcFunction functionCode, quint16 length);
+    /**
+      Helper function creating forwarded message from npdu. NPDU should be npduLength size.
+      \param npduToForward - pointer to an array with npdu data to forward;
+      \param forwardedMsg - array, where created message is stored;
+      \param srcAddr - address of the originator of NPDU message;
+      \param srcPort - port of the originator of NPDU message;
+      \returns number of bytes that forwardedMsg takes.
+      */
+    quint8 createForwardedMsg(quint8 *npduToForward, quint16 npduLength, QByteArray &forwardedMsg, QHostAddress srcAddr, quint16 srcPort);
 
 private:
     //! Holds the pointer to the network layer - should have.
@@ -85,6 +98,7 @@ private:
     //! Holds the pointer to the BBMD functionality, if any.
     BacnetBbmdHandler *_bbmdHndlr;
     //! Holds the pointer to the FD functionality, if any.
+    //! \todo BacnetFdtHandler *_fdtHandler;
 };
 
 #endif // BACNETBVLLHANDLER_H
