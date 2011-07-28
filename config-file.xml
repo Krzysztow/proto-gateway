@@ -1,0 +1,12 @@
+<config>
+	<Internal>
+		<object id="1" type="DeviceObject">
+				<property type="ObjName" value="Sensor 1" />
+				<object id="1" type="AnalogInput">
+				</object>
+		</object>
+	</Internal>
+	<Protocols>
+		<Bacnet>
+	</Protocols>
+</config>

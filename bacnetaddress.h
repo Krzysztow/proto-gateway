@@ -4,41 +4,110 @@
 #include <QtGlobal>
 
 /**
-  This class is intended to specify an abstract interface/helper of the Bacnet MAC layer address.
+  Bacnet address is a cocatenation of (6.1):
+  # an optional network,
+  # the MAC address appropriate to the underlying LAN technology,
+  # the link service access point (what is it?)
   */
 
 class BacnetAddress
 {
 public:
-    /**
-     Sets data from the network byte order (big endian).
-     \returns - number of bytes that were consumed to read the data.
-     */
-    virtual quint8 setFromRawData(quint8 *data, quint8 maxBytesToRead) = 0;
+    enum AddressConstants {
+        MaxMacLength = 6,
+        NetworkLength = 2
+    };
+
+    BacnetAddress();
 
     /**
-      Sets bytes starting from dest ptr to the value of the address.
-      \note bytes are set in network byte order (big endian).
-      \returns number of bytes that were used to store the address.
+      Sets address to be global broadcast
+      and the MAC field gets zero'd.
       */
-    virtual quint8 setToRawData(quint8 *dest, quint8 maxBytesToSet) = 0;
+    void setGlobalBroadcast();
+    /**
+      Returns true, if address is a global broadcast.
+      */
+    bool isGlobalBroadcast();
 
     /**
-      Returns number of bytes that are needed to store the address.
+      Sets the address to be a local broadcast and MAC fields get zero'd
       */
-    virtual quint8 length() = 0;
+    void setLocalBroadcast();
 
     /**
-      Returns the pointer to the bytes representing address.
-      \note THE DATA LAYOUT IS IN THE NETWORK ORDER (BIG ENDIAN)!!!
+      Returns true if address is local broadacst.
       */
-    virtual quint8 *address(quint8 &length) = 0;
-    virtual quint8 *address() = 0;
+    bool isLocalBraodacst();
 
     /**
-      Compares two addresses.
+      Returns true, if the network number was set.
       */
-    virtual bool isEqual(BacnetAddress &other) = 0;
+    bool hasNetworkNumber();
+    /**
+      Returns network number, if present. Otherwise returns 0.
+      */
+    quint16 networkNumber();
+
+    /**
+      Returns true if address has been initialized (meaning the MAC part has been filled)
+      */
+    bool isAddrInitialized();
+    /**
+      Clears contents and sets it uninitialized.
+      */
+    void resetMacAddress();
+
+    /**
+      Sets actual network number at data pointer.
+      \returns - number of bytes used to store the network number. It may be 0, if network number is invalid (internally less than 0)
+      */
+    quint8 networkNumToRaw(quint8 *data);
+
+    /**
+    Sets the network number according to the data passed.
+    \param data - pointer to the data that is supposed to represent network number.
+    \returns - number of bytes used to read network Number (currently it's 2)
+      */
+    quint8 setNetworkNumFromRaw(quint8 *data);
+
+    /**
+      Reads lenght bytes *data and sets them as this address (in network byte orded,
+      as there is no profit to do it in host byte orde)
+      */
+    void macAddressFromRaw(quint8 *data, quint8 length);
+
+    /**
+      Returns length of stored MAC address.
+      */
+    quint8 macAddrLength();
+
+    /**
+      Sets \sa length() bytes, starting from data pointer, to the value of MAC address in network byte order.
+      */
+    quint8 macAddressToRaw(quint8 *data);
+
+    /**
+      Compares two BacnetAddresses
+      */
+    bool operator ==(BacnetAddress &other);
+
+    /**
+      The function returns pointer to _address table.
+      \note probably you don't want to use this function.
+      */
+    quint8 *macPtr();
+
+private:
+    enum {
+        LocalBroadcastNet = -1,
+        GlobalBroadcastNet = 0xffff,
+        UninitizlizedNet = -2
+    };
+
+    quint8 _macAddress[MaxMacLength];
+    qint32 _networkNumber;
+    qint8 _macAddrLength;
 };
 
 #endif // BACNETADDRESS_H

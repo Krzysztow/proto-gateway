@@ -67,7 +67,7 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
                 bool ok = _bbmdHndlr->setBroatcastTableToRaw(tblPtr, dataSize);
                 if (ok) {
                     setHeadersFields(respFrame, Read_Broadcast_Distribution_Table_Ack, respLength);
-                    _transportHndlr->send(respFrame, respLength, srcAddr, srcPort);
+                    send(respFrame, respLength, srcAddr, srcPort);
                 }
                 else {
                     sendShortResult(Read_Broadcast_Distribution_Table_NAK, srcAddr, srcPort);
@@ -91,10 +91,9 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             subnets). So by looking on our FDT we can see how the other device got message to us - if the mask corresponding to our
             BIP is all 1's, then 2nd case holds.
             */
-            BacnetBipAddress origDeviceAddress;
-            quint8 addrLength = origDeviceAddress.length();
+            BacnetAddress origDeviceAddress;
             quint8 *addrPtr = &data[Bvlc_Forwarded_AddressField];
-            origDeviceAddress.setFromRawData(addrPtr, addrLength);
+            quint8 addrLength = BacnetBipAddressHelper::macAddressFromRaw(addrPtr, &origDeviceAddress);
 
             //do we support BBMD?
             if (0 != _bbmdHndlr) {
@@ -131,8 +130,8 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             break;
         }
     case (Distribute_Broadcast_To_Network): {
-            BacnetBipAddress srcBipAddr;
-            srcBipAddr.setAddress(srcAddr, srcPort);
+            BacnetAddress srcBipAddr;
+            BacnetBipAddressHelper::setMacAddress(srcAddr, srcPort, &srcBipAddr);
             //get npdu data information (pointer to start & size)
             quint8 *npdu = data + BvlcConstHeaderSize;
             quint16 npduLength = dataLength - BvlcConstHeaderSize;
@@ -158,8 +157,8 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
         }
     case (Original_Unicast_NPDU): {
             //some device sent us a directed message, forward it to the upper layer
-            BacnetBipAddress srcBipAddr;
-            srcBipAddr.setAddress(srcAddr, srcPort);
+            BacnetAddress srcBipAddr;
+            BacnetBipAddressHelper::setMacAddress(srcAddr, srcPort, &srcBipAddr);
             //prepare npdu infor
             quint8 *npdu = &data[BvlcConstHeaderSize];
             quint16 npduLength = dataLength - BvlcConstHeaderSize;
@@ -169,8 +168,8 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
         }
     case (Original_Broadcast_NPDU): {
             //some device sent us a broadcast - forward it to BBMDs and FDs (if necessary) and pass to the upper layer
-            BacnetBipAddress srcBipAddr;
-            srcBipAddr.setAddress(srcAddr, srcPort);
+            BacnetAddress srcBipAddr;
+            BacnetBipAddressHelper::setMacAddress(srcAddr, srcPort, &srcBipAddr);
             //prepare npdu infor
             quint8 *npdu = &data[BvlcConstHeaderSize];
             quint16 npduLength = dataLength - BvlcConstHeaderSize;
@@ -222,13 +221,26 @@ void BacnetBvllHandler::sendShortResult(BvlcResultCode result, QHostAddress dest
     fieldsPtr += BvlcDataField;
     (*(quint16*)fieldsPtr) = qToBigEndian((quint16)result);
 
+    send((quint8*)respData.data(), BvlcResultSize, destAddr, destPort);
+}
+
+void BacnetBvllHandler::send(quint8 *data, quint16 length, QHostAddress destAddr, quint16 destPort)
+{
     Q_ASSERT(0 != _transportHndlr);
-    _transportHndlr->send((quint8*)respData.data(), BvlcResultSize, destAddr, destPort);
+    _transportHndlr->send(data, length, destAddr, destPort);
+}
+
+QHostAddress BacnetBvllHandler::address() {
+    return _transportHndlr->address();
+}
+
+quint16 BacnetBvllHandler::port() {
+    return _transportHndlr->port();
 }
 
 quint8 BacnetBvllHandler::createForwardedMsg(quint8 *npduToForward, quint16 npduLength, QByteArray &forwardedMsg, QHostAddress srcAddr, quint16 srcPort)
 {
-    quint16 forwardedSize = npduLength + BvlcConstHeaderSize + BIP_ADDR_LENGTH;
+    quint16 forwardedSize = npduLength + BvlcConstHeaderSize + BacnetBipAddressHelper::BipAddrLength;
     forwardedMsg.reserve(forwardedSize);
     quint8 *forwardMsgPtr = (quint8*)forwardedMsg.data();
     quint8 *fieldsPtr = forwardMsgPtr;
@@ -236,9 +248,9 @@ quint8 BacnetBvllHandler::createForwardedMsg(quint8 *npduToForward, quint16 npdu
     setHeadersFields(fieldsPtr, Forwarded_NPDU, forwardedSize);
     fieldsPtr += BvlcConstHeaderSize;
     //create source/originator address
-    BacnetBipAddress bIpAddress;
-    bIpAddress.setAddress(srcAddr, srcPort);
-    fieldsPtr += bIpAddress.setToRawData(fieldsPtr, BIP_ADDR_LENGTH);
+    BacnetAddress bIpAddress;
+    BacnetBipAddressHelper::setMacAddress(srcAddr, srcPort, &bIpAddress);
+    fieldsPtr += bIpAddress.macAddressToRaw(fieldsPtr);
     //copy npdu
     quint8 *npdu_hlpr = npduToForward;
     for (int i = 0; i<npduLength; i++) {

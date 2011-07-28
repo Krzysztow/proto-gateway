@@ -19,14 +19,22 @@ SOURCES += main.cpp \
     bacnetnetworklayer.cpp \
     bacnetbbmdhandler.cpp \
     bacnetbipaddress.cpp \
-    bacnetudptransportlayer.cpp
+    bacnetudptransportlayer.cpp \
+    bacnetbiptransportlayer.cpp \
+    bacnetaddress.cpp \
+    bacnetrouter.cpp \
+    bacnetapplicationlayer.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
     bacnetbbmdhandler.h \
     bacnetbipaddress.h \
-    bacnetaddress.h \
     bacnetudptransportlayer.h \
     bacnetcommon.h \
-    bacnettransportlayer.h
+    bacnettransportlayer.h \
+    bacnetbiptransportlayer.h \
+    bacnetaddress.h \
+    bacnetrouter.h \
+    bacnetapplicationlayer.h \
+    bitfields.h

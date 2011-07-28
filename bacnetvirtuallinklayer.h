@@ -11,16 +11,12 @@ class BacnetUdpTransportLayerHandler;
 class BacnetBbmdHandler;
 
 /**
-    \note I wrap BacnetBvllHandler and it's BacnetUdpTransportLayer into BacnetTransportLayer - kind of proxy class.
-    Thanks to that, other layers may use it as if it was normal BacnetTransportLayer.
-
     \note The behaviour of Foreign Device is not implemented - most probably, it is easiest to exchange this Class,
     because only Forwarded-NPDU (for reception & transmission) as well as Distribute-Broadcast-To-Network (broadcast write)
     and Register-Foreign-Device with Result (registration is needed).
 
   */
-class BacnetBvllHandler:
-        public BacnetTransportLayer
+class BacnetBvllHandler
 {
 public:
     BacnetBvllHandler(BacnetNetworkLayerHandler *networkLayerHndlr,
@@ -76,10 +72,21 @@ public:
     void setBbmdHndlr(BacnetBbmdHandler *bbmdHandler);
 
 private:
+    //! Helper function to send data to underlying transport layer.
+    void send(quint8 *data, quint16 length, QHostAddress destAddr, quint16 destPort);
+
+    //! Get data from assigned transport layer about my ip address;
+    QHostAddress address();
+
+    //! Get my port from assigned transport layer
+    quint16 port();
+
     //! Function creates BVLC-Result frame and pass it to the transport layer to send.
     void sendShortResult(BvlcResultCode result, QHostAddress destAddr, quint16 destPort);
+
     //! Helper function for filling microprotocol, function code and length fields.
     void setHeadersFields(quint8 *data, BvlcFunction functionCode, quint16 length);
+
     /**
       Helper function creating forwarded message from npdu. NPDU should be npduLength size.
       \param npduToForward - pointer to an array with npdu data to forward;
@@ -97,8 +104,8 @@ private:
     BacnetUdpTransportLayerHandler *_transportHndlr;
     //! Holds the pointer to the BBMD functionality, if any.
     BacnetBbmdHandler *_bbmdHndlr;
-    //! Holds the pointer to the FD functionality, if any.
-    //! \todo BacnetFdtHandler *_fdtHandler;
+
+    friend class BacnetBbmdHandler;//encapsulation is broken! \todo think of it
 };
 
 #endif // BACNETBVLLHANDLER_H

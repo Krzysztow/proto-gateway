@@ -5,91 +5,47 @@
 #include <QHostAddress>
 
 #include "bacnetaddress.h"
-
+#define BIP_IP_LENGTH 4
 /**
     This class provides functionality to manipulate BACnet/IP address.
     \note So far only IPv4 addresses are supported.
 */
 
-#define BIP_IP_LENGTH 4
-#define BIP_PORT_LENGTH 2
-#define BIP_ADDR_LENGTH BIP_IP_LENGTH+BIP_PORT_LENGTH
-
-class BacnetBipAddress:
-        public BacnetAddress
+class BacnetBipAddressHelper
 {
 public:
-    BacnetBipAddress();
-
-//Implemented pure virtual functions from BacnetAddress
+    enum {
+        BipIpLength = BIP_IP_LENGTH,
+        BipMaskLength = BipIpLength,
+        BipPortLength = 2,
+        BipAddrLength = BipIpLength + BipPortLength
+    };
 
     /**
-        Sets value of the address copying data from array of addr. This function takes care of the byte order
-        of the input addr. Assumes th
-        \param addr - pointer to quint8, that is a first byte of the address (first ip address is laid, then the port associated)
-        \param isNetworkOrder - indicates if the layout of bytes is in the network order or host
+        Sets value of the address copying data from array starting at addr, considering it as the one containing Bip.
+        \param addrRawPtr - pointer to the array field being a start byte of the address,
+        \param outAddress - BacnetAddress to be set (has to be already allocated).
         \returns number of bytes that were used for the address
-        \sa BacnetAddress::setFromRaw()
     */
-    quint8 setFromRawData(quint8 *data, quint8 maxBytesToRead);
-    /**
-
-      \sa BacnetAddress::setToRaw()
-      */
-    quint8 setToRawData(quint8 *dest, quint8 maxBytesToSet);
+    static quint8 macAddressFromRaw(quint8 *addrRawPtr, BacnetAddress *outAddress);
 
     /**
-      All BACnet MAC addresses have length less than 255 octets - enough to store.
-      \sa Bacnet::length()
+      Returns the ip address representing part of the B/IPs address from inAddress.
+      \note it cannot be checked (apart from length) if the inAddress really represents BIP one. Call the function sensibly.
       */
-    quint8 length();
+    static QHostAddress ipAddress(BacnetAddress &inAddress);
 
-    /**
-      Compares two addresses.
-      */
-    bool isEqual(BacnetAddress &other);
-
-    /**
-      Returns byte representation of the address (in network order).
-      */
-
-    quint8 *address(quint8 &length);
-    quint8 *address();
-
-//Concrete class functions
-
-    /**
-      Returns the ip address representing part of the B/IPs
-      */
-    QHostAddress ipAddress();
     /**
       Returns ip port, being second part of the B/IP address.
       */
-    quint16 ipPort();
-
-    quint16 setAddress(QHostAddress address, quint16 port);
-
-private:
-    quint8 _address[BIP_ADDR_LENGTH];
-};
-
-class BacnetBipMask {
-
-public:
-    BacnetBipMask();
+    static quint16 ipPort(BacnetAddress &inAddress);
 
     /**
-     These functions works the same way, as BacnetBipAddress functions do
-     \sa BacnetBipAddress
-     */
-    quint8 setFromRaw(quint8 *addr, quint8 maxBytesToRead);
-    quint8 setToRaw(quint8 *dest, quint8 maxBytesToWrite);
-
-    quint8 length();
-    QHostAddress mask();
-
-private:
-    quint8 _mask[BIP_IP_LENGTH];
+      Converst QHostAddress (IPv4) and port into outAddress.
+      \returns number of bytes used to store that data.
+      */
+    static quint16 setMacAddress(QHostAddress address, quint16 port, BacnetAddress *outAddress);
 };
+
 
 #endif // BACNETBIPADDRESS_H

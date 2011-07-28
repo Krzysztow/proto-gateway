@@ -7,112 +7,61 @@
 #error "IPv6 not handled!"
 #endif
 
-BacnetBipAddress::BacnetBipAddress()
-{
-    memset(_address, 0, length());
-}
 
-quint8 BacnetBipAddress::setFromRawData(quint8 *addr, quint8 maxBytesToRead)
+quint8 BacnetBipAddressHelper::macAddressFromRaw(quint8 *addrRawPtr, BacnetAddress *outAddress)
 {
-    quint16 lengthToCopy = length();
-    Q_ASSERT(maxBytesToRead >= lengthToCopy);
-    memcpy(_address, addr, lengthToCopy);
+    Q_ASSERT(0 != outAddress);
+    outAddress->macAddressFromRaw(addrRawPtr, BipIpLength);
     //return number of bytes consumed
-    return lengthToCopy;
+    return BipAddrLength;
 }
 
-quint8 BacnetBipAddress::setToRawData(quint8 *dest, quint8 maxBytesToSet)
-{
-    quint16 lengthToCopy = length();
-    Q_ASSERT(maxBytesToSet >= lengthToCopy);
-    //set address fields in network byte order
-    memcpy(dest, _address, lengthToCopy);
-    //return number of bytes stored
-    return lengthToCopy;
-}
+//quint8 *BacnetBipAddress::address(quint8 &length)
+//{
+//    length = BIP_IP_LENGTH;
+//    return _address;
+//}
 
-quint8 BacnetBipAddress::length()
-{
-    return BIP_ADDR_LENGTH;
-}
+//quint8 *BacnetBipAddress::address()
+//{
+//    return _address;
+//}
 
-quint8 *BacnetBipAddress::address(quint8 &length)
-{
-    length = BIP_IP_LENGTH;
-    return _address;
-}
 
-quint8 *BacnetBipAddress::address()
+QHostAddress BacnetBipAddressHelper::ipAddress(BacnetAddress &inAddress)
 {
-    return _address;
-}
-
-bool BacnetBipAddress::isEqual(BacnetAddress &other)
-{
-    //only IPv4 supported
-    quint8 addrLength = length();
-    //if other address has length different than BIP (so far only IPv4 supported) address length, surely they can't be the same
-    if (other.length() == addrLength) {
-        return (0 == memcmp(address(), other.address(), addrLength));
+    Q_ASSERT(inAddress.macAddrLength() == (BipAddrLength));
+    if (inAddress.macAddrLength() == BipAddrLength) {
+        return QHostAddress(qFromBigEndian(*(quint32*)inAddress.macPtr()));
     }
-    else
-        return false;
+    else return QHostAddress();
 }
 
-QHostAddress BacnetBipAddress::ipAddress()
+quint16 BacnetBipAddressHelper::ipPort(BacnetAddress &inAddress)
 {
-    return QHostAddress(qFromBigEndian(*(quint32*)_address));
-}
-
-quint16 BacnetBipAddress::ipPort()
-{
-    return qFromBigEndian(*(quint16*)(_address[BIP_IP_LENGTH]));
-}
-
-quint16 BacnetBipAddress::setAddress(QHostAddress address, quint16 port)
-{
-    Q_ASSERT(address.protocol() == QAbstractSocket::IPv4Protocol);
-
-    quint32 hostAddr = address.toIPv4Address();
-    *(quint32*)_address = qToBigEndian(hostAddr);
-    quint8 *portField = _address + BIP_IP_LENGTH;
-    *(quint16*)portField = qToBigEndian(port);
-
-    return BIP_ADDR_LENGTH;
-}
-
-//===============================================
-
-
-BacnetBipMask::BacnetBipMask()
-{
-    memset(_mask, 0, length());
-}
-
-quint8 BacnetBipMask::setFromRaw(quint8 *mask, quint8 maxBytesToRead)
-{
-    quint16 maskLength = length();
-    Q_ASSERT(maskLength <= maxBytesToRead);
-    memcpy(_mask, mask, maskLength);
-    return maskLength;
-}
-
-quint8 BacnetBipMask::setToRaw(quint8 *dest, quint8 maxBytesToWrite)
-{
-    quint16 maskLength = length();
-    Q_ASSERT(maskLength <= maxBytesToWrite);
-    memcpy(dest, _mask, maskLength);
-    return maskLength;
+    Q_ASSERT(inAddress.macAddrLength() == (BipAddrLength));
+    if (inAddress.macAddrLength() == BipAddrLength) {
+        return qFromBigEndian(*(quint16*)(inAddress.macPtr()[BipIpLength]));
+    }
+    else return 0;
 
 }
 
-quint8 BacnetBipMask::length()
+quint16 BacnetBipAddressHelper::setMacAddress(QHostAddress inAddress, quint16 inPort, BacnetAddress *outAddress)
 {
-    return BIP_ADDR_LENGTH;
-}
+    Q_ASSERT(inAddress.protocol() == QAbstractSocket::IPv4Protocol);
+    Q_ASSERT(0 != outAddress);
 
-QHostAddress BacnetBipMask::mask()
-{
-    quint32 hostMask = qFromBigEndian(*(quint32*)_mask);
-    return QHostAddress(hostMask);
+    //Bacnet Bip address is stored in a fashion that first 4 bytes are ip address in network byte order
+    //and the other two are port in a network byte order
+
+    quint8 tempMac[BipAddrLength];
+    quint32 hostAddr = inAddress.toIPv4Address();
+    *(quint32*)tempMac = qToBigEndian(hostAddr);
+    quint8 *portField = &tempMac[BipIpLength];
+    *(quint16*)portField = qToBigEndian(inPort);
+
+    outAddress->macAddressFromRaw(tempMac, BipAddrLength);
+
+    return BipAddrLength;
 }

@@ -8,18 +8,28 @@
 #include "bacnetvirtuallinklayer.h"
 #include "bacnetbipaddress.h"
 
+//fix that there can be no more than 5 foreign devices
+#define MAX_FD_NUM 5
+
 struct BbmdTableEntry
 {
     //here I concretize BACnet address to BIP, since no other one is used in case of BBMD
-    BacnetBipAddress address;
-    BacnetBipMask mask;
+    BacnetAddress address;
+    //be careful, this is stored in local host byte ored
+    quint32 mask;
 };
 
-class BacnetUdpTransportLayerHandler;
+struct FdTableEntry
+{
+    //again concretized, no need for abstractness
+    BacnetAddress address;
+    quint16 timeToLiveLeft;
+};
+
 class BacnetBbmdHandler
 {
 public:
-    BacnetBbmdHandler(BacnetUdpTransportLayerHandler *transportHndlr);
+    BacnetBbmdHandler(BacnetBvllHandler *bvllHandler);
 
     //! Udpdates/initializes new BDT table. If succeeds, return Successcufll Completion code, otherwise NAK.
     bool setBroadcastTableFromRaw(quint8 *data, quint16 length);
@@ -35,25 +45,32 @@ public:
       If positive, does so using bvlHnldlr functions.
       \todo forward to all FDs except source
       */
-    void processForwardedMessage(quint8 *data, quint16 length, BacnetBipAddress &srcAddr);
+    void processForwardedMessage(quint8 *data, quint16 length, BacnetAddress &srcAddr);
 
     /**
       Carries out actions that should be done when BBMD gets DistributeBroadcastToNetwork message:
       # broadcasts message locally
       # sends to all BBMDs (excludes itself!)
       # forwards to all Foreign Devices (if one of them has srcAddr, it is omitted (no replications))
-      \note data is already formed Forward-NPDU frame
+      \warning data is already formed Forward-NPDU frame
       \todo forwarding to Foreign Devices is not implemented
       */
-    void processBroadcastToNetwork(quint8 *data, quint16 length, BacnetBipAddress &srcAddr);
+    void processBroadcastToNetwork(quint8 *data, quint16 length, BacnetAddress &srcAddr);
 
     /**
-      \note data is already formed Forward-NPDU frame
+      \warning data is already formed Forward-NPDU frame
       Carries out actions for reception of Original-Broadcast-NPDU:
       # sends data to all BBMDs (exluding itself, no need to)
       # sends data to all FD
       */
-    void processOriginalBroadcast(quint8 *data, quint16 length, BacnetBipAddress &srcAddr);
+    void processOriginalBroadcast(quint8 *data, quint16 length, BacnetAddress &srcAddr);
+
+    /**
+      \note maybe it's better pass entire frame received, not only the data
+      \warning data points to the registration field! which contains time-to-live parameter. The address itself corresponds to FD.
+      */
+//    void processRegisterFD(quint8 *data, quint16 length, BacnetBipAddress &srcAddr);
+
 
 private:
     /**
@@ -65,7 +82,8 @@ private:
 
 private:
     QVector<BbmdTableEntry> _bbmdTable;
-    BacnetUdpTransportLayerHandler *_transportHndlr;
+    QVector<FdTableEntry> _fdTable;
+    BacnetBvllHandler *_bvllHndlr;
 };
 
 #endif // BACNETBBMDHANDLER_H

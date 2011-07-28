@@ -15,6 +15,8 @@ BacnetUdpTransportLayerHandler::BacnetUdpTransportLayerHandler(QObject *parent) 
 
 bool BacnetUdpTransportLayerHandler::setAddress(QHostAddress ip, quint16 port)
 {
+    _myAddress = ip;
+    _myPort = port;
     //will listen to the packets directed to the device/broadcasted with port port
     return _socket->bind(port, QUdpSocket::ShareAddress);
 }
@@ -34,6 +36,10 @@ void BacnetUdpTransportLayerHandler::readDatagrams()
     while (_socket->hasPendingDatagrams()) {
         length = _socket->readDatagram(_datagram.data(), BacnetCommon::BvllMaxSize, &srcAddr, &srcPort);
         if (length > 0) {
+            if ( (_myAddress == srcAddr) && (srcPort == _myPort) ) {
+                qDebug("BacnetUdpTransportLayerHandler:readDatagrams() : Discard message received from myself!");
+                continue;
+            }
             //pass it to the higher layer if any data read
             _bvllHndlr->consumeDatagram((quint8*)(_datagram.data()), length, srcAddr, srcPort);
         }
