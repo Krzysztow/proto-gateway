@@ -8,6 +8,10 @@
   # an optional network,
   # the MAC address appropriate to the underlying LAN technology,
   # the link service access point (what is it?)
+
+  About broadcasts:
+  - mac address equal to 0xffff means it's a global broadcast
+  - mac address
   */
 
 class BacnetAddress
@@ -39,6 +43,17 @@ public:
       Returns true if address is local broadacst.
       */
     bool isLocalBraodacst();
+
+    /**
+      Sets address as a remote broadcast.
+      \warning this is only preparation, you have to remember to set appropriate networknumber (earlier or later).
+      */
+    void setRemoteBroadcast();
+
+    /**
+      Depicts if address is a remote broadcast.
+      */
+    bool isRemoteBroadcast();
 
     /**
       Returns true, if the network number was set.

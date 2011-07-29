@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     bacnetbiptransportlayer.cpp \
     bacnetaddress.cpp \
     bacnetrouter.cpp \
-    bacnetapplicationlayer.cpp
+    bacnetapplicationlayer.cpp \
+    bacnetnpci.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -37,4 +38,5 @@ HEADERS += \
     bacnetaddress.h \
     bacnetrouter.h \
     bacnetapplicationlayer.h \
-    bitfields.h
+    bitfields.h \
+    bacnetnpci.h

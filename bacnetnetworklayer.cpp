@@ -1,6 +1,7 @@
 #include "bacnetnetworklayer.h"
 #include "bacnettransportlayer.h"
 #include "bacnetapplicationlayer.h"
+#include "bacnetnpci.h"
 
 #define REAL_APP_LAYER_NUM -1
 
@@ -12,20 +13,20 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
 {
     //check if we can handle it - this class implements only de/en-coding of BACnet protocol version 1
     quint8 *actualBytePtr = npdu;
-    if (*actualBytePtr != ProtocolVersion) {
-#warning "What to do here? Just drop the frame, or send something back."
-        return;
-    }
+    qint32 ret;
 
     //now it points at the NPCI field
     actualBytePtr++;
-    Q_ASSERT(NpciFieldHelper::isNpciSane(actualBytePtr));
-    //if its a network message
-    if (NpciFieldHelper::isNetworkLayerMessage(actualBytePtr)) {
-
-    } else {
-
+    BacnetNpci npci;
+    ret = npci.setFromRaw(actualBytePtr);
+    Q_ASSERT(ret < 0);
+    Q_ASSERT(npci.isSane());
+    if (ret < 0) {
+        return;
     }
+
+    actualBytePtr += ret;
+
 }
 
 void BacnetNetworkLayerHandler::setTransportLayer(BacnetTransportLayerHandler *transportHndlr)

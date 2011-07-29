@@ -4,24 +4,12 @@
 #include <QHash>
 
 #include "bacnetaddress.h"
-#include "bitfields.h"
 
 class BacnetApplicationLayerHandler;
 class BacnetTransportLayerHandler;
 class BacnetNetworkLayerHandler
 {
 public:
-    enum NetworkPriority {
-        PriorityNormal      = 0x00,
-        PriorityUrgent      = 0x01,
-        PriorityCritical    = 0x10,
-        PriorityLifeSafety  = 0x11
-    };
-
-    enum SupportedProtocol {
-        ProtocolVersion = 0x01
-    };
-
     BacnetNetworkLayerHandler();
 
     void readNpdu(quint8 *npdu, quint16 length, BacnetAddress &dlSrcAddress);
@@ -46,18 +34,6 @@ private:
       key is same as it's network number.
       */
     QHash<quint16, BacnetApplicationLayerHandler*> _networks;
-
-};
-
-class NpciFieldHelper {
-public:
-    static inline bool isNpciSane(quint8 *npciField) {return ((BitFields::Bit6 & *npciField) | (BitFields::Bit4 & *npciField)) == 0;}
-    static inline bool isNetworkLayerMessage(quint8 *npciField) {return (BitFields::Bit7 & *npciField);}
-    static inline bool isDestinationSpecified(quint8 *npciField) {return (BitFields::Bit5 & *npciField);}
-    static inline bool isSourceSpecified(quint8 *npciField) {return (BitFields::Bit3 & *npciField);}
-    static inline bool isConfirmed(quint8 *npciField) {return (BitFields::Bit2 & *npciField);}
-    static BacnetNetworkLayerHandler::NetworkPriority networkPriority(quint8 *npciField)
-        {return (BacnetNetworkLayerHandler::NetworkPriority)((*npciField)&(BitFields::Bit0 | BitFields::Bit1));}
 
 };
 
