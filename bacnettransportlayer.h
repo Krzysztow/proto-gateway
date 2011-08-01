@@ -2,6 +2,7 @@
 #define BACNETTRANSPORTLAYER_H
 
 #include "bacnetnetworklayer.h"
+#include "bacnetcommon.h"
 
 /**
   This class provides interface for BACnet transport layer. The transport layer is supposed to interact only with
@@ -11,13 +12,16 @@
   \sa BacnetNetworkLayer:
   */
 
+class Buffer;
 class BacnetTransportLayerHandler
 {
 public:
     /**
       This function gives \sa BacnetNetworkLayer ability to send data to the BACnet network.
+      When no destAddress is specified-
       */
-    virtual void sendNpdu(quint8 *data, BacnetAddress &srcAddress, BacnetAddress &destAddress) = 0;
+    virtual void sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio = BacnetCommon::PriorityNormal,
+                          const BacnetAddress *destAddress = 0, const BacnetAddress *srcAddress = 0) = 0;
 };
 
 #endif // BACNETTRANSPORTLAYER_H

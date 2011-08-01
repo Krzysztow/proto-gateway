@@ -24,7 +24,10 @@ SOURCES += main.cpp \
     bacnetaddress.cpp \
     bacnetrouter.cpp \
     bacnetapplicationlayer.cpp \
-    bacnetnpci.cpp
+    bacnetnpci.cpp \
+    helpercoder.cpp \
+    bacnetbuffermanager.cpp \
+    buffer.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -39,4 +42,7 @@ HEADERS += \
     bacnetrouter.h \
     bacnetapplicationlayer.h \
     bitfields.h \
-    bacnetnpci.h
+    bacnetnpci.h \
+    helpercoder.h \
+    bacnetbuffermanager.h \
+    buffer.h

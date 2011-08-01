@@ -115,7 +115,6 @@ public:
 
 private:
     enum {
-        LocalBroadcastNet = -1,
         GlobalBroadcastNet = 0xffff,
         UninitizlizedNet = -2
     };

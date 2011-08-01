@@ -5,16 +5,18 @@
 
 #include "bitfields.h"
 #include "bacnetaddress.h"
+#include "bacnetcommon.h"
+
+/**
+6.2.2.1
+DNET, SNET, and Vendor ID Encoding
+The multi-octet fields, DNET, SNET, and Vendor ID, shall be conveyed with the most significant octet first. Allowable
+network number values for DNET shall be from 1 to 65535 and for SNET from 1 to 65534.
+  */
 
 class BacnetNpci
 {
 public:
-    enum NetworkPriority {
-        PriorityNormal      = 0x00,
-        PriorityUrgent      = 0x01,
-        PriorityCritical    = 0x10,
-        PriorityLifeSafety  = 0x11
-    };
 
     enum SupportedProtocol {
         ProtocolVersion = 0x01
@@ -49,19 +51,45 @@ public:
       */
     qint8 setFromRaw(quint8 *inDataPrt);
 
+    /**
+      Fills the buffer starting at outDataPtr with information contained in the npci instance.
+      \returns number of bytes used to store aforementioned information.
+      */
+    qint8 setToRaw(quint8 *outDataPtr);
+
+    BacnetAddress &destAddress();
+    void setDestAddress(BacnetAddress &addr);
+    BacnetAddress &srcAddress();
+    void setSrcAddress(BacnetAddress &addr);
+
     inline bool isSane() {return ((BitFields::Bit6 & _controlOctet) | (BitFields::Bit4 & _controlOctet)) == 0;}
-private:
+
+    void setExpectingReply(bool expectReply);
+    void setApduMessage();
+    void setNetworkMessage(BacnetNetworkMessageType netMsgType);
     inline bool isNetworkLayerMessage() {return (BitFields::Bit7 & _controlOctet);}
+    BacnetNetworkMessageType networkMessageType();
+
+    inline BacnetCommon::NetworkPriority networkPriority() {
+        return (BacnetCommon::NetworkPriority)((_controlOctet)&(BitFields::Bit0 | BitFields::Bit1));}
+    inline void setNetworkPriority(BacnetCommon::NetworkPriority netPriority) {_controlOctet |= ( (quint8)netPriority & (BitFields::Bit0 | BitFields::Bit1) );}
+
+private:
     inline bool isDestinationSpecified() {return (BitFields::Bit5 & _controlOctet);}
     inline bool isSourceSpecified() {return (BitFields::Bit3 & _controlOctet);}
     inline bool isConfirmed() {return (BitFields::Bit2 & _controlOctet);}
-    NetworkPriority networkPriority() {return (NetworkPriority)((_controlOctet)&(BitFields::Bit0 | BitFields::Bit1));}
-
+    inline bool isExpectingReply() {return (_controlOctet & BitFields::Bit2);}
     /**
       Decodes address bacnet address and network from NPCI
-      \note affects inOutPtr!
+      \note affects netFieldPtr!
       */
-    void decodeAddressHlpr(quint8 **inOutPtr, BacnetAddress *outAddress);
+    void decodeAddressHlpr(quint8 **netFieldPtr, BacnetAddress *outAddress);
+
+    /**
+      Encodes address bacnet address and network from bacAddress into buffer starting at netFieldPtr.
+      \note affects netFieldPtr!
+      */
+    void encodeAddressHlpr(BacnetAddress &bacAddress, quint8 **netFieldPtr);
 
 private:
     //! remembers control octet
@@ -74,6 +102,8 @@ private:
     quint8 _hopCount;
     //! message type
     BacnetNetworkMessageType _messageType;
+    //! vendorId
+    quint16 _vendorId;
 };
 
 #endif // BACNETNPCI_H

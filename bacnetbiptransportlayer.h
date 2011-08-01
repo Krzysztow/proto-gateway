@@ -13,7 +13,14 @@ class BacnetBipTransportLayer :
 public:
     BacnetBipTransportLayer(BacnetNetworkLayerHandler *networkHndlr);
 
-    void sendNpdu(quint8 *data, BacnetAddress &srcAddress, BacnetAddress &destAddress);
+    /**
+      Implementation of BacnetTransportLayerHandler interface function.
+      This function is used to send
+      */
+    virtual void sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio = BacnetCommon::PriorityNormal,
+                          const BacnetAddress *destAddress = 0, const BacnetAddress *srcAddress = 0);
+
+    BacnetUdpTransportLayerHandler *transportLayer();
 
 private:
     BacnetBvllHandler *_bvllHndlr;

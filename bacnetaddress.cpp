@@ -36,13 +36,13 @@ bool BacnetAddress::isRemoteBroadcast()
 
 void BacnetAddress::setLocalBroadcast()
 {
-    _networkNumber = LocalBroadcastNet;
+    _networkNumber = UninitizlizedNet;
     _macAddrLength = 0;
 }
 
 bool BacnetAddress::isLocalBraodacst()
 {
-    return (_networkNumber == LocalBroadcastNet);
+    return ( (0 == _macAddrLength) && (UninitizlizedNet == _networkNumber) );
 }
 
 quint16 BacnetAddress::networkNumber()
@@ -58,8 +58,13 @@ void BacnetAddress::macAddressFromRaw(quint8 *data, quint8 length)
 
 quint8 BacnetAddress::macAddressToRaw(quint8 *data)
 {
-    memcpy(data, _macAddress, _macAddrLength);
-    return _macAddrLength;
+    if (_macAddrLength >= 0) {
+        memcpy(data, _macAddress, _macAddrLength);
+        return _macAddrLength;
+    }
+    else {
+        return 0;
+    }
 }
 
 quint8 BacnetAddress::macAddrLength()
@@ -90,7 +95,7 @@ quint8 BacnetAddress::setNetworkNumFromRaw(quint8 *data)
 
 void BacnetAddress::resetMacAddress()
 {
-    _networkNumber = 0;
+    _networkNumber = UninitizlizedNet;
     _macAddrLength = -1;
     memset(_macAddress, 0, MaxMacLength);
 }

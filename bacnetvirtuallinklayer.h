@@ -70,6 +70,7 @@ public:
 
     //! Sets BBMD handler so that it may act as an BBMD.
     void setBbmdHndlr(BacnetBbmdHandler *bbmdHandler);
+    void setTransportProxy(BacnetTransportLayerHandler *transportProxy);
 
 private:
     //! Helper function to send data to underlying transport layer.
@@ -104,6 +105,9 @@ private:
     BacnetUdpTransportLayerHandler *_transportHndlr;
     //! Holds the pointer to the BBMD functionality, if any.
     BacnetBbmdHandler *_bbmdHndlr;
+
+    //!just to pass to the network layer information about the TransportLayer we are in.
+    BacnetTransportLayerHandler *_transportProxyPtr;
 
     friend class BacnetBbmdHandler;//encapsulation is broken! \todo think of it
 };

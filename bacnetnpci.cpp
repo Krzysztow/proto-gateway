@@ -1,25 +1,44 @@
 #include "bacnetnpci.h"
+#include "helpercoder.h"
 
 BacnetNpci::BacnetNpci():
-        _controlOctet(0)
+        _controlOctet(0),
+        _hopCount(255),
+        _vendorId(0)
 {
 }
 
-void BacnetNpci::decodeAddressHlpr(quint8 **dnetPtr, BacnetAddress *bacAddress)
+void BacnetNpci::decodeAddressHlpr(quint8 **netFieldPtr, BacnetAddress *bacAddress)
 {
     //network number is always available, then
-    (*dnetPtr) += bacAddress->setNetworkNumFromRaw(*dnetPtr);
+    (*netFieldPtr) += bacAddress->setNetworkNumFromRaw(*netFieldPtr);
     //address is varying, dependant on MAC layer, so encode length first, then address itself
     //the length is 2 bytes long
-    quint16 length = qFromBigEndian(*(quint16*)*dnetPtr);
-    (*dnetPtr) += 2;
+    quint16 length = qFromBigEndian(*(quint16*)*netFieldPtr);
+    (*netFieldPtr) += 2;
     //get address
     if (length == 0) {
-        bacAddress->setRemoteBroadcast();
+        if (!bacAddress->isGlobalBroadcast())
+            bacAddress->setRemoteBroadcast();
     } else {
-        bacAddress->macAddressFromRaw(*dnetPtr, length);
-        (*dnetPtr) += length;
+        bacAddress->macAddressFromRaw(*netFieldPtr, length);
+        (*netFieldPtr) += length;
     }
+}
+
+void BacnetNpci::encodeAddressHlpr(BacnetAddress &bacAddress, quint8 **netFieldPtr)
+{
+    quint8 *&ptr = *netFieldPtr;
+    //network number is always available, then
+    //! \todo This will not work if we were to rout between two irtual networks - no consultation with our routing table
+    ptr += bacAddress.networkNumToRaw(ptr);
+    ptr += HelperCoder::uin16ToRaw(bacAddress.macAddrLength(), ptr);
+    /*
+    if it's not a remote and local broadcast (and it's not a local message (we are sure of that
+    since network number is present)) we have to encode address as well - this is taken care of
+    by BacnetAddress class.
+    */
+    ptr += bacAddress.macAddressToRaw(ptr);
 }
 
 qint8 BacnetNpci::setFromRaw(quint8 *inDataPrt)
@@ -29,6 +48,7 @@ qint8 BacnetNpci::setFromRaw(quint8 *inDataPrt)
 #warning "What to do here? Just drop the frame, or send something back."
         return NpciBadProtocolVersion;
     }
+
     //remember control octet
     _controlOctet = *actualPtr;
 
@@ -38,7 +58,7 @@ qint8 BacnetNpci::setFromRaw(quint8 *inDataPrt)
     }
 
     //parse NPCI further
-    actualPtr++;
+    ++actualPtr;
     //do we have info about destination?
     if (isDestinationSpecified()) {
         //interpret information at inDataPrt as destination address. indataPtr gets updated by helper function.
@@ -51,14 +71,122 @@ qint8 BacnetNpci::setFromRaw(quint8 *inDataPrt)
     }
     //if there was destination, we have hop count as well - decrease the hop count
     if (isDestinationSpecified()) {
-        _hopCount = (*actualPtr) - 1;
-        actualPtr++;
+        _hopCount = *actualPtr;
+        ++actualPtr;
     }
 
+    //take care of message type and vendor id
     if (isNetworkLayerMessage()) {
         _messageType = (BacnetNetworkMessageType)*actualPtr;
-        actualPtr++;
+        ++actualPtr;
+        if (_messageType > LastAshraeReserved) {
+            actualPtr += HelperCoder::uint16FromRaw(actualPtr, &_vendorId);
+        }
     }
 
     return (actualPtr - inDataPrt);
+}
+
+qint8 BacnetNpci::setToRaw(quint8 *outDataPtr)
+{
+    quint8 *actPtr(outDataPtr);
+    //set protocol version
+    *actPtr = ProtocolVersion;
+    ++actPtr;
+
+    //we have to check few things before control octet is ready
+    if (_destAddr.hasNetworkNumber()) {
+        _controlOctet |= BitFields::Bit5;
+    }
+    if (_srcAddr.hasNetworkNumber()) {
+        //it is a remote message or broadcast - SNET, SLEN will be present
+        _controlOctet |= BitFields::Bit3;
+    }
+    //expecting reply should be already set
+    //priority should be already set
+
+    //set control octet
+    *actPtr = _controlOctet;
+    ++actPtr;
+    //if we have destination set, we need to insert it
+    if (isDestinationSpecified()) {
+        encodeAddressHlpr(_destAddr, &actPtr);
+    }
+    //if we have source set
+    if (isSourceSpecified()) {
+        encodeAddressHlpr(_srcAddr, &actPtr);
+    }
+
+    //hop count
+    if (isDestinationSpecified()) {
+        //if it's a routed message - we already decreased
+        *actPtr = (_hopCount - 1);
+        ++actPtr;
+    }
+
+    //vendor id
+    if (isNetworkLayerMessage() && (networkMessageType() > LastAshraeReserved)) {
+        *actPtr += HelperCoder::uin16ToRaw(_vendorId, actPtr);
+    }
+
+    return (actPtr - outDataPtr);
+}
+
+BacnetNpci::BacnetNetworkMessageType BacnetNpci::networkMessageType()
+{
+    if (isNetworkLayerMessage())
+        return _messageType;
+    else
+        return LastVendor;
+    enum NetworkPriority {
+        PriorityNormal      = 0x00,
+        PriorityUrgent      = 0x01,
+        PriorityCritical    = 0x10,
+        PriorityLifeSafety  = 0x11
+    };
+}
+
+void BacnetNpci::setExpectingReply(bool expectReply)
+{
+    if (expectReply)
+        _controlOctet |= BitFields::Bit2;
+    else
+        _controlOctet &= (~BitFields::Bit2);
+}
+
+void BacnetNpci::setApduMessage()
+{
+    _controlOctet &= (~BitFields::Bit7);
+    //maybe shouldn't set this one?
+    _messageType = LastVendor;
+}
+
+void BacnetNpci::setNetworkMessage(BacnetNetworkMessageType netMsgType)
+{
+    //set network message flag in the control octet
+    _controlOctet |= BitFields::Bit7;
+    //remember message type
+    _messageType = netMsgType;
+}
+
+BacnetAddress &BacnetNpci::destAddress()
+{
+    //! \todo = maybe I should check if control bit is set?
+    return _destAddr;
+}
+
+void BacnetNpci::setDestAddress(BacnetAddress &addr)
+{
+    _destAddr = addr;
+}
+
+BacnetAddress &BacnetNpci::srcAddress()
+{
+    //! \todo = maybe I should check if control bit is set?
+    return _srcAddr;
+}
+
+void BacnetNpci::setSrcAddress(BacnetAddress &addr)
+{
+    _srcAddr = addr;
 }

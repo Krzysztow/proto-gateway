@@ -22,6 +22,11 @@ void BacnetBvllHandler::setBbmdHndlr(BacnetBbmdHandler *bbmdHandler)
     _bbmdHndlr = bbmdHandler;
 }
 
+void BacnetBvllHandler::setTransportProxy(BacnetTransportLayerHandler *transportProxy)
+{
+    _transportProxyPtr = transportProxy;
+}
+
 void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddress srcAddr, qint64 srcPort)
 {
     //decode BVLL information
@@ -105,7 +110,7 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             //data passed to network layer is shorter than data carried by forwarded-NPDU by address length
             quint8 *npduPtr = addrPtr + addrLength;
             dataLength -= addrLength;
-            _networkHndlr->readNpdu(npduPtr, dataLength, origDeviceAddress);
+            _networkHndlr->readNpdu(npduPtr, dataLength, origDeviceAddress, _transportProxyPtr);
 
             break;
         }
@@ -151,7 +156,7 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
                  receive it anymore, since our transport layer discards all the messages sent by oursleves.
                  */
                 //pass it to the netorowk layer, since we won't get the forwarded message (our transport layer blocks messages sent by ourself)
-                _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr);
+                _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr, _transportProxyPtr);
             }
             break;
         }
@@ -163,7 +168,7 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             quint8 *npdu = &data[BvlcConstHeaderSize];
             quint16 npduLength = dataLength - BvlcConstHeaderSize;
             //pass it
-            _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr);
+            _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr, _transportProxyPtr);
             break;
         }
     case (Original_Broadcast_NPDU): {
@@ -183,7 +188,7 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             }
 
             //pass it to the upper layer
-            _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr);
+            _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr, _transportProxyPtr);
             break;
         }
     default:
