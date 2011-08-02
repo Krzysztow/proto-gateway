@@ -14,7 +14,7 @@ void BacnetBipTransportLayer::sendNpdu(Buffer *buffToSend, BacnetCommon::Network
                                        const BacnetAddress *destAddress, const BacnetAddress *srcAddress)
 {
 #warning "When BacnetBvllHandler has its send method, implemenet it here!"
-//    _bvllHndlr->send
+    _bvllHndlr->sendNpdu(buffToSend, prio, destAddress, srcAddress);
 }
 
 BacnetUdpTransportLayerHandler *BacnetBipTransportLayer::transportLayer()

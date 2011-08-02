@@ -266,3 +266,9 @@ quint8 BacnetBvllHandler::createForwardedMsg(quint8 *npduToForward, quint16 npdu
 
     return forwardedSize;
 }
+
+void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio,
+                                 const BacnetAddress *destAddress, const BacnetAddress *srcAddress)
+{
+
+}

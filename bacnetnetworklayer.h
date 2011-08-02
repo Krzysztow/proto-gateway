@@ -16,7 +16,17 @@ public:
     BacnetNetworkLayerHandler();
 
     enum ErrorCodes {
-        BufferNotValid = -1
+        BufferNotValid = -1,
+        BufferToSmall = -2,
+        NotEnoughData = -3
+    };
+
+    enum RejectMessageToRouterReason {
+        OtherError = 0,
+        NotDirectlyConnected = 1,
+        RouterBusy = 2,
+        UnknownNetworkMessage = 3,
+        TooLongMessage = 4
     };
 
     /**
@@ -51,6 +61,9 @@ private:
       physical (or BVLL logical) ports.
       */
     qint32 processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port);
+    qint32 processRejectMessageToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port);
+    qint32 processInitializeRoutingTable(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetTransportLayerHandler *port);
+    void sendRejectMessageToNetwork(RejectMessageToRouterReason rejReason, quint16 dnet, BacnetAddress &destAddr, BacnetTransportLayerHandler *port);
 
     void sendBuffer(Buffer *bufferToSend, BacnetCommon::NetworkPriority priority = BacnetCommon::PriorityNormal,
                     const BacnetAddress *destination = 0, const BacnetAddress *source = 0);

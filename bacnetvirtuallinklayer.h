@@ -5,10 +5,12 @@
 #include <QHostAddress>
 
 #include "bacnettransportlayer.h"
+#include "bacnetcommon.h"
 
 class BacnetNetworkLayerHandler;
 class BacnetUdpTransportLayerHandler;
 class BacnetBbmdHandler;
+class Buffer;
 
 /**
     \note The behaviour of Foreign Device is not implemented - most probably, it is easiest to exchange this Class,
@@ -67,6 +69,14 @@ public:
 
     //! Used when reading the data from underlying transport layer.
     void consumeDatagram(quint8 *data, quint32 datagramLength, QHostAddress srcAddr, qint64 srcPort);
+
+    /**
+      Used to send data from network layer.
+      \note If destination address is 0, then local broadcast (using broadcast MAC address) is carried out.
+      */
+    virtual void sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio = BacnetCommon::PriorityNormal,
+                          const BacnetAddress *destAddress = 0, const BacnetAddress *srcAddress = 0);
+
 
     //! Sets BBMD handler so that it may act as an BBMD.
     void setBbmdHndlr(BacnetBbmdHandler *bbmdHandler);
