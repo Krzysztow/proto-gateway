@@ -12,6 +12,7 @@
   */
 
 class BacnetBvllHandler;
+class Buffer;
 class BacnetUdpTransportLayerHandler :
         public QObject//inhertiance from QObject due to readDatagrams() slot
 {
@@ -32,6 +33,9 @@ public:
 
     //! Used by higher layers to send data over UDP
     bool send(quint8 *data, qint64 length, QHostAddress destAddr, qint16 destPort);
+
+    //! Newer version of above.
+    void sendBuffer(Buffer *buffer, QHostAddress &destAddr, qint16 destPort);
 
     /**
       Returns actual ip address of the device

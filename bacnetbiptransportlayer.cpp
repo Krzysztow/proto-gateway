@@ -6,6 +6,7 @@ BacnetBipTransportLayer::BacnetBipTransportLayer(BacnetNetworkLayerHandler *netw
         _transportHndlr(new BacnetUdpTransportLayerHandler())
 {
     _bvllHndlr = new BacnetBvllHandler(networkHndlr, _transportHndlr);
+    _transportHndlr->setBvlc(_bvllHndlr);
     networkHndlr->setTransportLayer(this);
     _bvllHndlr->setTransportProxy(this);
 }

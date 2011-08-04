@@ -1,6 +1,9 @@
 #ifndef BACNETCOMMON_H
 #define BACNETCOMMON_H
 
+#include <stdio.h>
+#include <QtCore>
+
 /**
   This header is meant to provide some common data for all BACnet classes within the project.
   */

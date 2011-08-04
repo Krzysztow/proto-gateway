@@ -10,12 +10,13 @@ BacnetNpci::BacnetNpci():
 
 void BacnetNpci::decodeAddressHlpr(quint8 **netFieldPtr, BacnetAddress *bacAddress)
 {
+    quint8 *&ptr = *netFieldPtr;
     //network number is always available, then
-    (*netFieldPtr) += bacAddress->setNetworkNumFromRaw(*netFieldPtr);
+    ptr += bacAddress->setNetworkNumFromRaw(ptr);
     //address is varying, dependant on MAC layer, so encode length first, then address itself
     //the length is 2 bytes long
-    quint16 length = qFromBigEndian(*(quint16*)*netFieldPtr);
-    (*netFieldPtr) += 2;
+    quint8 length = *ptr;
+    ++ptr;
     //get address
     if (length == 0) {
         if (!bacAddress->isGlobalBroadcast())
@@ -48,6 +49,7 @@ qint8 BacnetNpci::setFromRaw(quint8 *inDataPrt)
 #warning "What to do here? Just drop the frame, or send something back."
         return NpciBadProtocolVersion;
     }
+    ++actualPtr;
 
     //remember control octet
     _controlOctet = *actualPtr;
@@ -125,8 +127,11 @@ qint8 BacnetNpci::setToRaw(quint8 *outDataPtr)
     }
 
     //vendor id
-    if (isNetworkLayerMessage() && (networkMessageType() > LastAshraeReserved)) {
-        *actPtr += HelperCoder::uin16ToRaw(_vendorId, actPtr);
+    if (isNetworkLayerMessage() ) {
+        *actPtr = (quint8)_messageType;
+        ++actPtr;
+        if ((networkMessageType() > LastAshraeReserved))
+            *actPtr += HelperCoder::uin16ToRaw(_vendorId, actPtr);
     }
 
     return (actPtr - outDataPtr);

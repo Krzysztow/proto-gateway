@@ -7,7 +7,7 @@ BacnetAddress::BacnetAddress()
     resetMacAddress();
 }
 
-bool BacnetAddress::hasNetworkNumber()
+bool BacnetAddress::hasNetworkNumber() const
 {
     return (_networkNumber >= 0);
 }
@@ -18,7 +18,7 @@ void BacnetAddress::setGlobalBroadcast()
     _macAddrLength = 0;
 }
 
-bool BacnetAddress::isGlobalBroadcast()
+bool BacnetAddress::isGlobalBroadcast() const
 {
     return (_networkNumber == GlobalBroadcastNet);
 }
@@ -29,7 +29,7 @@ void BacnetAddress::setRemoteBroadcast()
     _macAddrLength = 0;
 }
 
-bool BacnetAddress::isRemoteBroadcast()
+bool BacnetAddress::isRemoteBroadcast() const
 {
     return ( (0 == _macAddress) && (_networkNumber >= 0) );
 }
@@ -40,12 +40,12 @@ void BacnetAddress::setLocalBroadcast()
     _macAddrLength = 0;
 }
 
-bool BacnetAddress::isLocalBraodacst()
+bool BacnetAddress::isLocalBraodacst() const
 {
     return ( (0 == _macAddrLength) && (UninitizlizedNet == _networkNumber) );
 }
 
-quint16 BacnetAddress::networkNumber()
+quint16 BacnetAddress::networkNumber() const
 {
     return _networkNumber;
 }
@@ -67,12 +67,12 @@ quint8 BacnetAddress::macAddressToRaw(quint8 *data)
     }
 }
 
-quint8 BacnetAddress::macAddrLength()
+quint8 BacnetAddress::macAddrLength() const
 {
     return _macAddrLength;
 }
 
-quint8 *BacnetAddress::macPtr()
+const quint8 *BacnetAddress::macPtr() const
 {
     return _macAddress;
 }
@@ -100,7 +100,7 @@ void BacnetAddress::resetMacAddress()
     memset(_macAddress, 0, MaxMacLength);
 }
 
-bool BacnetAddress::isAddrInitialized()
+bool BacnetAddress::isAddrInitialized() const
 {
     return (_macAddrLength > 0);
 }

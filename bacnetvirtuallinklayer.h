@@ -95,8 +95,14 @@ private:
     //! Function creates BVLC-Result frame and pass it to the transport layer to send.
     void sendShortResult(BvlcResultCode result, QHostAddress destAddr, quint16 destPort);
 
-    //! Helper function for filling microprotocol, function code and length fields.
-    void setHeadersFields(quint8 *data, BvlcFunction functionCode, quint16 length);
+    /** Helper function for filling microprotocol, function code and length fields.
+      \param data - pointer to the befginning of the data, that should be filled
+      \param functionCode - BVLL function code
+      \param addLength - length of the additional data, that will be appended after this header (of length BvlcConstHeaderSize).
+      \note the length field is equal to addLength + BvlcConstHeaderSize
+      \returns - number of bytes used to encode this data - it should be BvlcConstHeaderSize
+      */
+    quint8 setHeadersFields(quint8 *data, BvlcFunction functionCode, quint16 addLength);
 
     /**
       Helper function creating forwarded message from npdu. NPDU should be npduLength size.

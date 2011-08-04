@@ -3,6 +3,8 @@
 #include <cstring>
 #include <QtEndian>
 
+#include "helpercoder.h"
+
 #if (BIP_IP_LENGTH != 4)
 #error "IPv6 not handled!"
 #endif
@@ -28,7 +30,7 @@ quint8 BacnetBipAddressHelper::macAddressFromRaw(quint8 *addrRawPtr, BacnetAddre
 //}
 
 
-QHostAddress BacnetBipAddressHelper::ipAddress(BacnetAddress &inAddress)
+QHostAddress BacnetBipAddressHelper::ipAddress(const BacnetAddress &inAddress)
 {
     Q_ASSERT(inAddress.macAddrLength() == (BipAddrLength));
     if (inAddress.macAddrLength() == BipAddrLength) {
@@ -56,12 +58,23 @@ quint16 BacnetBipAddressHelper::setMacAddress(QHostAddress inAddress, quint16 in
     //and the other two are port in a network byte order
 
     quint8 tempMac[BipAddrLength];
-    quint32 hostAddr = inAddress.toIPv4Address();
-    *(quint32*)tempMac = qToBigEndian(hostAddr);
-    quint8 *portField = &tempMac[BipIpLength];
-    *(quint16*)portField = qToBigEndian(inPort);
+//    quint32 hostAddr = inAddress.toIPv4Address();
+//    *(quint32*)tempMac = qToBigEndian(hostAddr);
+//    quint8 *portField = &tempMac[BipIpLength];
+//    *(quint16*)portField = qToBigEndian(inPort);
+    ipAddrToRaw(inAddress, inPort, tempMac);
 
     outAddress->macAddressFromRaw(tempMac, BipAddrLength);
+
+    return BipAddrLength;
+}
+
+quint16 BacnetBipAddressHelper::ipAddrToRaw(QHostAddress address, quint16 port, quint8 *outData)
+{
+    quint32 hostAddr = address.toIPv4Address();
+    HelperCoder::uint32ToRaw(hostAddr, outData);
+    quint8 *portField = &outData[BipIpLength];
+    HelperCoder::uin16ToRaw(port, portField);
 
     return BipAddrLength;
 }

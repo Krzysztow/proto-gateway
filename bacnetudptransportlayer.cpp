@@ -2,6 +2,7 @@
 
 #include "bacnetcommon.h"
 #include "bacnetvirtuallinklayer.h"
+#include "buffer.h"
 
 BacnetUdpTransportLayerHandler::BacnetUdpTransportLayerHandler(QObject *parent) :
     QObject(parent),
@@ -49,6 +50,16 @@ void BacnetUdpTransportLayerHandler::readDatagrams()
 bool BacnetUdpTransportLayerHandler::send(quint8 *data, qint64 length, QHostAddress destAddr, qint16 destPort)
 {
     return (_socket->writeDatagram((char*)data, length, destAddr, destPort) == length);
+}
+
+void BacnetUdpTransportLayerHandler::sendBuffer(Buffer *buffer, QHostAddress &destAddr, qint16 destPort)
+{
+    Buffer::printArray(buffer->bodyPtr(), buffer->bodyLength(), "Sending data:");
+    qDebug("Is sent to %s 0x%40x", qPrintable(destAddr.toString()), destPort);
+
+    if (buffer->bodyLength() != _socket->writeDatagram((char*)buffer->bodyPtr(), buffer->bodyLength(), destAddr, destPort)) {
+        qDebug("I didn't manage to send the data! Need to implement resending!");
+    }
 }
 
 QHostAddress BacnetUdpTransportLayerHandler::address()

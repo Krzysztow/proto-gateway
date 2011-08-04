@@ -52,7 +52,17 @@ public:
     void setBodyPtr(quint8 *bodyPtr);
     quint8 *bodyPtr();
 
-    bool isValid();
+    /**
+      Returns true, if the memory for the buffer is allocated.
+      */
+    bool isValid() const;
+
+    /**
+      Retursn true, if we are NOT the only owner of the buffer.
+      */
+    bool isShared() const;
+
+    static void printArray(quint8 *ptr, int size, const char *pretext = "");
 
 private:
     Buffer(quint8 *refCount, quint16 buffLength):

@@ -41,6 +41,73 @@ void BacnetNetworkLayerHandler::sendRejectMessageToNetwork(RejectMessageToRouter
     sendBuffer(&buffer, BacnetCommon::PriorityNormal, &destAddr);
 }
 
+qint32 BacnetNetworkLayerHandler::processIAmRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddress, BacnetTransportLayerHandler *port)
+{
+    Q_UNUSED(port);
+    /**followed by one or more 2-octet network numbers:
+      Each network number is 2-bytes long. Thus we can expect length/2 networks to be passed.
+      */
+    Q_ASSERT((length%2) == 0);
+    if (0 != (length%2)) {
+        qDebug("BacnetNetworkLayerHandler: networks length is inappropriate!");
+        return NotEnoughData;
+    }
+
+    quint8 netsNum = length%2;
+    quint16 itNet;
+    QVector<quint16> nets;
+    nets.resize(netsNum);
+    for (; netsNum > 0; --netsNum) {
+        actualBytePtr += HelperCoder::uint16FromRaw(actualBytePtr, &itNet);
+        nets.append(itNet);
+    }
+
+    addRouterToNetwork(nets, srcAddress);
+
+    return length;
+}
+
+void BacnetNetworkLayerHandler::addRouterToNetwork(QVector<quint16> &nets, BacnetAddress &routerAddress)
+{
+    //override everything - this is the newest value possible, most probably the best one!
+    for (int i=0; i<nets.count(); ++i) {
+        _routers.insert(nets[i], routerAddress);
+    }
+}
+
+void BacnetNetworkLayerHandler::rmRouterToNetwork(quint16 net)
+{
+    //remove all entreis (of course, should be only one)
+    _routers.remove(net);
+}
+
+const BacnetAddress *BacnetNetworkLayerHandler::dlAddressForDest(const BacnetAddress *destAddr)
+{
+    static BacnetAddress localBroadcastAddr;
+    localBroadcastAddr.setLocalBroadcast();
+
+    if (0 == destAddr) {
+        return &localBroadcastAddr;
+    }
+
+    Q_ASSERT(destAddr->isAddrInitialized());
+    if (destAddr->hasNetworkNumber()) {
+        if (destAddr->isGlobalBroadcast()) {
+            return destAddr;
+        }
+
+        if (_routers.contains(destAddr->networkNumber())) {
+            return &_routers[destAddr->networkNumber()];
+        } else {
+            //! \todo send who is router to network message!!!!!
+#warning "Send who-is-router-to-network request!"
+            return &localBroadcastAddr;
+        }
+    }
+
+    return destAddr;
+}
+
 qint32 BacnetNetworkLayerHandler::processInitializeRoutingTable(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetTransportLayerHandler *port)
 {
     Q_ASSERT(length >= 1);
@@ -126,13 +193,19 @@ qint32 BacnetNetworkLayerHandler::processRejectMessageToNetwork(quint8 *actualBy
 {
     quint8 *dataPtr = actualBytePtr;
     Q_ASSERT(length == 3);
+    RejectMessageToRouterReason reasonCode = (RejectMessageToRouterReason)*dataPtr;
     const char *reason;
-    switch (*dataPtr) {
+    ++dataPtr;
+    quint16 dnet;
+    dataPtr += HelperCoder::uint16FromRaw(actualBytePtr, &dnet);
+
+    switch (reasonCode) {
     case (OtherError):
         reason = "Other error";
         break;
     case (NotDirectlyConnected):
         reason = "No direct connection";
+        rmRouterToNetwork(dnet);
         break;
     case (RouterBusy):
         reason = "Router is busy";
@@ -146,10 +219,6 @@ qint32 BacnetNetworkLayerHandler::processRejectMessageToNetwork(quint8 *actualBy
     default:
         reason = "Unrecognized reason";
     }
-
-    ++dataPtr;
-    quint16 dnet;
-    dataPtr += HelperCoder::uint16FromRaw(actualBytePtr, &dnet);
 
     qDebug("BacnetNetworkLayerHandler: got rejected network message from net#%d with reason: %s", dnet, reason);
     return (dataPtr - actualBytePtr);
@@ -232,18 +301,28 @@ void BacnetNetworkLayerHandler::sendApdu(Buffer *apduBuffer, bool dataExpectingR
 #warning "Communication with Application layer not implemented, yet!"
     //remember to include the network address of the source
 }
-
 void BacnetNetworkLayerHandler::sendBuffer(Buffer *bufferToSend, BacnetCommon::NetworkPriority priority, const BacnetAddress *destination, const BacnetAddress *source)
 {
     /** \note if this was a routing node, here we should consult a routing table and find which port (TransportLayerHndlr) should be called.
         So far we have only one port - no routing necessary!
       */
 
-    _transportHndlr->sendNpdu(bufferToSend, priority, destination, source);
+    /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    *
+    *
+    *
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+
+    Buffer::printArray(bufferToSend->bodyPtr(), bufferToSend->bodyLength(), "Response from us (network):");
+
+    const BacnetAddress *destAddress = dlAddressForDest(destination);
+    _transportHndlr->sendNpdu(bufferToSend, priority, destAddress, source);
 }
 
 void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAddress &dlSrcAddress, BacnetTransportLayerHandler *port)
 {
+    Buffer::printArray(npdu, length, "NPDU data: ");
+
     quint8 *actualBytePtr = npdu;
     quint16 leftLength = length;
     qint32 ret(0);
@@ -252,7 +331,7 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
     BacnetNpci npci;
     ret = npci.setFromRaw(actualBytePtr);
     Q_ASSERT(leftLength >= ret);
-    Q_ASSERT(ret < 0);
+    Q_ASSERT(ret >= 0);
     Q_ASSERT(npci.isSane());
     if (ret < 0) {
         qDebug("BacnetNetworkLayerHandler: Insane frame, drop it!");
@@ -270,13 +349,13 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
             ret = processWhoIsRouterToNetwork(actualBytePtr, leftLength, port);
             break;
         case (BacnetNpci::IAmRouterToNetwork):
-            /** \todo We do nothing about it so far. We have only one port - messages will be
-                    sent to this one, no matter what the destination network number is.
-                    Check also all the cases below, which are commented with: Same as above,
-                  */
+            ret = processIAmRouterToNetwork(actualBytePtr, leftLength, dlSrcAddress, port);
             break;
         case (BacnetNpci::ICouldBeRouterToNetwork):
-            // Same as above
+            /** \todo We do nothing about it so far. We have only one port - messages will be
+                  sent to this one, no matter what the destination network number is.
+                  Check also all the cases below, which are commented with: Same as above,
+              */
             break;
         case (BacnetNpci::RejectMessageToNetwork):
             ret = processRejectMessageToNetwork(actualBytePtr, leftLength, port);
@@ -318,7 +397,8 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
         /** This is either for application layer of:
             - the router device, when the message is locally sent (no DNET specified)
             - application layer of some of our virtual networks - if the DNET is specified and equal to one of registered networks in _networks.
-            Otherwise the message is to be dropped - it was not for us.
+            - for all application layers if this is a global broadcast
+             Otherwise the message is to be dropped - it was not for us.
           */
         BacnetApplicationLayerHandler *appHndlr = 0;
         if (npci.destAddress().isAddrInitialized()) {

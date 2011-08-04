@@ -32,7 +32,7 @@ public:
     /**
       Returns true, if address is a global broadcast.
       */
-    bool isGlobalBroadcast();
+    bool isGlobalBroadcast() const;
 
     /**
       Sets the address to be a local broadcast and MAC fields get zero'd
@@ -42,7 +42,7 @@ public:
     /**
       Returns true if address is local broadacst.
       */
-    bool isLocalBraodacst();
+    bool isLocalBraodacst() const;
 
     /**
       Sets address as a remote broadcast.
@@ -53,21 +53,21 @@ public:
     /**
       Depicts if address is a remote broadcast.
       */
-    bool isRemoteBroadcast();
+    bool isRemoteBroadcast() const;
 
     /**
       Returns true, if the network number was set.
       */
-    bool hasNetworkNumber();
+    bool hasNetworkNumber() const;
     /**
       Returns network number, if present. Otherwise returns 0.
       */
-    quint16 networkNumber();
+    quint16 networkNumber() const;
 
     /**
       Returns true if address has been initialized (meaning the MAC part has been filled)
       */
-    bool isAddrInitialized();
+    bool isAddrInitialized() const;
     /**
       Clears contents and sets it uninitialized.
       */
@@ -95,7 +95,7 @@ public:
     /**
       Returns length of stored MAC address.
       */
-    quint8 macAddrLength();
+    quint8 macAddrLength() const;
 
     /**
       Sets \sa length() bytes, starting from data pointer, to the value of MAC address in network byte order.
@@ -111,7 +111,7 @@ public:
       The function returns pointer to _address table.
       \note probably you don't want to use this function.
       */
-    quint8 *macPtr();
+    const quint8 *macPtr() const;
 
 private:
     enum {

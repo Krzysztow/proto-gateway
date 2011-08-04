@@ -50,12 +50,12 @@ public:
       */
     Buffer &getBuffer(RequestingLayer reqLayer);
 
-private:
     /**
       Returns nominal offsets for each layer. For instance, when we want to get offset for APDU in the buffer,
       call offsetForLayer(ApplicationLayer).
       */
     quint16 offsetForLayer(RequestingLayer reqLayer);
+private:
 
 private:
     // Prevent others from creating an instance - SingletonPattern

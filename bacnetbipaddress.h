@@ -33,7 +33,7 @@ public:
       Returns the ip address representing part of the B/IPs address from inAddress.
       \note it cannot be checked (apart from length) if the inAddress really represents BIP one. Call the function sensibly.
       */
-    static QHostAddress ipAddress(BacnetAddress &inAddress);
+    static QHostAddress ipAddress(const BacnetAddress &inAddress);
 
     /**
       Returns ip port, being second part of the B/IP address.
@@ -45,6 +45,8 @@ public:
       \returns number of bytes used to store that data.
       */
     static quint16 setMacAddress(QHostAddress address, quint16 port, BacnetAddress *outAddress);
+
+    static quint16 ipAddrToRaw(QHostAddress address, quint16 port, quint8 *outData);
 };
 
 
