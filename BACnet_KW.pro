@@ -27,7 +27,9 @@ SOURCES += main.cpp \
     bacnetnpci.cpp \
     helpercoder.cpp \
     bacnetbuffermanager.cpp \
-    buffer.cpp
+    buffer.cpp \
+    bacnetpci.cpp \
+    bacnetcoder.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -45,4 +47,6 @@ HEADERS += \
     bacnetnpci.h \
     helpercoder.h \
     bacnetbuffermanager.h \
-    buffer.h
+    buffer.h \
+    bacnetpci.h \
+    bacnetcoder.h

@@ -3,6 +3,8 @@
 
 #include <QtCore>
 
+#include "bacnetpci.h"
+
 class BacnetNetworkLayerHandler;
 class BacnetAddress;
 class BacnetApplicationLayerHandler
@@ -23,7 +25,9 @@ public:
       \param - destAddr - not specified by BACnet but if application layer is supposed to act as a collection of
       devices we need to have information which device is being called.
       */
-    virtual void indication(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr) = 0;
+    void indication(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr);
+
+    void processConfirmedRequest(quint8 *dataPtr, quint16 dataLength);
 
 protected:
     BacnetNetworkLayerHandler *_networkHndlr;
