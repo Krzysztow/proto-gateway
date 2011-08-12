@@ -113,10 +113,18 @@ public:
         // see propertyIsNotAnArray                 	= 50
     };
 
+    /**The error enumeration that may be come into while parsing:
+      -NoError                  - no error occured,
+      -BufferOverrun            - buffer left length is insufficient to parse tags and its values,
+      -AppTagNotRequestedType   - application type tag is being tried to be converted into wrong type with to*() function,
+      -ContextValueWrongLength  - the context type value is trying to be converted into value of not matching length.
+      */
     enum BacnetTagParserError {
         NoError = 0,
 
-        BufferOverrun = -1
+        BufferOverrun = -1,
+        AppTagNotRequestedType = -2,
+        ContextValueWrongLength = -3
     };
 
     BacnetTagParser(quint8 *data, quint16 length):
@@ -259,6 +267,13 @@ private:
       */
     bool reduceLeftBytes(quint16 bytesNum);
 
+    //! Returns true if recently parsed tag is of requested data type or is context tag. Otherwise returns false and sets _error to AppTagNotRequestedType.
+    bool checkCorrectAppOrCtxTagHelper(BacnetCoder::BacnetTags dataType);
+
+    bool checkCorrectLengthHelper(quint8 dataLength);
+
+    bool valueLengthLessThanEqHelper(quint8 maxEqLength);
+    bool valueLenthGreaterThanEqHelper(quint8 minEqLength);
 
 private:
     quint8 *_trackedData;
