@@ -1,12 +1,17 @@
 #ifndef BACNETCODER_H
 #define BACNETCODER_H
 
+#include <QtCore>
+#include "bitfields.h"
+
 class BacnetCoder
 {
 public:
     BacnetCoder();
 
     enum BacnetTags {
+        InvalidTag      = -1,
+
         Null            = 0x00,
         Boolean         = 0x01,
         UnsignedInteger = 0x02,
@@ -22,21 +27,23 @@ public:
         BacnetObjectIdentifier = 0x0c,
         ASHRAE0         = 0x0d,
         ASHRAE1         = 0x0e,
-        ASHRAE2         = 0x0f
+        ASHRAE2         = 0x0f,
+        LastAshraeTag   = ASHRAE2,
+
+        ExtendedTagNumber = 0xff
     };
 
     enum CharacterSet {
-        AnsiX3_4 = 0x00,
-        IbmDbcs = 0x01,
-        JisC6266 = 0x02,
-        ISO10646 = 0x03
+        AnsiX3_4    = 0x00,
+        IbmDbcs     = 0x01,
+        JisC6266    = 0x02,
+        UCS_4       = 0x03,
+        UCS_2       = 0x04,
+        ISO_8859_1  = 0x05
     };
+
+    static inline bool isContextTag(quint8 *dataPtr) {return (*dataPtr) & BitFields::Bit3;}
 };
 
-class BacnetReadProperty
-{
-public:
-    qint16 fromRaw(quint8 *dataPtr, quint16 lengthLeft);
-};
 
 #endif // BACNETCODER_H

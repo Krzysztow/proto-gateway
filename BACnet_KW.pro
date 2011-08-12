@@ -29,7 +29,9 @@ SOURCES += main.cpp \
     bacnetbuffermanager.cpp \
     buffer.cpp \
     bacnetpci.cpp \
-    bacnetcoder.cpp
+    bacnetcoder.cpp \
+    services/bacnetreadproperty.cpp \
+    bacnettagparser.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -49,4 +51,6 @@ HEADERS += \
     bacnetbuffermanager.h \
     buffer.h \
     bacnetpci.h \
-    bacnetcoder.h
+    bacnetcoder.h \
+    services/bacnetreadproperty.h \
+    bacnettagparser.h

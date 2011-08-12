@@ -30,6 +30,46 @@ namespace BacnetCommon
                             BvllMaxSize = NpduMaxSize + BvllMaxHeaderSize
                                       };
 
+    enum BacnetObjectType {
+        ObjectTypeAccumulator 	= 23,
+        ObjectTypeAnalogInput 	= 0,
+        ObjectTypeAnalogOutput 	= 1,
+        ObjectTypeAnalogValue 	= 2,
+        ObjectTypeAveraging 	= 18,
+        ObjectTypeBinaryInput 	= 3,
+        ObjectTypeBinaryOutput 	= 4,
+        ObjectTypeBinaryValue 	= 5,
+        ObjectTypeCalendar 	= 6,
+        ObjectTypeCommand 	= 7,
+        ObjectTypeDevice 	= 8,
+        ObjectTypeEventEnrollment 	= 9,
+        ObjectTypeFile 	= 10,
+        ObjectTypeGroup 	= 11,
+        ObjectTypeLifeSafetyPoint 	= 21,
+        ObjectTypeLifeSafetyZone 	= 22,
+        ObjectTypeLoop 	= 12,
+        ObjectTypeMultiStateInput 	= 13,
+        ObjectTypeMultiStateOutput 	= 14,
+        ObjectTypeMultiStateValue 	= 19,
+        ObjectTypeNotificationClass 	= 15,
+        ObjectTypeProgram 	= 16,
+        ObjectTypePulseConverter 	= 24,
+        ObjectTypeSchedule 	= 17,
+        // see averaging 	= 18,
+        // see multiStateValue 	= 19,
+        ObjectTypeTrendLog 	= 20,
+        // see lifeSafetyPoint 	= 21,
+        // see lifeSafetyZone 	= 22,
+        // see accumulator 	= 23,
+        // see pulseConverter 	= 24
+        ObjectTypeUndefined = 255//not defiend by standard, but we have space for it - only 10 bits are used
+    };
+
+    struct ObjectId {
+        BacnetObjectType objectType;
+        quint32 instanceNum;
+    };
+
     enum NetworkPriority {
         PriorityNormal      = 0x00,
         PriorityUrgent      = 0x01,

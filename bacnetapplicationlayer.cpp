@@ -38,7 +38,8 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
             break;
         }
     case (BacnetConfirmedService::ReadProperty): {
-            BacnetReadProperty readPrpty;
+//            BacnetReadProperty readPrpty;
+//            readPrpty.setFromRaw()
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
