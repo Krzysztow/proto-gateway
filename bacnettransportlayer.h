@@ -20,7 +20,7 @@ public:
       This function gives \sa BacnetNetworkLayer ability to send data to the BACnet network.
       When no destAddress is specified-
       */
-    virtual void sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio = BacnetCommon::PriorityNormal,
+    virtual void sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority prio = Bacnet::PriorityNormal,
                           const BacnetAddress *destAddress = 0, const BacnetAddress *srcAddress = 0) = 0;
 };
 

@@ -11,7 +11,7 @@ BacnetBipTransportLayer::BacnetBipTransportLayer(BacnetNetworkLayerHandler *netw
     _bvllHndlr->setTransportProxy(this);
 }
 
-void BacnetBipTransportLayer::sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio,
+void BacnetBipTransportLayer::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority prio,
                                        const BacnetAddress *destAddress, const BacnetAddress *srcAddress)
 {
 #warning "When BacnetBvllHandler has its send method, implemenet it here!"

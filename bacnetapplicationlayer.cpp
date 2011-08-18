@@ -61,18 +61,23 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
 void BacnetApplicationLayerHandler::indication(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr)
 {
     Q_ASSERT(length >= 1);//we need at least first byte for PDU type recognition
-    qint16 ret(0);
+    if (length < 1) {
+        //send error
+        return;
+    }
 
+    qint16 ret(0);
     //dispatch to the device!!!
+
 
     switch (BacnetPci::pduType(actualBytePtr))
     {
-        /*upon reception:
-          - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
-          - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
-         */
     case (BacnetPci::TypeConfirmedRequest):
         {
+            /*upon reception:
+              - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+              - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+             */
             processConfirmedRequest(actualBytePtr, length);
             break;
         }

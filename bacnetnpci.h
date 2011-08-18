@@ -70,9 +70,9 @@ public:
     inline bool isNetworkLayerMessage() {return (BitFields::Bit7 & _controlOctet);}
     BacnetNetworkMessageType networkMessageType();
 
-    inline BacnetCommon::NetworkPriority networkPriority() {
-        return (BacnetCommon::NetworkPriority)((_controlOctet)&(BitFields::Bit0 | BitFields::Bit1));}
-    inline void setNetworkPriority(BacnetCommon::NetworkPriority netPriority) {_controlOctet |= ( (quint8)netPriority & (BitFields::Bit0 | BitFields::Bit1) );}
+    inline Bacnet::NetworkPriority networkPriority() {
+        return (Bacnet::NetworkPriority)((_controlOctet)&(BitFields::Bit0 | BitFields::Bit1));}
+    inline void setNetworkPriority(Bacnet::NetworkPriority netPriority) {_controlOctet |= ( (quint8)netPriority & (BitFields::Bit0 | BitFields::Bit1) );}
 
 private:
     inline bool isDestinationSpecified() {return (BitFields::Bit5 & _controlOctet);}

@@ -214,7 +214,7 @@ public:
     QDate toDate(bool *ok = 0);
     QTime toTime(bool *ok = 0);
 
-    BacnetCommon::ObjectId toObjectId(bool *ok = 0);
+    Bacnet::ObjectId toObjectId(bool *ok = 0);
 
     /**
       Returns QString with decoded value from token value we are currently at (if the token is string).

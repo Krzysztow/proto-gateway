@@ -271,7 +271,7 @@ quint8 BacnetBvllHandler::createForwardedMsg(quint8 *npduToForward, quint16 npdu
     return forwardedSize;
 }
 
-void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio,
+void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority prio,
                                  const BacnetAddress *destAddress, const BacnetAddress *srcAddress)
 {
     /* get safe start byte for this layer - it is calculated basing on the maximum header sizes for each layer

@@ -11,7 +11,7 @@ BacnetUdpTransportLayerHandler::BacnetUdpTransportLayerHandler(QObject *parent) 
 {
     connect(_socket, SIGNAL(readyRead()), this, SLOT(readDatagrams()));
     //make space for _datagrams to be received
-    _datagram.resize(BacnetCommon::BvllMaxSize);
+    _datagram.resize(Bacnet::BvllMaxSize);
 }
 
 bool BacnetUdpTransportLayerHandler::setAddress(QHostAddress ip, quint16 port)
@@ -35,7 +35,7 @@ void BacnetUdpTransportLayerHandler::readDatagrams()
     quint16 srcPort;
     qint64 length;
     while (_socket->hasPendingDatagrams()) {
-        length = _socket->readDatagram(_datagram.data(), BacnetCommon::BvllMaxSize, &srcAddr, &srcPort);
+        length = _socket->readDatagram(_datagram.data(), Bacnet::BvllMaxSize, &srcAddr, &srcPort);
         if (length > 0) {
             if ( (_myAddress == srcAddr) && (srcPort == _myPort) ) {
                 qDebug("BacnetUdpTransportLayerHandler:readDatagrams() : Discard message received from myself!");

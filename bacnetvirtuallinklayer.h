@@ -74,7 +74,7 @@ public:
       Used to send data from network layer.
       \note If destination address is 0, then local broadcast (using broadcast MAC address) is carried out.
       */
-    virtual void sendNpdu(Buffer *buffToSend, BacnetCommon::NetworkPriority prio = BacnetCommon::PriorityNormal,
+    virtual void sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority prio = Bacnet::PriorityNormal,
                           const BacnetAddress *destAddress = 0, const BacnetAddress *srcAddress = 0);
 
 

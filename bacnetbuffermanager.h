@@ -29,9 +29,9 @@ public:
           allocation is needed afterwards.
           */
 
-        MaximumBufferSize = BacnetCommon::BvllMaxSize,
-        OffsetForNPDU = (MaximumBufferSize - BacnetCommon::NpduMaxSize),
-        OffsetForAPDU = (OffsetForNPDU + BacnetCommon::NpduMaxHeaderSize)
+        MaximumBufferSize = Bacnet::BvllMaxSize,
+        OffsetForNPDU = (MaximumBufferSize - Bacnet::NpduMaxSize),
+        OffsetForAPDU = (OffsetForNPDU + Bacnet::NpduMaxHeaderSize)
     };
 
     enum RequestingLayer {

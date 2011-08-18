@@ -348,12 +348,12 @@ QTime BacnetTagParser::toTime(bool *ok)
     return ret;
 }
 
-BacnetCommon::ObjectId BacnetTagParser::toObjectId(bool *ok)
+Bacnet::ObjectId BacnetTagParser::toObjectId(bool *ok)
 {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
     //here we return by value, maybe should change it?
-    BacnetCommon::ObjectId ret = {BacnetCommon::ObjectTypeUndefined, 0};
+    Bacnet::ObjectId ret = {Bacnet::ObjectTypeUndefined, 0};
     if (checkCorrectAppOrCtxTagHelper(BacnetCoder::BacnetObjectIdentifier) &&
         checkCorrectLengthHelper(4)) {
         quint16 objType = *(quint16*)_valuePtr;
@@ -361,7 +361,7 @@ BacnetCommon::ObjectId BacnetTagParser::toObjectId(bool *ok)
         objType >>= 6;//get rid of the part from the instance number
         quint32 instNum = qFromBigEndian(*(quint32*)_valuePtr);
         instNum &= 0x3fffff;//get rid of the part of object type
-        ret.objectType = (BacnetCommon::BacnetObjectType)objType;
+        ret.objectType = (Bacnet::BacnetObjectType)objType;
         ret.instanceNum = instNum;
         if (ok) *ok = true;
         return ret;

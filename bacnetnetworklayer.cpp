@@ -28,7 +28,7 @@ void BacnetNetworkLayerHandler::sendRejectMessageToNetwork(RejectMessageToRouter
     BacnetNpci npci;
     npci.setNetworkMessage(BacnetNpci::RejectMessageToNetwork);
     npci.setExpectingReply(false);//this is a response
-    npci.setNetworkPriority(BacnetCommon::PriorityNormal);
+    npci.setNetworkPriority(Bacnet::PriorityNormal);
     //don't set npci addresses, since all is resent locally
     //fill buffer with NPCI
     buffPtr += npci.setToRaw(buffPtr);
@@ -38,7 +38,7 @@ void BacnetNetworkLayerHandler::sendRejectMessageToNetwork(RejectMessageToRouter
     buffPtr += HelperCoder::uin16ToRaw(dnet, buffPtr);
 
     buffer.setBodyLength(buffPtr - buffer.bodyPtr());
-    sendBuffer(&buffer, BacnetCommon::PriorityNormal, &destAddr);
+    sendBuffer(&buffer, Bacnet::PriorityNormal, &destAddr);
 }
 
 qint32 BacnetNetworkLayerHandler::processIAmRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddress, BacnetTransportLayerHandler *port)
@@ -129,7 +129,7 @@ qint32 BacnetNetworkLayerHandler::processInitializeRoutingTable(quint8 *actualBy
     BacnetNpci npci;
     npci.setNetworkMessage(BacnetNpci::InitializeRoutingTableAck);
     npci.setExpectingReply(false);//this is a response
-    npci.setNetworkPriority(BacnetCommon::PriorityNormal);
+    npci.setNetworkPriority(Bacnet::PriorityNormal);
     //don't set npci addresses, since all is resent locally
     //fill buffer with NPCI
     buffPtr += npci.setToRaw(buffPtr);
@@ -184,7 +184,7 @@ qint32 BacnetNetworkLayerHandler::processInitializeRoutingTable(quint8 *actualBy
     buffer.setBodyLength(buffPtr - buffer.bufferStart());
 
     //this is sent back to the source of the request
-    sendBuffer(&buffer, BacnetCommon::PriorityNormal, &srcAddr);
+    sendBuffer(&buffer, Bacnet::PriorityNormal, &srcAddr);
 
     return (dataPtr - actualBytePtr);
 }
@@ -271,7 +271,7 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
     BacnetNpci npci;
     npci.setNetworkMessage(BacnetNpci::IAmRouterToNetwork);
     npci.setExpectingReply(false);//this is a response
-    npci.setNetworkPriority(BacnetCommon::PriorityNormal);
+    npci.setNetworkPriority(Bacnet::PriorityNormal);
     //don't set npci addresses, since all is resent locally
 
     //fill buffer with NPCI
@@ -290,18 +290,18 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
     //lets send it
     /*who are we going to sent it to? - 6.6.3.2 says that we should send it with MAC broadcast,
     what means - send it with local broadcast - null pointer is enough*/
-    sendBuffer(&buffer, BacnetCommon::PriorityNormal);
+    sendBuffer(&buffer, Bacnet::PriorityNormal);
 
     return (dataPtr - actualBytePtr);
 }
 
 void BacnetNetworkLayerHandler::sendApdu(Buffer *apduBuffer, bool dataExpectingReply, BacnetAddress *destAddr,
-                                         BacnetAddress *srcAddr, BacnetCommon::NetworkPriority prio)
+                                         BacnetAddress *srcAddr, Bacnet::NetworkPriority prio)
 {
 #warning "Communication with Application layer not implemented, yet!"
     //remember to include the network address of the source
 }
-void BacnetNetworkLayerHandler::sendBuffer(Buffer *bufferToSend, BacnetCommon::NetworkPriority priority, const BacnetAddress *destination, const BacnetAddress *source)
+void BacnetNetworkLayerHandler::sendBuffer(Buffer *bufferToSend, Bacnet::NetworkPriority priority, const BacnetAddress *destination, const BacnetAddress *source)
 {
     /** \note if this was a routing node, here we should consult a routing table and find which port (TransportLayerHndlr) should be called.
         So far we have only one port - no routing necessary!

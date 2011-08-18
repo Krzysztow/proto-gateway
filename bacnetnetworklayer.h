@@ -39,7 +39,7 @@ public:
     void readNpdu(quint8 *npdu, quint16 length, BacnetAddress &dlSrcAddress, BacnetTransportLayerHandler *port);
 
     void sendApdu(Buffer *apduBuffer, bool dataExpectingReply, BacnetAddress *destAddr,
-                  BacnetAddress *srcAddr, BacnetCommon::NetworkPriority prio = BacnetCommon::PriorityNormal);
+                  BacnetAddress *srcAddr, Bacnet::NetworkPriority prio = Bacnet::PriorityNormal);
 
     /**
       Sets transport layer (or its proxy) that it communicates with, when wants to send data.
@@ -67,7 +67,7 @@ private:
 
     void sendRejectMessageToNetwork(RejectMessageToRouterReason rejReason, quint16 dnet, BacnetAddress &destAddr, BacnetTransportLayerHandler *port);
 
-    void sendBuffer(Buffer *bufferToSend, BacnetCommon::NetworkPriority priority = BacnetCommon::PriorityNormal,
+    void sendBuffer(Buffer *bufferToSend, Bacnet::NetworkPriority priority = Bacnet::PriorityNormal,
                     const BacnetAddress *destination = 0, const BacnetAddress *source = 0);
 
     void addRouterToNetwork(QVector<quint16> &nets, BacnetAddress &routerAddress);

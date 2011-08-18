@@ -7,7 +7,7 @@
 /**
   This header is meant to provide some common data for all BACnet classes within the project.
   */
-namespace BacnetCommon
+namespace Bacnet
 {
     enum BacnetAddressSize {
         //this is a size of the address being concatenation of IPv4 address and port number

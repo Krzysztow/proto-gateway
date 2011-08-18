@@ -31,7 +31,8 @@ SOURCES += main.cpp \
     bacnetpci.cpp \
     bacnetcoder.cpp \
     services/bacnetreadproperty.cpp \
-    bacnettagparser.cpp
+    bacnettagparser.cpp \
+    property.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -53,4 +54,5 @@ HEADERS += \
     bacnetpci.h \
     bacnetcoder.h \
     services/bacnetreadproperty.h \
-    bacnettagparser.h
+    bacnettagparser.h \
+    property.h
