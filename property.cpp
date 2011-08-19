@@ -1,6 +1,8 @@
 #include "property.h"
 #include "propertyowner.h"
 
+#include "cdm.h"
+
 ///////////////Property
 
 Property::Property()
@@ -37,7 +39,7 @@ int PropertySubject::setValue(QVariant &inValue)
     }
 
     setValueInstantly(inValue, 0);
-    return Property::Ready;
+    return Property::ResultOk;
 }
 
 int PropertySubject::getValue(QVariant *outValue)
@@ -49,7 +51,7 @@ int PropertySubject::getValue(QVariant *outValue)
     }
 
     *outValue = _value;
-    return Property::Ready;
+    return Property::ResultOk;
 }
 
 void PropertySubject::setOwner(PropertyOwner *owner)
@@ -67,7 +69,7 @@ QVariant::Type PropertySubject::type()
     return _value.type();
 }
 
-int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *gettingObserver)
+int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *requester)
 {
     Q_ASSERT(0 != outValue);//be sure pointer is not null
     if ( !outValue->isNull() && (outValue->type() != _value.type()) ) { //if the QVariant has type, be sure they are the same
@@ -75,70 +77,101 @@ int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *gettingO
         return TypeMismatch;
     }
 
-    int ret(Property::Ready);
+    int ret(Property::ResultOk);
     if (0 != _owner) {
-        ret = _owner->getPropertyRequest(this, gettingObserver);
+        ret = _owner->getPropertyRequest(this);
     }
 
-    if (Property::Ready == ret) {
+    if (Property::ResultOk == ret) {
         *outValue = _value;
+    } else if (ret >= 0) {
+        DataModel::instance()->setAsynchIdData(ret, this, requester);
     }
 
     return ret;
 }
 
-int PropertySubject::setValueSafe(QVariant &inValue, PropertyObserver *settingObserver)
+int PropertySubject::setValueSafe(QVariant &inValue, PropertyObserver *requester)
 {
     if (inValue.type() != _value.type()) {
         Q_ASSERT(inValue.type() == _value.type());
         return Property::TypeMismatch;
     }
 
-    int ret(Property::Ready);
+    int ret(Property::ResultOk);
     if (0 != _owner)
-        ret = _owner->setPropertyRequest(this, inValue, settingObserver);
+        ret = _owner->setPropertyRequest(this, inValue);
 
-    if (Property::Ready == ret) {
+    if (Property::ResultOk == ret) {
         if (_value != inValue) {//set and inform only if there is a difference in values.
-            setValueInstantly(inValue, settingObserver);
+            setValueInstantly(inValue, requester);
         }
+    } else if (ret >= 0) {
+        DataModel::instance()->setAsynchIdData(ret, this, requester);
     }
 
     return ret;
 }
 
-void PropertySubject::asynchSetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
-{
-    // TODO (are we sure/should we be sure) that the value passed is the same as _value? Types should be the same.
-    Q_ASSERT(value.type() == _value.type());
-    int index = _observers.indexOf((PropertyObserver*)originRequester);//not nice casting, however we are sure there are only PropertyObservers instances - we compare pointers
-    if (index >= 0) {//this was one of my observers requesting
-        _observers.at(index)->asynchSetValueResponse(asynchId, value, success, 0);
-    } else {
-        foreach (PropertyObserver *observer, _observers)
-            observer->asynchSetValueResponse(asynchId, value, success, 0);
-    }
-}
+//void PropertySubject::asynchSetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+//{
+//    // TODO (are we sure/should we be sure) that the value passed is the same as _value? Types should be the same.
+//    Q_ASSERT(value.type() == _value.type());
+//    int index = _observers.indexOf((PropertyObserver*)originRequester);//not nice casting, however we are sure there are only PropertyObservers instances - we compare pointers
+//    if (index >= 0) {//this was one of my observers requesting
+//        _observers.at(index)->asynchSetValueResponse(asynchId, value, success, 0);
+//    } else {
+//        foreach (PropertyObserver *observer, _observers)
+//            observer->asynchSetValueResponse(asynchId, value, success, 0);
+//    }
+//}
 
-void PropertySubject::asynchGetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+//void PropertySubject::asynchGetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+//{
+//    Q_ASSERT(value.type() == _value.type());
+//    int index = _observers.indexOf((PropertyObserver*)originRequester);//we are looking for a pointer match, so don't care about nasty casting.
+//    if (index >= 0) {//this was one of my observers requesting
+//        _observers.at(index)->asynchSetValueResponse(asynchId, value, success, 0);
+//    } else {
+//        foreach (PropertyObserver *observer, _observers)
+//            observer->asynchSetValueResponse(asynchId, value, success, 0);
+//    }
+//}
+
+void PropertySubject::asynchActionFinished(int asynchId, Property::ActiontResult actionResult)
 {
-    Q_ASSERT(value.type() == _value.type());
-    int index = _observers.indexOf((PropertyObserver*)originRequester);//we are looking for a pointer match, so don't care about nasty casting.
-    if (index >= 0) {//this was one of my observers requesting
-        _observers.at(index)->asynchSetValueResponse(asynchId, value, success, 0);
-    } else {
-        foreach (PropertyObserver *observer, _observers)
-            observer->asynchSetValueResponse(asynchId, value, success, 0);
+    Q_ASSERT(this == DataModel::instance()->asynchActionSubject(asynchId));
+    PropertyObserver *requester = DataModel::instance()->asynchActionRequester(asynchId);
+    Q_CHECK_PTR(requester);
+
+    int index = _observers.indexOf(requester);
+    if (index >= 0) {//this was one of my observers requesting, so tell him we are done
+        _observers.at(index)->asynchActionFinished(asynchId, actionResult);
     }
+
+    //if the value is changed with success - tell other observers that it has changed
+    if (Property::ResultOk == actionResult) {
+        foreach (PropertyObserver *observer, _observers) {
+            if (observer != requester)
+                observer->propertyValueChanged();
+        }
+    } else
+        qDebug("PropertySubject::asynchActionFinished() - result %d, don't tell others!", actionResult);
 }
 
 void PropertySubject::setValueInstantly(QVariant &inValue, PropertyObserver *observerToOmit)
 {
+    Q_ASSERT(_value.type() == inValue.type());
     _value = inValue;
     foreach (PropertyObserver *observer, _observers) {
         if (observer != observerToOmit)
-                observer->propertyValueChanged(_value);
+                observer->propertyValueChanged();
     }
+}
+
+void PropertySubject::setValueSilent(QVariant &inValue)
+{
+    Q_ASSERT(_value.type() == inValue.type());
 }
 
 void PropertySubject::addObserver(PropertyObserver *observer)
@@ -194,30 +227,43 @@ int PropertyObserver::setValue(QVariant &inValue)
     return _property->setValueSafe(inValue, this);
 }
 
-void PropertyObserver::propertyValueChanged(QVariant &value)
+void PropertyObserver::propertyValueChanged()
 {
-    Q_UNUSED(value);
     qWarning("PropertyObserver::propertyValueChanged() not handled!");
 }
 
-void PropertyObserver::asynchSetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+int PropertyObserver::getValueInstant(QVariant *outValue)
 {
-    Q_UNUSED(asynchId);
-    Q_UNUSED(value);
-    Q_UNUSED(success);
-    Q_UNUSED(originRequester);
-    if (0 != _owner)
-        _owner->setRequestResult(asynchId, this, value, success);
+    Q_ASSERT(_property);
+    //we know it's not Property, but PropertySubject, so no virtual function is called, but straight PropertySubject one.
+    return _property->getValue(outValue);
 }
 
-void PropertyObserver::asynchGetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+
+//void PropertyObserver::asynchSetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+//{
+//    Q_UNUSED(asynchId);
+//    Q_UNUSED(value);
+//    Q_UNUSED(success);
+//    Q_UNUSED(originRequester);
+//    if (0 != _owner)
+//        _owner->setRequestResult(asynchId, success);
+//}
+
+//void PropertyObserver::asynchGetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
+//{
+//    Q_UNUSED(asynchId);
+//    Q_UNUSED(value);
+//    Q_UNUSED(success);
+//    Q_UNUSED(originRequester);
+//    if (0 != _owner)
+//        _owner->getRequestResult(asynchId, success);
+//}
+
+void PropertyObserver::asynchActionFinished(int asynchId, Property::ActiontResult actionResult)
 {
-    Q_UNUSED(asynchId);
-    Q_UNUSED(value);
-    Q_UNUSED(success);
-    Q_UNUSED(originRequester);
     if (0 != _owner)
-        _owner->getRequestResult(asynchId, this, value, success);
+        _owner->asynchActionFinished(asynchId, this, actionResult);
 }
 
 ///////////////PROPERTY UNSHARED
@@ -230,7 +276,7 @@ int PropertyUnshared::getValueSafe(QVariant *outValue)
 {
     Q_ASSERT(0 != outValue);
     *outValue = _value;
-    return Property::Ready;
+    return Property::ResultOk;
 }
 
 int PropertyUnshared::setValueSafe(QVariant &inValue)
@@ -242,7 +288,7 @@ int PropertyUnshared::setValueSafe(QVariant &inValue)
     }
 
     _value = inValue;
-    return Property::Ready;
+    return Property::ResultOk;
 }
 
 QVariant::Type PropertyUnshared::type()

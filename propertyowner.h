@@ -3,14 +3,12 @@
 
 #include <QVariant>
 
+#include "property.h"
 /**
   The property container is meant to be inherited by a protocol. This would decide if the property
   is ready to be read/written or some asynchronous steps are to be taken.
   */
 
-class Property;
-class PropertyObserver;
-class PropertySubject;
 class PropertyOwner
 {
 public:
@@ -20,10 +18,9 @@ public:
     };
 
     struct AsynchData {
-        Property *property;
+        PropertySubject *prop;
         int id;
         RequestType reqType;
-        Property *requester;
         QVariant valSet;
     };
 
@@ -39,21 +36,22 @@ public:
              generated with Property::asynchGetResponse(). Having this pointer avoids sending too many information about property value
              to the requester.
       */
-    virtual int getPropertyRequest(Property *toBeGotten, Property *requester) = 0;
+    virtual int getPropertyRequest(PropertySubject *toBeGotten) = 0;
 
     /**
       Like in a case of reading property. This function is meant to check if the value is in the correct range,
       or to request asynchronous operations to set the real object to that value.
       */
-    virtual int setPropertyRequest(Property *toBeSet, QVariant &value, Property *requester) = 0;
+    virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value) = 0;
 
     /** Hook method, invoked when the asynchronous set action on property is finished. This should be invoked.
       */
-    virtual void setRequestResult(int asynchId, Property *property, QVariant &propValue, bool success) = 0;
+//    virtual void setRequestResult(int asynchId, bool success) = 0;
 
     /** Hook method, invoked when the asynchronous get action on property is finished. This should be invoked.
       */
-    virtual void getRequestResult(int asynchId, Property *property, QVariant &propValue, bool success) = 0;
+//    virtual void getRequestResult(int asynchId, bool success) = 0;
+    virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
 };
 
 #endif // PROPERTYOWNER_H
