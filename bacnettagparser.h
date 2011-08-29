@@ -6,6 +6,7 @@
 #include "bacnetcoder.h"
 #include "helpercoder.h"
 #include "bacnetcommon.h"
+#include "bacnetdata.h"
 
 //this is used for detection of open/close tag. They have to be context specific (Bit3 is set to 1) and
 //110 when opening, whereas 111 when closing tag is encoded
@@ -20,100 +21,7 @@ void printBin(int value, int lsbBitsNum, const char *prestring, const char *post
 class BacnetTagParser
 {
 public:
-    enum BacnetAbortReason {
-        AbortReasonOther                        = 0,
-        AbortReasonBufferOverflow               = 1,
-        AbortReasonInvalidApduInThisState 	= 2,
-        AbortReasonPreemptedByHigherPriorityTask= 3,
-        AbortReasonSegmentationNotSupported 	= 4
-                                              };
-
-    enum BacnetRejectReason {
-        RejectReasonOther                       = 0,
-        RejectReasonBufferOverflow              = 1,
-        RejectReasonInconsistentParameters 	= 2,
-        RejectReasonInvalidParameterDataType 	= 3,
-        RejectReasonInvalidTag                  = 4,
-        RejectReasonMissingRequiredParameter 	= 5,
-        RejectReasonParameterOutOfRange 	= 6,
-        RejectReasonTooManyArguments            = 7,
-        RejectReasonUndefinedEnumeration 	= 8,
-        RejectReasonUnrecognizedService 	= 9
-                                              };
-
-    enum BacnetErrorClass {
-        ClassDevice 	= 0,
-        ClassObject 	= 1,
-        ClassProperty 	= 2,
-        ClassResources 	= 3,
-        ClassSecurity 	= 4,
-        ClassServices 	= 5,
-        ClassVt 	= 6
-                      };
-
-    enum BacnetErrorCode {
-        CodeOther                                   	= 0,
-        CodeAuthenticationFailed                   	= 1,
-        CodeCharacterSetNotSupported             	= 41,
-        CodeConfigurationInProgress               	= 2,
-        CodeDatatypeNotSupported                  	= 47,
-        CodeDeviceBusy                             	= 3,
-        CodeDuplicateName                          	= 48,
-        CodeDplicateObjectId                      	= 49,
-        CodeDynamicCreationNotSupported          	= 4,
-        CodeFileAccessDenied                      	= 5,
-        CodeIncompatibleSecurityLevels            	= 6,
-        CodeInconsistentParameters                 	= 7,
-        CodeInconsistentSelectionCriterion        	= 8,
-        CodeInvalidArrayIndex                     	= 42,
-        CodeInvalidConfigurationData              	= 46,
-        CodeInvalidDataType                       	= 9,
-        CodeInvalidFileAccessMethod              	= 10,
-        CodeInvalidFileStartPosition             	= 11,
-        CodeInvalidOperatorName                   	= 12,
-        CodeInvalidParameterDataType             	= 13,
-        CodeInvalidTimeStamp                      	= 14,
-        CodeKeyGenerationError                    	= 15,
-        CodeMissingRequiredParameter              	= 16,
-        CodeNoObjectsOfSpecifiedType            	= 17,
-        CodeNoSpaceForObject                     	= 18,
-        CodeNoSpaceToAddListElement                     = 19,
-        CodeNoSpaceToWriteProperty              	= 20,
-        CodeNoVtSessionsAvailable                	= 21,
-        CodeObjectDeletionNotPermitted           	= 23,
-        CodeObjectIdentifierAlreadyExists        	= 24,
-        CodeOperationalProblem                     	= 25,
-        CodeOptionalFunctionalityNotSupported   	= 45,
-        CodePasswordFailure                        	= 26,
-        CodePropertyIsNotAList                  	= 22,
-        CodePropertyIsNotAnArray                	= 50,
-        CodeReadAccessDenied                      	= 27,
-        CodeSecurityNotSupported                  	= 28,
-        CodeServiceRequestDenied                  	= 29,
-        CodeTimeout                                 	= 30,
-        CodeUnknownObject                               = 31,
-        CodeUnknownProperty                             = 32,
-        // this enumeration was removed                 	= 33,
-        CodeUnknownVtClass                              = 34,
-        CodeUnknownVtSession                            = 35,
-        CodeUnsupportedObjectType                       = 36,
-        CodeValueOutOfRange                             = 37,
-        CodeVtSessionAlreadyClosed                      = 38,
-        CodeVtSessionTerminationFailure                 = 39,
-        CodeWriteAccessDenied                           = 40,
-        // see characterSetNotSupported              	= 41,
-        // see invalidArrayIndex                      	= 42,
-        CodeCovSubscriptionFailed                       = 43,
-        CodeNotCovProperty                              = 44,
-        // see optionalFunctionalityNotSupported,    	= 45,
-        // see invalidConfigurationData               	= 46,
-        // see datatypeNotSupported                   	= 47,
-        // see duplicateName                           	= 48,
-        // see duplicateObjectId                      	= 49,
-        // see propertyIsNotAnArray                 	= 50
-    };
-
-    /**The error enumeration that may be come into while parsing:
+    /**The error enumeration that may happen while parsing:
       -NoError                  - no error occured,
       -BufferOverrun            - buffer left length is insufficient to parse tags and its values,
       -AppTagNotRequestedType   - application type tag is being tried to be converted into wrong type with to*() function,
@@ -149,20 +57,7 @@ public:
       Sets the data to be parsed.
       \note Keep in mind that the buffer data cannot be altered while parsing. To be able to do so, use \sa copyData.
       */
-    void setData(quint8 *data, quint16 length)
-    {
-        if (0 != _copiedData) {//shouldn't be a performance bottleneck, since we wouldn't use it much often, I suppose
-            delete []_copiedData;
-            _copiedData = 0;
-        }
-
-        _leftLength = length;
-        _trackedData = data;
-        _actualTagPtr = data;
-        _valuePtr = _actualTagPtr;
-        _valueLength = 0;
-        _error = NoError;
-    }
+    void setData(quint8 *data, quint16 length);
 
     /**
       This function copies all the data from buffer passed by setData. From now on, the original data may be destroyed or
@@ -179,6 +74,12 @@ public:
     {
         return _isContextTag;
     }
+
+    //! Cheks if the token recently parsed is a context one and of number tagNumber.
+    bool isContextTag(qint16 tagNumber);
+
+    //! Ckecks if the token recently parsed is an application one and of number tag tagNumber (remember there are only 15 application tags!).
+    bool isApplicationTag(BacnetCoder::BacnetTags tag);
 
     inline qint16 tagNumber()
     {
@@ -225,12 +126,14 @@ public:
     //! Returns integer value representing enumeration (if the current token is enumerated)
     quint32 toEumerated(bool *ok = 0);
 
+    //! returns true if the tag actually parsed is an opening one.
     inline bool isOpeningTag() {
         //make sure that if it's an opening or closing tag, the class field is set to context
         Q_ASSERT(((*_actualTagPtr & (BitFields::Bit0 | BitFields::Bit1 | BitFields::Bit2)) >= 0x0e) ? BacnetCoder::isContextTag(_actualTagPtr) : true);
         return (OPEN_TAG == (*_actualTagPtr & OPEN_CLOSE_TAG_MASK));
     }
 
+    //! Returns true, if the tag actuall parsed is a closing one.
     inline bool isClosingTag() {
         //make sure that if it's an opening or closing tag, the class field is set to context
         Q_ASSERT(((*_actualTagPtr & (BitFields::Bit0 | BitFields::Bit1 | BitFields::Bit2)) >= 0x0e) ? BacnetCoder::isContextTag(_actualTagPtr) : true);
@@ -238,7 +141,7 @@ public:
     }
 
     /**
-      Returns true if the initial tag LTV is of value B'110' or B'111'.
+      Returns true if the initial tag LTV is of value B'110' or B'111', meaning that actually parsed tag is either opening or closing one.
       \warning assumes _actualPtr points at initial octet.
       */
     inline bool isOpeningOrClosingTag() {
@@ -248,6 +151,16 @@ public:
     }
 
     quint16 valueLength();
+
+    //! Returns error enum of the parsing. If no error has occured NoError is given.
+    inline BacnetTagParserError error() {
+        return _error;
+    }
+
+    inline bool hasError() {
+        return _error != NoError;
+    }
+
 private:
     /**
       Retursn true if the LTV field is of value B'110'.

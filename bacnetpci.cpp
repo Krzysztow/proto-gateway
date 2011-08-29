@@ -164,3 +164,72 @@ qint16 BacnetAbortData::fromRaw(quint8 *dataPtr, quint16 length)
 
     return (ptr - dataPtr);
 }
+
+qint16 BacnetPciData::fillRawResponse(quint8 *buffer)
+{
+    Q_UNUSED(buffer);
+    return 0;
+}
+
+BacnetPciData *BacnetPci::createPciData(quint8 *pciPtr, quint16 length, qint16 *retCode)
+{
+    Q_CHECK_PTR(retCode);
+
+    switch (BacnetPci::pduType(pciPtr))
+    {
+    case (BacnetPci::TypeConfirmedRequest):
+        {
+            /*upon reception:
+          - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+          - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+         */
+            BacnetConfirmedRequestData *bData = new BacnetConfirmedRequestData();
+            *retCode = bData->fromRaw(pciPtr, length);
+            return bData;
+        }
+    case (BacnetPci::TypeUnconfirmedRequest):
+        /*upon reception: do what's needed and that's all
+     */
+        Q_ASSERT_X(false, "BacnetPci", "Factory doesn't implements this type, yet");
+        break;
+    case (BacnetPci::TypeSimpleAck):
+        /*upon reception update state machine
+     */
+        Q_ASSERT_X(false, "BacnetPci", "Factory doesn't implements this type, yet");
+        break;
+    case (BacnetPci::TypeComplexAck):
+        /*upon reception update state machine
+     */
+        Q_ASSERT_X(false, "BacnetPci", "Factory doesn't implements this type, yet");
+        break;
+    case (BacnetPci::TypeSemgmendAck):
+        /*upon reception update state machine and send back another segment
+     */
+        Q_ASSERT_X(false, "BacnetPci", "Factory doesn't implements this type, yet");
+        break;
+    case (BacnetPci::TypeError):
+        /*BacnetConfirmedRequest seervice failed
+     */
+        Q_ASSERT_X(false, "BacnetPci", "Factory doesn't implements this type, yet");
+        break;
+    case (BacnetPci::TypeReject):
+        /*Protocol error occured
+     */
+        Q_ASSERT_X(false, "BacnetPci", "Factory doesn't implements this type, yet");
+        break;
+    case (BacnetPci::TypeAbort):
+        break;
+    default: {
+            Q_ASSERT(false);
+            *retCode = UnexpectedType;
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+quint8 BacnetConfirmedRequestData::pduType()
+{
+    return BacnetPci::TypeConfirmedRequest;
+}

@@ -17,7 +17,7 @@ void BacnetApplicationLayerHandler::setNetworkHandler(BacnetNetworkLayerHandler 
     _networkHndlr = networkHndlr;
 }
 
-void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, quint16 dataLength)
+void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, quint16 dataLength, void sth)
 {
     BacnetConfirmedRequestData serviceData;
     qint16 ret = serviceData.fromRaw(dataPtr, dataLength);

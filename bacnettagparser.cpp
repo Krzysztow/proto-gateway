@@ -4,6 +4,21 @@
 #define LENGTH_FIELD_MASK 0x07
 #define EXT_LENGTH_VALUE 0x05
 
+void BacnetTagParser::setData(quint8 *data, quint16 length)
+{
+    if (0 != _copiedData) {//shouldn't be a performance bottleneck, since we wouldn't use it much often, I suppose
+        delete []_copiedData;
+        _copiedData = 0;
+    }
+
+    _leftLength = length;
+    _trackedData = data;
+    _actualTagPtr = data;
+    _valuePtr = _actualTagPtr;
+    _valueLength = 0;
+    _error = NoError;
+}
+
 qint16 BacnetTagParser::parseNext()
 {
     if (_leftLength == 0)//no bytes left - nothing to parse
@@ -27,6 +42,16 @@ qint16 BacnetTagParser::parseNext()
     }
 
     return fieldsShift + _valueLength;
+}
+
+bool BacnetTagParser::isContextTag(qint16 tagNumber)
+{
+    return (_isContextTag && (_tagNum == tagNumber));
+}
+
+bool BacnetTagParser::isApplicationTag(BacnetCoder::BacnetTags tag)
+{
+    return (!_isContextTag && (_tagNum == tag));
 }
 
 bool BacnetTagParser::reduceLeftBytes(quint16 bytesNum)
@@ -361,7 +386,7 @@ Bacnet::ObjectId BacnetTagParser::toObjectId(bool *ok)
         objType >>= 6;//get rid of the part from the instance number
         quint32 instNum = qFromBigEndian(*(quint32*)_valuePtr);
         instNum &= 0x3fffff;//get rid of the part of object type
-        ret.objectType = (Bacnet::BacnetObjectType)objType;
+        ret.objectType = (Bacnet::ObjectType)objType;
         ret.instanceNum = instNum;
         if (ok) *ok = true;
         return ret;

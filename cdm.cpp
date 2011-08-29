@@ -160,6 +160,7 @@ void DataModel::internalTimeout()
 #define CDM_TEST
 #ifdef CDM_TEST
 #include <QDebug>
+#include <QtCore>
 
 #include "propertyowner.h"
 #include "asynchowner.h"
@@ -171,14 +172,78 @@ void DataModel::internalTimeout()
 
 #include <sys/time.h>
 
+#include "bacnetcommon.h"
+
 struct KElement {
     int timeLeft;
     PropertyOwner *owner;
     PropertyOwner *requester;
 };
 
+//class TestObject
+//{
+//public:
+//    TestObject(Bacnet::ObjectId identifier):
+//    _id(identifier)
+//    {}
+
+//    TestObject(quint32 instance, Bacnet::ObjectType type)
+//    {
+//        _id.instanceNum = instance;
+//        _id.objectType = type;
+//    }
+
+//    Property *getPropertyPtr(BacnetProperty::BacnetPropertyIdentifier propId) {
+//        Property *retProp = _objectProperties.value(propId);
+//        if (0 == retProp) {
+//            retProp = BacnetDefaultObject::instance()->getProperty(_id.objectType, propId);
+//        }
+//        return retProp;
+//    }
+
+//    void addProperty(BacnetProperty::BacnetPropertyIdentifier propId, Property *property) {
+//        Property *oldProp = _objectProperties.value(propId);
+//        _objectProperties.insert(propId, property);
+//        Q_ASSERT(0 != oldProp);//there was other property
+//        if (0 != oldProp) {
+//            qDebug("TestObject: addProperty() - there was already a property with such id.");
+//            delete oldProp;
+//        }
+//    }
+
+//    quint32 objId() {
+//        return ((_id.objectType & 0x03ff) << 22) |
+//                (_id.instanceNum & 0x3fffff);
+//    }
+
+//private:
+//    Bacnet::ObjectId _id;
+//    QMap<BacnetProperty::BacnetPropertyIdentifier, Property*> _objectProperties;
+//};
+
+//class DeviceObject
+//{
+//public:
+//    DeviceObject(quint32 instance):
+//            _object(instance, Bacnet::ObjectTypeDevice)
+//    {}
+
+//private:
+//    TestObject _object;
+//};
+
+#include "helpercoder.h"
+#include "bacnettagparser.h"
+
+#include "helpercoder.h"
+#include "bacnetprimitivedata.h"
+
 int main(int argc, char *argv[])
 {
+    int i = 4;
+    qDebug()<<"RESULT"<<i%8;
+    return 0;
+
     QCoreApplication a(argc, argv);
 
     DataModel *cdm = DataModel::instance();
@@ -201,7 +266,22 @@ int main(int argc, char *argv[])
     proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 112);
     proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 110);
 
-    proto1->exec();
+//    proto1->exec();
+
+    //READ PROPERTY ENCODED
+
+    quint8 readPropertyService[] = {
+        0x00,
+        0x00,
+        0x01,
+        0x0C,
+        0x0C,
+        0x00, 0x00, 0x00, 0x05,
+        0x19,
+        0x55
+    };
+
+
 
     qDebug()<<"Sizeof QObject "<<sizeof(QObject)<<sizeof(QObjectPrivate)<<sizeof(QObjectData);
 

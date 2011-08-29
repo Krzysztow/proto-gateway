@@ -6,12 +6,14 @@
 #include "bitfields.h"
 #include "bacnetcommon.h"
 
+class BacnetPciData;
 class BacnetPci
 {
 public:
     enum ParseReturnCodes {
         BufferTooSmall = -1,
-        InappropriateBufferSize = -2
+        InappropriateBufferSize = -2,
+        UnexpectedType = -3
     };
 
     enum BacnetPduType
@@ -27,15 +29,25 @@ public:
     };
 
     inline static BacnetPduType pduType(quint8 *pciPtr) {return (BacnetPduType)((*pciPtr)>>4);}
+    static BacnetPciData *createPciData(quint8 *pciPtr, quint16 length, qint16 *retCode);
 };
 
-class BacnetConfirmedRequestData
+class BacnetPciData
+{
+public:
+    virtual qint16 fillRawResponse(quint8 *buffer);
+    virtual quint8 pduType() {return 0;};
+};
+
+class BacnetConfirmedRequestData:
+        public BacnetPciData
 {
 public:
     BacnetConfirmedRequestData();
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
 
     inline BacnetConfirmedService::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
+    virtual quint8 pduType();
 
 private:
     bool _segmented;
@@ -50,7 +62,8 @@ private:
 
 };
 
-class BacnetUnconfirmedRequestData
+class BacnetUnconfirmedRequestData:
+        public BacnetPciData
 {
 public:
     BacnetUnconfirmedRequestData() {}
@@ -60,7 +73,8 @@ private:
     quint8 _serviceChoice;
 };
 
-class BacnetSimpleAckData
+class BacnetSimpleAckData:
+        public BacnetPciData
 {
 public:
     BacnetSimpleAckData() {}
@@ -71,7 +85,8 @@ private:
     quint8 _serviceAckChoice;
 };
 
-class BacnetComplexAckData
+class BacnetComplexAckData:
+        public BacnetPciData
 {
 public:
     BacnetComplexAckData() {}
@@ -86,7 +101,8 @@ private:
     quint8 _serviceAckChoice;
 };
 
-class BacnetSegmentedAckData
+class BacnetSegmentedAckData:
+        public BacnetPciData
 {
 public:
     BacnetSegmentedAckData() {}
@@ -105,7 +121,8 @@ private:
     quint8 _actualWindSize;
 };
 
-class BacnetErrorData
+class BacnetErrorData:
+        public BacnetPciData
 {
 public:
     BacnetErrorData() {}
@@ -116,7 +133,8 @@ private:
     quint8 _errorChoice;
 };
 
-class BacnetRejectData
+class BacnetRejectData:
+        public BacnetPciData
 {
 public:
     BacnetRejectData() {}
@@ -127,7 +145,8 @@ private:
     quint8 _rejectReason;
 };
 
-class BacnetAbortData
+class BacnetAbortData:
+        public BacnetPciData
 {
 public:
     BacnetAbortData() {}

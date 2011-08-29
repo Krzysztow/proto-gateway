@@ -4,11 +4,8 @@
 #include <QtCore>
 #include "bitfields.h"
 
-class BacnetCoder
+namespace BacnetCoder
 {
-public:
-    BacnetCoder();
-
     enum BacnetTags {
         InvalidTag      = -1,
 
@@ -43,6 +40,30 @@ public:
     };
 
     static inline bool isContextTag(quint8 *dataPtr) {return (*dataPtr) & BitFields::Bit3;}
+
+    enum WritingError {
+        BufferOverrun = -1,
+        NotEncodablePrimitiveTag = -2
+    };
+
+    /** This function encodes the starting tag of the data, as well as the tag length. The function is safe.
+      If the buffer is too small to be packed with the tag + length fields and with data length, then the
+      \sa WritingError is returned and buffer not overrun.
+      */
+    qint8 encodeTagAndLength(quint8 *startPtr, quint16 buffLength, quint8 tagToEncode, bool isContextTag, quint32 lengthToEncode);
+    qint8 encodeAppBool(quint8 *startPtr, quint16 buffLength, bool value);
+
+    static inline qint8 encodeContextTagAndLength(quint8 *startPtr, quint16 buffLength, quint8 tagToEncode, quint32 lengthToEncode)
+    {
+        return encodeTagAndLength(startPtr, buffLength, tagToEncode, true, lengthToEncode);
+    }
+
+    //! \todo If the performance tests show there is a need to improve this encoding - separate application tag encoding - it may be simplified.
+    static inline qint8 encodeAppTagAndLength(quint8 *startPtr, quint16 buffLength, quint8 tagToEncode, quint32 lengthToEncode)
+    {
+        return encodeTagAndLength(startPtr, buffLength, tagToEncode, false, lengthToEncode);
+    }
+
 };
 
 

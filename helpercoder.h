@@ -18,12 +18,18 @@ namespace HelperCoder
     quint8 uint32fromVarLengthRaw(quint8 *ptr, quint32 *result, quint8 varLength);
     quint8 sint32fromVarLengthRaw(quint8 *ptr, qint32 *result, quint8 varLength);
     quint8 doubleFromRaw(quint8 *ptr, double *result);
+    quint8 doubleToRaw(double &value, quint8 *destPtr);
     static inline quint8 floatFromRaw(quint8 *ptr, float *result);
+    static inline quint8 floatToRaw(float value, quint8 *destPtr);
 
     static inline quint8 uin16ToRaw(quint16 source, quint8 *destPtr);
     static inline quint8 sin16ToRaw(qint16 source, quint8 *destPtr);
     static inline quint8 uint32ToRaw(quint32 source, quint8 *destPtr);
     static inline quint8 uint32ToRaw(qint32 source, quint8 *destPtr);
+
+    quint8 uint32ToVarLengthRaw(quint8 *dstPtr, quint32 value);
+    quint8 sint32ToVarLengthRaw(quint8 *dstPtr, qint32 value);
+
 }
 
 inline quint8 HelperCoder::uint16FromRaw(quint8 *ptr, quint16 *result)
@@ -51,6 +57,12 @@ inline quint8 HelperCoder::floatFromRaw(quint8 *ptr, float *result)
 {
     Q_ASSERT(4 == sizeof(float));//we confine ourselves only to 4-byte floats. 8-byte ones are double!
     return uint32FromRaw(ptr, (quint32*)result);
+}
+
+inline quint8 HelperCoder::floatToRaw(float value, quint8 *destPtr)
+{
+    Q_ASSERT(4 == sizeof(float));//we confine ourselves only to 4-byte floats. 8-byte ones are double!
+    return uint32ToRaw(*(quint32*)&value, destPtr);
 }
 
 inline quint8 HelperCoder::sint32FromRaw(quint8 *ptr, qint32 *result)
