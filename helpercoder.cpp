@@ -5,7 +5,7 @@ quint8 HelperCoder::sint32fromVarLengthRaw(quint8 *ptr, qint32 *result, quint8 v
     Q_CHECK_PTR(ptr);
     Q_CHECK_PTR(result);
 
-    int i;
+//    int i;
     *result = 0;
     if (*(qint8*)ptr < 0) {//if the value is negative - we have to fill most significant places with ones
 //        qint32 filler = ((quint8)-1) << 8*(sizeof(qint32)-1);
@@ -13,7 +13,7 @@ quint8 HelperCoder::sint32fromVarLengthRaw(quint8 *ptr, qint32 *result, quint8 v
 //            *result |= filler;
 //            filler >>= 8;
 //        }
-        *result = -1;
+        *result = -1 << (8*varLength);//-1 makes all ones in two complement
     }
 
     quint8 *dataPtr = ptr;
@@ -37,7 +37,8 @@ quint8 HelperCoder::uint32ToVarLengthRaw(quint8 *dstPtr, quint32 value)
         return 1;
     }
 
-    for (int i = 0; i<sizeof(quint32); ++i) {
+    //! \todo If the peroformance is an issue, make it 4-case switch depending on the value range.
+    for (uint i = 0; i<sizeof(quint32); ++i) {
         if ((actualPtr != dstPtr) || (mask & value)) {
             *actualPtr = (quint8)((mask & value) >> (8*(sizeof(quint32)-1-i)));
             ++actualPtr;
@@ -61,7 +62,7 @@ quint8 HelperCoder::sint32ToVarLengthRaw(quint8 *dstPtr, qint32 value)
         return 1;
     }
 
-    for (int i = 0; i<sizeof(qint32); ++i) {
+    for (uint i = 0; i<sizeof(qint32); ++i) {
         if ((actualPtr != dstPtr) || (mask & help)) {
             *actualPtr = (quint8)((mask & value) >> (8*(sizeof(quint32)-1-i)));
             ++actualPtr;
@@ -134,3 +135,44 @@ quint8 HelperCoder::doubleToRaw(double &value, quint8 *destPtr)
 
     return 8;
 }
+
+#ifndef QT_NO_DEBUG
+
+QDebug HelperCoder::operator<<(QDebug dbg, const QBitArray& z)
+{
+    QString text;
+    for (int i = 0; i < z.size(); ++i)
+        text += z.testBit(i) ? "1": "0";
+    dbg << text;
+    return dbg;
+}
+
+void HelperCoder::printArray(quint8 *ptr, int size, const char *pretext = "")
+{
+    printf("%s 0x", pretext);
+    for (int i=0; i<size; i++) {
+        printf("%02x ", ptr[i]);
+    }
+    printf("\n");
+    fflush(stdout);
+}
+
+void HelperCoder::printBin(int value, int lsbBitsNum, const char *prestring="B'", const char *poststring="'\n")
+{
+    unsigned int mask;
+    --lsbBitsNum;
+    printf("%s", prestring);
+    for (; lsbBitsNum >= 0; --lsbBitsNum) {
+        mask = (1 << lsbBitsNum);
+        if (mask & value)
+            printf("1");
+        else
+            printf("0");
+    }
+    printf("%s", poststring);
+    fflush(stdout);
+    fflush(stderr);
+
+}
+
+#endif

@@ -46,7 +46,7 @@ public:
     BacnetConfirmedRequestData();
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
 
-    inline BacnetConfirmedService::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
+    inline BacnetServices::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
     virtual quint8 pduType();
 
 private:
@@ -58,7 +58,7 @@ private:
     quint8 _invokeId;
     quint8 _sequenceNum;
     quint8 _propWindowSize;
-    BacnetConfirmedService::BacnetConfirmedServiceChoice _serviceChoice;
+    BacnetServices::BacnetConfirmedServiceChoice _serviceChoice;
 
 };
 

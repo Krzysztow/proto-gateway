@@ -44,13 +44,27 @@ int PropertySubject::setValue(QVariant &inValue)
 
 int PropertySubject::getValue(QVariant *outValue)
 {
-    Q_ASSERT(0 != outValue);//be sure pointer is not null
-    if ( !outValue->isNull() && (outValue->type() != _value.type()) ) { //if the QVariant has type, be sure they are the same
-        Q_ASSERT(outValue->isNull() || (outValue->type() == _value.type()));
-        return TypeMismatch;
-    }
+    if (0 != outValue) {
+        if ( !outValue->isNull() && (outValue->type() != _value.type()) ) { //if the QVariant has type, be sure they are the same
+            Q_ASSERT(outValue->isNull() || (outValue->type() == _value.type()));
+            return TypeMismatch;
+        }
 
-    *outValue = _value;
+        *outValue = _value;
+    }
+    return Property::ResultOk;
+}
+
+int PropertySubject::getValueInstant(QVariant *outValue)
+{
+    Q_ASSERT(0 != outValue);//be sure pointer is not null
+    if (0 != outValue) {
+        if ( !outValue->isNull() && (outValue->type() != _value.type()) ) { //if the QVariant has type, be sure they are the same
+            Q_ASSERT(outValue->isNull() || (outValue->type() == _value.type()));
+            return TypeMismatch;
+        }
+        *outValue = _value;
+    }
     return Property::ResultOk;
 }
 
@@ -71,10 +85,11 @@ QVariant::Type PropertySubject::type()
 
 int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *requester)
 {
-    Q_ASSERT(0 != outValue);//be sure pointer is not null
-    if ( !outValue->isNull() && (outValue->type() != _value.type()) ) { //if the QVariant has type, be sure they are the same
-        Q_ASSERT(outValue->isNull() || (outValue->type() == _value.type()));
-        return TypeMismatch;
+    if (0 != outValue) {
+        if ( !outValue->isNull() && (outValue->type() != _value.type()) ) { //if the QVariant has type, be sure they are the same
+            Q_ASSERT(outValue->isNull() || (outValue->type() == _value.type()));
+            return TypeMismatch;
+        }
     }
 
     int ret(Property::ResultOk);
@@ -83,7 +98,8 @@ int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *requeste
     }
 
     if (Property::ResultOk == ret) {
-        *outValue = _value;
+        if (0 != outValue)
+            *outValue = _value;
     } else if (ret >= 0) {
         DataModel::instance()->setAsynchIdData(ret, this, requester);
     }
@@ -274,8 +290,8 @@ PropertyUnshared::PropertyUnshared(QVariant::Type propType):
 
 int PropertyUnshared::getValueSafe(QVariant *outValue)
 {
-    Q_ASSERT(0 != outValue);
-    *outValue = _value;
+    if (0 != outValue)
+        *outValue = _value;
     return Property::ResultOk;
 }
 

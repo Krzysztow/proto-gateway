@@ -156,9 +156,13 @@ void DataModel::internalTimeout()
 }
 
 //TEST
-
-#define CDM_TEST
-#ifdef CDM_TEST
+//#define CDM_TEST
+#ifndef CDM_TEST
+//int main()
+//{
+//    return 0;
+//}
+#else
 #include <QDebug>
 #include <QtCore>
 
@@ -180,70 +184,17 @@ struct KElement {
     PropertyOwner *requester;
 };
 
-//class TestObject
-//{
-//public:
-//    TestObject(Bacnet::ObjectId identifier):
-//    _id(identifier)
-//    {}
-
-//    TestObject(quint32 instance, Bacnet::ObjectType type)
-//    {
-//        _id.instanceNum = instance;
-//        _id.objectType = type;
-//    }
-
-//    Property *getPropertyPtr(BacnetProperty::BacnetPropertyIdentifier propId) {
-//        Property *retProp = _objectProperties.value(propId);
-//        if (0 == retProp) {
-//            retProp = BacnetDefaultObject::instance()->getProperty(_id.objectType, propId);
-//        }
-//        return retProp;
-//    }
-
-//    void addProperty(BacnetProperty::BacnetPropertyIdentifier propId, Property *property) {
-//        Property *oldProp = _objectProperties.value(propId);
-//        _objectProperties.insert(propId, property);
-//        Q_ASSERT(0 != oldProp);//there was other property
-//        if (0 != oldProp) {
-//            qDebug("TestObject: addProperty() - there was already a property with such id.");
-//            delete oldProp;
-//        }
-//    }
-
-//    quint32 objId() {
-//        return ((_id.objectType & 0x03ff) << 22) |
-//                (_id.instanceNum & 0x3fffff);
-//    }
-
-//private:
-//    Bacnet::ObjectId _id;
-//    QMap<BacnetProperty::BacnetPropertyIdentifier, Property*> _objectProperties;
-//};
-
-//class DeviceObject
-//{
-//public:
-//    DeviceObject(quint32 instance):
-//            _object(instance, Bacnet::ObjectTypeDevice)
-//    {}
-
-//private:
-//    TestObject _object;
-//};
 
 #include "helpercoder.h"
 #include "bacnettagparser.h"
 
 #include "helpercoder.h"
 #include "bacnetprimitivedata.h"
+#include "bacnetpci.h"
+#include "bacnetreadpropertyservice.h"
 
 int main(int argc, char *argv[])
 {
-    int i = 4;
-    qDebug()<<"RESULT"<<i%8;
-    return 0;
-
     QCoreApplication a(argc, argv);
 
     DataModel *cdm = DataModel::instance();
@@ -251,22 +202,22 @@ int main(int argc, char *argv[])
     AsynchSetter *proto1 = new AsynchSetter();
 
     QVariant test;
-    test.setValue((float)0.4999999);
+    test.setValue((double)72.3);
 
     AsynchOwner *proto2 = new AsynchOwner();
 
-    PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Bool);
+    PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Double);
+    subject->setValue(test);
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
 
     proto2->addProperty(subject);
-    proto1->addProperty(obs, 111);
+    proto1->addProperty(obs, BacnetProperty::PresentValue);
 
     subject = DataModel::instance()->createProperty(2, QVariant::Int);
     proto2->addProperty(subject);
     proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 112);
     proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 110);
 
-//    proto1->exec();
 
     //READ PROPERTY ENCODED
 
@@ -281,11 +232,34 @@ int main(int argc, char *argv[])
         0x55
     };
 
-
-
-    qDebug()<<"Sizeof QObject "<<sizeof(QObject)<<sizeof(QObjectPrivate)<<sizeof(QObjectData);
-
+    proto1->getBytes(readPropertyService, sizeof readPropertyService);
 
     return a.exec();
+
+//    KAddress *address = new KAddress(8);
+//    quint8 data[] = {0x00, 0x04, 0x59, 0x0F, 0x0C,
+//                    0x00, 0x80, 0x00, 0x01,
+//                    0x19, 0x55, 0x3E,
+//                    0x44,
+//                    0x43, 0x34, 0x00, 0x00,
+//                    0x3F};
+//    quint8 *dataPtr = data;
+//    quint16 length = sizeof(data);
+
+//    qint16 ret(0);
+//    BacnetPciData *pciData = BacnetPci::createPciData(dataPtr, length, &ret);
+//    if (ret <= 0) {
+//        Q_ASSERT(false);//some error
+//        //send reject/abort message
+//    }
+//    dataPtr += ret;
+//    length -= ret;
+
+
+//    BacnetService *service = ServiceFactory::createService(dataPtr, length, pciData->pduType(), &ret);
+//    if (ret <= 0) {
+//        Q_ASSERT(false);//some error
+//        //send reject/abort message
+//    }
 }
 #endif //PCDM_TEST

@@ -5,6 +5,12 @@
 
 namespace HelperCoder
 {
+#ifndef QT_NO_DEBUG
+    void printArray(quint8 *ptr, int size, const char *pretext);
+    QDebug operator<<(QDebug dbg, const QBitArray& z);
+    void printBin(int value, int lsbBitsNum, const char *prestring, const char *poststring);
+#endif
+
     /**
       Funcitons decode unsigned integers. They convert data represented in netowrk byte order (big endian)
       to integers in host enian.

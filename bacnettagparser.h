@@ -14,9 +14,8 @@
 #define OPEN_TAG (0x00 | BitFields::Bit1 | BitFields::Bit2 | BitFields::Bit3)
 #define CLOSE_TAG (0x00 | BitFields::Bit0 | BitFields::Bit1 | BitFields::Bit2 | BitFields::Bit3)
 
-void printArray(quint8 *ptr, int size, char *pretext);
-QDebug operator<<(QDebug dbg, const QBitArray& z);
-void printBin(int value, int lsbBitsNum, const char *prestring, const char *poststring);
+
+using namespace Bacnet;
 
 class BacnetTagParser
 {
@@ -32,7 +31,8 @@ public:
 
         BufferOverrun = -1,
         AppTagNotRequestedType = -2,
-        ContextValueWrongLength = -3
+        CtxTagNotRequested      = -3,
+        ContextValueWrongLength = -4
     };
 
     BacnetTagParser(quint8 *data, quint16 length):
@@ -46,8 +46,12 @@ public:
     {
     }
 
-    //default copy constructor is ok, when we need to have our own copy of data, call copyData()
+    //
+    static qint16 parseStructuredData(BacnetTagParser &bParser,
+                                      BacnetObjectType::ObjectType objType, BacnetProperty::Identifier propId, quint32 arrayIndex,
+                                      quint8 tagToParse, Bacnet::BacnetDataInterface **resultData);
 
+    //default copy constructor is ok, when we need to have our own copy of data, call copyData()
     ~BacnetTagParser()
     {
         delete []_copiedData;
@@ -75,14 +79,21 @@ public:
         return _isContextTag;
     }
 
+    /** Returns length of the entire token - with tag (be it simple or extended, length fields and data). If the
+        tag is opening or closing one, it will return it's length of 1.
+      */
+    quint16 actualTagAndDataLength();
+
     //! Cheks if the token recently parsed is a context one and of number tagNumber.
     bool isContextTag(qint16 tagNumber);
 
     //! Ckecks if the token recently parsed is an application one and of number tag tagNumber (remember there are only 15 application tags!).
-    bool isApplicationTag(BacnetCoder::BacnetTags tag);
+    bool isApplicationTag(AppTags::BacnetTags tag);
 
-    inline qint16 tagNumber()
-    {
+    //! Returns next tag number or 0 if there is no next tag, or negative value in case of error (buffer overrun).
+    qint16 nextTagNumber(bool *isContextTag);
+
+    inline qint16 tagNumber() {
         return _tagNum;
     }
 
@@ -115,7 +126,7 @@ public:
     QDate toDate(bool *ok = 0);
     QTime toTime(bool *ok = 0);
 
-    Bacnet::ObjectId toObjectId(bool *ok = 0);
+    Bacnet::ObjectIdStruct toObjectId(bool *ok = 0);
 
     /**
       Returns QString with decoded value from token value we are currently at (if the token is string).
@@ -133,12 +144,16 @@ public:
         return (OPEN_TAG == (*_actualTagPtr & OPEN_CLOSE_TAG_MASK));
     }
 
+    bool isOpeningTag(quint8 tag);
+
     //! Returns true, if the tag actuall parsed is a closing one.
     inline bool isClosingTag() {
         //make sure that if it's an opening or closing tag, the class field is set to context
         Q_ASSERT(((*_actualTagPtr & (BitFields::Bit0 | BitFields::Bit1 | BitFields::Bit2)) >= 0x0e) ? BacnetCoder::isContextTag(_actualTagPtr) : true);
         return (CLOSE_TAG == (*_actualTagPtr & OPEN_CLOSE_TAG_MASK));
     }
+
+    bool isClosingTag(quint8 tag);
 
     /**
       Returns true if the initial tag LTV is of value B'110' or B'111', meaning that actually parsed tag is either opening or closing one.
@@ -152,6 +167,10 @@ public:
 
     quint16 valueLength();
 
+    inline quint8 *actualTagStart() {
+        return _actualTagPtr;
+    }
+
     //! Returns error enum of the parsing. If no error has occured NoError is given.
     inline BacnetTagParserError error() {
         return _error;
@@ -159,6 +178,10 @@ public:
 
     inline bool hasError() {
         return _error != NoError;
+    }
+
+    inline bool hasNext() {
+        return (_leftLength > 0);
     }
 
 private:
@@ -178,15 +201,19 @@ private:
     /** Helper function, that checks if we can read more bytesNum from the buffer.
       If there is enough bytes to read, true is returned and _leftLength is reduced by bytesNum value. Otherwise, false is returned and error set to BufferOverrun.
       */
-    bool reduceLeftBytes(quint16 bytesNum);
+    bool reduceBytesLeft(quint16 bytesNum);
 
     //! Returns true if recently parsed tag is of requested data type or is context tag. Otherwise returns false and sets _error to AppTagNotRequestedType.
-    bool checkCorrectAppOrCtxTagHelper(BacnetCoder::BacnetTags dataType);
+    bool checkCorrectAppOrCtxTagHelper(AppTags::BacnetTags dataType);
 
     bool checkCorrectLengthHelper(quint8 dataLength);
 
     bool valueLengthLessThanEqHelper(quint8 maxEqLength);
     bool valueLenthGreaterThanEqHelper(quint8 minEqLength);
+
+private:
+    //! \todo This function is redundant with decodeDataLengthHelper() one. Correct it!
+    static qint16 decodeTagNumber_helper(quint8 *tagPtr, quint8 *tagNum, bool *isContextTag, quint16 leftLength);
 
 private:
     quint8 *_trackedData;

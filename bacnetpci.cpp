@@ -36,7 +36,7 @@ qint16 BacnetConfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
         _sequenceNum = _propWindowSize = 0;
     }
 
-    _serviceChoice = (BacnetConfirmedService::BacnetConfirmedServiceChoice)(*ptr);
+    _serviceChoice = (BacnetServices::BacnetConfirmedServiceChoice)(*ptr);
     ++ptr;
 
     return (ptr - dataPtr);

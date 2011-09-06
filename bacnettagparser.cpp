@@ -4,6 +4,8 @@
 #define LENGTH_FIELD_MASK 0x07
 #define EXT_LENGTH_VALUE 0x05
 
+using namespace Bacnet;
+
 void BacnetTagParser::setData(quint8 *data, quint16 length)
 {
     if (0 != _copiedData) {//shouldn't be a performance bottleneck, since we wouldn't use it much often, I suppose
@@ -29,14 +31,14 @@ qint16 BacnetTagParser::parseNext()
     quint8 fieldsShift(0);//shift of tag, then length, then value fields - this shift could result due to tag>=16, or length > 5
     fieldsShift = decodeTagNumberHelper();
 
-    if (!isContextTag() && (BacnetCoder::Boolean >= _tagNum)) {
+    if (!isContextTag() && (AppTags::Boolean >= _tagNum)) {
         //it's a special case for null (no value specified, but take thanks to that we return 1 byte consumed) and boolean (app boolean stores value in TLV field)
         _valueLength = 1;
         _valuePtr = _actualTagPtr;
     } else {
         fieldsShift += decodeDataLengthHelper(fieldsShift);
         ++fieldsShift;//a little trick - maybe should reconsider it and rewrite that function
-        if (!reduceLeftBytes(_valueLength))//check if there is enough space in the buffer for the declared value. If not - error!
+        if (!reduceBytesLeft(_valueLength))//check if there is enough space in the buffer for the declared value. If not - error!
             return BufferOverrun;
         _valuePtr = _actualTagPtr + fieldsShift;//1 is that normally the value field comes straight after the tag
     }
@@ -44,21 +46,38 @@ qint16 BacnetTagParser::parseNext()
     return fieldsShift + _valueLength;
 }
 
+quint16 BacnetTagParser::actualTagAndDataLength()
+{
+    Q_ASSERT(isOpeningOrClosingTag() ?
+             (_valueLength + (_valuePtr - _actualTagPtr) == 0) : true);
+    return _valueLength + (_valuePtr - _actualTagPtr);
+}
+
 bool BacnetTagParser::isContextTag(qint16 tagNumber)
 {
     return (_isContextTag && (_tagNum == tagNumber));
 }
 
-bool BacnetTagParser::isApplicationTag(BacnetCoder::BacnetTags tag)
+bool BacnetTagParser::isApplicationTag(AppTags::BacnetTags tag)
 {
     return (!_isContextTag && (_tagNum == tag));
 }
 
-bool BacnetTagParser::reduceLeftBytes(quint16 bytesNum)
+bool BacnetTagParser::isOpeningTag(quint8 tag)
+{
+    return isOpeningTag() && (_tagNum == tag);
+}
+
+bool BacnetTagParser::isClosingTag(quint8 tag)
+{
+    return isClosingTag() && (_tagNum == tag);
+}
+
+bool BacnetTagParser::reduceBytesLeft(quint16 bytesNum)
 {
     if (bytesNum > _leftLength) {
         _error = BufferOverrun;
-        Q_ASSERT_X(false, "BacnetTagParser::reduceLeftBytes()", "Buffer overrun!");
+        Q_ASSERT_X(false, "BacnetTagParser::reduceBytesLeft()", "Buffer overrun!");
         return false;
     }
 
@@ -66,16 +85,50 @@ bool BacnetTagParser::reduceLeftBytes(quint16 bytesNum)
     return true;
 }
 
+qint16 BacnetTagParser::nextTagNumber(bool *isContextTag)
+{
+    Q_CHECK_PTR(isContextTag);
+    quint8 *nextTagData = _valuePtr + _valueLength;
+    quint8 tagNumber(0);
+    if (decodeTagNumber_helper(nextTagData, &tagNumber, isContextTag, _leftLength) < 0)
+        return -1;
+    return tagNumber;
+}
+
+qint16 BacnetTagParser::decodeTagNumber_helper(quint8 *tagPtr, quint8 *tagNum, bool *isContextTag, quint16 leftLength)
+{
+    Q_CHECK_PTR(tagPtr);
+    Q_CHECK_PTR(isContextTag);
+    Q_CHECK_PTR(tagNum);
+
+    if (leftLength-- == 0)//to get tag number we need at least 1 byte
+        return 0;
+
+    *isContextTag = BacnetCoder::isContextTag(tagPtr);
+    *tagNum = (*tagPtr & TAG_FIELD_MASK) >> 4;
+
+    if (AppTags::ExtendedTagNumber == *tagNum) {
+        if (leftLength-- == 0)//the tag is extended - we need another one byte
+            return -1;
+        Q_ASSERT(*isContextTag);
+        *tagNum = *(tagPtr + 1);
+        return 2;
+    }
+
+    return 1;
+}
+
+
 quint8 BacnetTagParser::decodeTagNumberHelper()
 {
-    if (!reduceLeftBytes(1))//to get tag number we need at least 1 byte
+    if (!reduceBytesLeft(1))//to get tag number we need at least 1 byte
         return 0;
 
     _isContextTag = BacnetCoder::isContextTag(_actualTagPtr);
     _tagNum = (*_actualTagPtr & TAG_FIELD_MASK) >> 4;
 
-    if (BacnetCoder::ExtendedTagNumber == _tagNum) {
-        if (!reduceLeftBytes(1))//the tag is extended - we need another one byte
+    if (AppTags::ExtendedTagNumber == _tagNum) {
+        if (!reduceBytesLeft(1))//the tag is extended - we need another one byte
             return 0;
         Q_ASSERT(_isContextTag);
         _tagNum = *(_actualTagPtr + 1);
@@ -92,14 +145,14 @@ quint8 BacnetTagParser::decodeDataLengthHelper(quint8 skipExtendedTagFields)
     } else {
         _valueLength = (*_actualTagPtr) & LENGTH_FIELD_MASK;
         if (EXT_LENGTH_VALUE == _valueLength) {//if is equal to B'101', then the length is larger than 4
-            if (!reduceLeftBytes(1))//we need one additional byte for length
+            if (!reduceBytesLeft(1))//we need one additional byte for length
                 return 0;
             quint8 *extLengthPtr = _actualTagPtr + skipExtendedTagFields + 1;
             if (*extLengthPtr < 254) {//if less, then the length is within 5-253
                 _valueLength = *extLengthPtr;
                 return 1;
             } else if (254 == *extLengthPtr) {//the length takes 16bits
-                if (!reduceLeftBytes(2))//we need two additional bytes
+                if (!reduceBytesLeft(2))//we need two additional bytes
                     return 0;
                 quint16 tempLenght;
                 quint8 ret = HelperCoder::uint16FromRaw(extLengthPtr + 1, &tempLenght);
@@ -107,7 +160,7 @@ quint8 BacnetTagParser::decodeDataLengthHelper(quint8 skipExtendedTagFields)
                 Q_ASSERT(ret > 0);
                 return ret;
             } else {//it takes 32 bits
-                if (!reduceLeftBytes(4))//we need four additional bytes
+                if (!reduceBytesLeft(4))//we need four additional bytes
                     return 0;
                 quint8 ret = HelperCoder::uint32FromRaw(extLengthPtr + 1, &_valueLength);
                 Q_ASSERT(ret > 0);
@@ -125,7 +178,7 @@ quint8 BacnetTagParser::decodeDataLengthHelper(quint8 skipExtendedTagFields)
 QByteArray BacnetTagParser::toByteArray(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     QByteArray ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::OctetString)) {
+    if (checkCorrectAppOrCtxTagHelper(AppTags::OctetString)) {
         if (ok) *ok = true;
         //! \todo maybe we should use QByteArray::setRawData() instead of fromRawData - no copying will occure.
         ret = QByteArray::fromRawData((const char*)_valuePtr, _valueLength);
@@ -141,7 +194,7 @@ QBitArray BacnetTagParser::toBitArray(bool *ok)
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(_valueLength >= 2);//has to have the free bits number field and at least one bits-field
     QBitArray ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::BitString) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::BitString) &&
             valueLengthLessThanEqHelper(2)) {
         if (ok) *ok = true;
         quint16 numOfBits = 8*(_valueLength-1) - *_valuePtr;
@@ -161,7 +214,7 @@ QString BacnetTagParser::toString(bool *ok)
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(_valueLength >= 2);//at least lenght and one string byte has to be encoded
     QString ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::CharacterString) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::CharacterString) &&
         valueLenthGreaterThanEqHelper(2)) {
         BacnetCoder::CharacterSet encoding = (BacnetCoder::CharacterSet)*_valuePtr;
         if (ok) *ok = true;
@@ -245,7 +298,7 @@ void BacnetTagParser::copyData()
 bool BacnetTagParser::toBoolean(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(1 == _valueLength);
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::Boolean) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::Boolean) &&
         checkCorrectLengthHelper(1)) {
         if (ok) *ok = true;
         return (bool)(*_valuePtr & 0x01);
@@ -258,7 +311,7 @@ quint32 BacnetTagParser::toUInt(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(_valueLength <= 4);
     quint32 ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::UnsignedInteger) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::UnsignedInteger) &&
         valueLengthLessThanEqHelper(4)) {
         if (ok) *ok = true;
         HelperCoder::uint32fromVarLengthRaw(_valuePtr, &ret, _valueLength);
@@ -273,7 +326,7 @@ qint32 BacnetTagParser::toInt(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(_valueLength <= 4);
     qint32 ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::SignedInteger) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::SignedInteger) &&
         valueLengthLessThanEqHelper(4)) {
         if (ok) *ok = true;
         HelperCoder::sint32fromVarLengthRaw(_valuePtr, &ret, _valueLength);
@@ -288,7 +341,7 @@ quint32 BacnetTagParser::toEumerated(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(_valueLength <= 4);
     quint32 ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::Enumerated) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::Enumerated) &&
         valueLengthLessThanEqHelper(4)) {
         if (ok) *ok = true;
         HelperCoder::uint32fromVarLengthRaw(_valuePtr, &ret, _valueLength);
@@ -304,7 +357,7 @@ float BacnetTagParser::toFloat(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
     float ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::Real) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::Real) &&
         checkCorrectLengthHelper(4)) {
         if (ok) *ok = true;
         HelperCoder::floatFromRaw(_valuePtr, &ret);
@@ -319,7 +372,7 @@ double BacnetTagParser::toDouble(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(8 == _valueLength);
     double ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::Double) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::Double) &&
         checkCorrectLengthHelper(8)) {
         if (ok) *ok = true;
         HelperCoder::doubleFromRaw(_valuePtr, &ret);
@@ -335,7 +388,7 @@ QDate BacnetTagParser::toDate(bool *ok)
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
     QDate ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::Date) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::Date) &&
         checkCorrectLengthHelper(4)) {
         if (ok) *ok = true;
         quint16 year = *_valuePtr + 1900;
@@ -357,7 +410,7 @@ QTime BacnetTagParser::toTime(bool *ok)
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
     QTime ret;
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::Time) &&
+    if (checkCorrectAppOrCtxTagHelper(AppTags::Time) &&
         checkCorrectLengthHelper(4)) {
         if (ok) *ok = true;
         quint8 hour = *_valuePtr;
@@ -373,21 +426,19 @@ QTime BacnetTagParser::toTime(bool *ok)
     return ret;
 }
 
-Bacnet::ObjectId BacnetTagParser::toObjectId(bool *ok)
+Bacnet::ObjectIdStruct BacnetTagParser::toObjectId(bool *ok)
 {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
     //here we return by value, maybe should change it?
-    Bacnet::ObjectId ret = {Bacnet::ObjectTypeUndefined, 0};
-    if (checkCorrectAppOrCtxTagHelper(BacnetCoder::BacnetObjectIdentifier) &&
+    Bacnet::ObjectIdStruct ret = {BacnetObjectType::Undefined, 0};
+    if (checkCorrectAppOrCtxTagHelper(AppTags::BacnetObjectIdentifier) &&
         checkCorrectLengthHelper(4)) {
-        quint16 objType = *(quint16*)_valuePtr;
+        quint32 objType = *(quint32*)_valuePtr;
         objType = qFromBigEndian(objType);
-        objType >>= 6;//get rid of the part from the instance number
-        quint32 instNum = qFromBigEndian(*(quint32*)_valuePtr);
-        instNum &= 0x3fffff;//get rid of the part of object type
-        ret.objectType = (Bacnet::ObjectType)objType;
-        ret.instanceNum = instNum;
+        ret.instanceNum = objType & 0x3fffff;//get rid of the part of object type
+        objType >>= 22;//get rid of the part from the instance number
+        ret.objectType = (BacnetObjectType::ObjectType)objType;
         if (ok) *ok = true;
         return ret;
     }
@@ -426,7 +477,7 @@ bool BacnetTagParser::valueLengthLessThanEqHelper(quint8 maxEqLength)
     return false;
 }
 
-bool BacnetTagParser::checkCorrectAppOrCtxTagHelper(BacnetCoder::BacnetTags dataType)
+bool BacnetTagParser::checkCorrectAppOrCtxTagHelper(AppTags::BacnetTags dataType)
 {
     if (_isContextTag || (tagNumber() == dataType)) {
         return true;
@@ -441,6 +492,45 @@ quint16 BacnetTagParser::valueLength()
     return _valueLength;
 }
 
+
+#include "bacnetdefaultobject.h"
+qint16 BacnetTagParser::parseStructuredData(BacnetTagParser &bParser,
+                                            BacnetObjectType::ObjectType objType, BacnetProperty::Identifier propId, quint32 arrayIndex,
+                                            quint8 tagToParse, Bacnet::BacnetDataInterface **resultData)
+{
+    Q_CHECK_PTR(resultData);//pointer pointer can't be zero
+    Q_ASSERT_X(0 == *resultData, "BacnetTagParser::parseStructuredData()", "Don't pass me data in resultData pointer. This is the output!");
+    qint16 total(0);
+    qint16 ret(0);
+
+
+    *resultData = BacnetDefaultObject::createDataForType(objType, propId, arrayIndex);
+    Q_CHECK_PTR(*resultData);
+    if (0 == (*resultData)) {
+        //unknown tag, can't create
+        Q_ASSERT_X(false, "BacnetWritePropertyService::fromRaw()", "Run out of memory or not supported object type!");
+        return -2;
+    }
+
+    if ((*resultData)->typeId() <= DataType::BACnetObjectIdentifier) {//this is a simple data, wrapped into the opening and closing tag
+        ret = bParser.parseNext();
+        if ( (ret < 0) || !bParser.isOpeningTag(tagToParse))
+            return -1;
+        total += ret;
+        ret = (*resultData)->fromRaw(bParser);
+        if (ret < 0)
+            return -1;
+        total += ret;
+        ret = bParser.parseNext();
+        if ( (ret < 0) || !bParser.isClosingTag(tagToParse))
+            return -1;
+        total += ret;
+        return total;
+    }
+
+    return (*resultData)->fromRaw(bParser, tagToParse);
+}
+
 //Application data parsing checker!
 //#define TEST_CONVERSIONS
 #ifdef TEST_CONVERSIONS
@@ -451,7 +541,7 @@ int main(int argc, char *argv[])
     BacnetTagParser bsp(dataNull, 1);
     Q_ASSERT(bsp.parseNext() == 1);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Null);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Null);
 
     bool convOk;
 
@@ -461,7 +551,7 @@ int main(int argc, char *argv[])
     Q_ASSERT(bsp.parseNext() == 1);
     Q_ASSERT(bsp.isContextTag() == false);
     Q_ASSERT(bsp.valueLength() == 1);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Boolean);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Boolean);
     Q_ASSERT(bsp.toBoolean(&convOk) == false);
     Q_ASSERT(convOk);
 
@@ -481,13 +571,13 @@ int main(int argc, char *argv[])
     Q_ASSERT(bsp.parseNext() == 1);//application boolean
     Q_ASSERT(bsp.isContextTag() == false);
     Q_ASSERT(bsp.valueLength() == 1);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Boolean);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Boolean);
     Q_ASSERT(bsp.toBoolean(&convOk) == false);
     Q_ASSERT(convOk);
     Q_ASSERT(bsp.parseNext() == 2);
     //check Unsigned Int context tag
     Q_ASSERT(bsp.isContextTag() == true);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+    Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
     Q_ASSERT(bsp.toBoolean(&convOk) == true);
     Q_ASSERT(convOk);
 
@@ -496,7 +586,7 @@ int main(int argc, char *argv[])
     bsp.setData(dataSigned, sizeof dataSigned);
     Q_ASSERT(bsp.parseNext() == sizeof dataSigned);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::SignedInteger);
+    Q_ASSERT(bsp.tagNumber() == AppTags::SignedInteger);
     Q_ASSERT(bsp.toInt(&convOk) == 72);
     Q_ASSERT(convOk);
 
@@ -505,7 +595,7 @@ int main(int argc, char *argv[])
     bsp.setData(dataReal, sizeof dataReal);
     Q_ASSERT(bsp.parseNext() == sizeof dataReal);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Real);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Real);
     Q_ASSERT( (bsp.toFloat(&convOk) - 72.0) < 0.01 );
     Q_ASSERT(convOk);
 
@@ -514,7 +604,7 @@ int main(int argc, char *argv[])
     bsp.setData(dataDouble, sizeof dataDouble);
     Q_ASSERT(bsp.parseNext() == sizeof dataDouble);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Double);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Double);
     Q_ASSERT( (bsp.toDouble(&convOk) - 72.0) < 0x0001 );
     Q_ASSERT(convOk);
 
@@ -523,7 +613,7 @@ int main(int argc, char *argv[])
     bsp.setData(dataOctetStr, sizeof dataOctetStr);
     Q_ASSERT(bsp.parseNext() == sizeof dataOctetStr);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::OctetString);
+    Q_ASSERT(bsp.tagNumber() == AppTags::OctetString);
     QByteArray octetRes = bsp.toByteArray(&convOk);
     Q_ASSERT(convOk);
     qDebug()<<"Got octet string"<<octetRes.toHex();
@@ -534,7 +624,7 @@ int main(int argc, char *argv[])
     bsp.setData(ansiString, sizeof ansiString);
     Q_ASSERT(bsp.parseNext() == sizeof ansiString);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::CharacterString);
+    Q_ASSERT(bsp.tagNumber() == AppTags::CharacterString);
     qDebug()<<"ANSI"<<bsp.toString(&convOk);
     Q_ASSERT(convOk);
 
@@ -545,7 +635,7 @@ int main(int argc, char *argv[])
     bsp.setData((quint8*)dbcsString, sizeof dbcsString);
     Q_ASSERT(bsp.parseNext() == sizeof dbcsString);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::CharacterString);
+    Q_ASSERT(bsp.tagNumber() == AppTags::CharacterString);
     qDebug()<<"Got from dbcs"<<bsp.toString(&convOk);
     Q_ASSERT(!convOk);//we know it's unsupported
 
@@ -562,7 +652,7 @@ int main(int argc, char *argv[])
     qDebug()<<"Got from ucs2"<<bsp.toString(&convOk);
     Q_ASSERT(convOk);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::CharacterString);
+    Q_ASSERT(bsp.tagNumber() == AppTags::CharacterString);
 
     //UCS2 is UTF16
     //UCS4 is UTF32
@@ -573,7 +663,7 @@ int main(int argc, char *argv[])
     bsp.setData(bitString, sizeof bitString);
     Q_ASSERT(bsp.parseNext() == sizeof bitString);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::BitString);
+    Q_ASSERT(bsp.tagNumber() == AppTags::BitString);
     QBitArray bArray = bsp.toBitArray(&convOk);
     Q_ASSERT(convOk);
     qDebug()<<"Resulting bit array"<<bArray<<bArray[4];
@@ -583,7 +673,7 @@ int main(int argc, char *argv[])
     bsp.setData(enumData, sizeof enumData);
     Q_ASSERT(bsp.parseNext() == sizeof enumData);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Enumerated);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Enumerated);
     Q_ASSERT(bsp.toEumerated(&convOk) == 0x00);
     Q_ASSERT(convOk);
 
@@ -592,7 +682,7 @@ int main(int argc, char *argv[])
     bsp.setData(dateData, sizeof dateData);
     Q_ASSERT(bsp.parseNext() == sizeof dateData);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Date);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Date);
     qDebug()<<"Date: "<<bsp.toDate(&convOk);
     Q_ASSERT(convOk);
 
@@ -601,7 +691,7 @@ int main(int argc, char *argv[])
     bsp.setData(timeDatap, sizeof timeDatap);
     Q_ASSERT(bsp.parseNext() == sizeof timeDatap);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::Time);
+    Q_ASSERT(bsp.tagNumber() == AppTags::Time);
     qDebug()<<"Time"<<bsp.toTime(&convOk);
     Q_ASSERT(convOk);
 
@@ -610,10 +700,10 @@ int main(int argc, char *argv[])
     bsp.setData(objIdData, sizeof objIdData);
     Q_ASSERT(bsp.parseNext() == sizeof objIdData);
     Q_ASSERT(bsp.isContextTag() == false);
-    Q_ASSERT(bsp.tagNumber() == BacnetCoder::BacnetObjectIdentifier);
-    BacnetCommon::ObjectId objId = bsp.toObjectId(&convOk);
+    Q_ASSERT(bsp.tagNumber() == AppTags::BacnetObjectIdentifier);
+    Bacnet::ObjectIdStruct objId = bsp.toObjectId(&convOk);
     Q_ASSERT(convOk);
-    Q_ASSERT(BacnetCommon::ObjectTypeBinaryInput == objId.objectType);
+    Q_ASSERT(BacnetObjectType::BinaryInput == objId.objectType);
     Q_ASSERT(15 == objId.instanceNum);
     qDebug()<<"Object type returned"<<objId.instanceNum<<objId.objectType;
 
@@ -725,7 +815,7 @@ int main(int argc, char *argv[])
         Q_ASSERT(bsp.parseNext() == sizeof enumCtx);
         Q_ASSERT(bsp.isContextTag() == true);
         Q_ASSERT(bsp.tagNumber() == 9);
-        Q_ASSERT(bsp.toEumerated(&convOk) == BacnetCommon::ObjectTypeAnalogInput);
+        Q_ASSERT(bsp.toEumerated(&convOk) == BacnetObjectType::AnalogInput);
         Q_ASSERT(convOk);
     }
 
@@ -760,9 +850,9 @@ int main(int argc, char *argv[])
         Q_ASSERT(bsp.parseNext() == sizeof identifierCtx);
         Q_ASSERT(bsp.isContextTag() == true);
         Q_ASSERT(bsp.tagNumber() == 4);
-        BacnetCommon::ObjectId identifier = bsp.toObjectId(&convOk);
+        Bacnet::ObjectIdStruct identifier = bsp.toObjectId(&convOk);
         Q_ASSERT(convOk);
-        Q_ASSERT(identifier.instanceNum == 15 && identifier.objectType == BacnetCommon::ObjectTypeBinaryInput);
+        Q_ASSERT(identifier.instanceNum == 15 && identifier.objectType == BacnetObjectType::BinaryInput);
     }
 
     //Application SEQUENCE
@@ -779,11 +869,11 @@ int main(int argc, char *argv[])
                             0x11, 0x23, 0x2D, 0x11};
         bsp.setData(seq1Ctx, sizeof seq1Ctx);
         Q_ASSERT(bsp.parseNext() == 5);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::Date);
+        Q_ASSERT(bsp.tagNumber() == AppTags::Date);
         qDebug()<<"Seq 1"<<bsp.toDate(&convOk);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 5);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::Time);
+        Q_ASSERT(bsp.tagNumber() == AppTags::Time);
         qDebug()<<"Seq 2"<<bsp.toTime(&convOk);
         Q_ASSERT(convOk);
     }
@@ -802,11 +892,11 @@ int main(int argc, char *argv[])
         Q_ASSERT(bsp.isOpeningTag());
         Q_ASSERT(bsp.tagNumber() == 0);
         Q_ASSERT(bsp.parseNext() == 5);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::Date);
+        Q_ASSERT(bsp.tagNumber() == AppTags::Date);
         //        qDebug()<<"seq 3"<<bsp.toDate(&convOk);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 5);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::Time);
+        Q_ASSERT(bsp.tagNumber() == AppTags::Time);
         //        qDebug()<<"Seq 4"<<bsp.toTime(&convOk);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 1);
@@ -821,11 +911,11 @@ int main(int argc, char *argv[])
                             0x11, 0x23, 0x2D, 0x11};
         bsp.setData(seq1Ctx, sizeof seq1Ctx);
         Q_ASSERT(bsp.parseNext() == 5);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::Date);
+        Q_ASSERT(bsp.tagNumber() == AppTags::Date);
         //        qDebug()<<"Seq 1"<<bsp.toDate(&convOk);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 5);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::Time);
+        Q_ASSERT(bsp.tagNumber() == AppTags::Time);
         //        qDebug()<<"Seq 2"<<bsp.toTime(&convOk);
         Q_ASSERT(convOk);
     }
@@ -838,17 +928,17 @@ int main(int argc, char *argv[])
         bsp.setData(seq3App, sizeof seq3App);
         Q_ASSERT(bsp.parseNext() == 2);
         Q_ASSERT(bsp.isContextTag() == false);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+        Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
         Q_ASSERT(bsp.toUInt(&convOk) == 1);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 2);
         Q_ASSERT(bsp.isContextTag() == false);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+        Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
         Q_ASSERT(bsp.toUInt(&convOk) == 2);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 2);
         Q_ASSERT(bsp.isContextTag() == false);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+        Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
         Q_ASSERT(bsp.toUInt(&convOk) == 4);
         Q_ASSERT(convOk);
     }
@@ -868,17 +958,17 @@ int main(int argc, char *argv[])
         Q_ASSERT(bsp.isClosingTag() == false);
         Q_ASSERT(bsp.parseNext() == 2);
         Q_ASSERT(bsp.isContextTag() == false);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+        Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
         Q_ASSERT(bsp.toUInt(&convOk) == 1);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 2);
         Q_ASSERT(bsp.isContextTag() == false);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+        Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
         Q_ASSERT(bsp.toUInt(&convOk) == 2);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 2);
         Q_ASSERT(bsp.isContextTag() == false);
-        Q_ASSERT(bsp.tagNumber() == BacnetCoder::UnsignedInteger);
+        Q_ASSERT(bsp.tagNumber() == AppTags::UnsignedInteger);
         Q_ASSERT(bsp.toUInt(&convOk) == 4);
         Q_ASSERT(convOk);
         Q_ASSERT(bsp.parseNext() == 1);
@@ -901,22 +991,22 @@ int main(int argc, char *argv[])
         bsp.setData(seq4CConstr, sizeof seq4CConstr);
         {//first ocnstructed data
             Q_ASSERT(bsp.parseNext() == 5);
-            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == BacnetCoder::Date);
+            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == AppTags::Date);
             Q_ASSERT(bsp.toDate(&convOk) == QDate(1991, 1, 24));
             Q_ASSERT(convOk);
             Q_ASSERT(bsp.parseNext() == 5);
-            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == BacnetCoder::Time);
+            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == AppTags::Time);
             Q_ASSERT(bsp.toTime(&convOk) == QTime(17, 00, 0, 0));
             Q_ASSERT(convOk);
 
         }
         {//second ocnstructed data
             Q_ASSERT(bsp.parseNext() == 5);
-            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == BacnetCoder::Date);
+            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == AppTags::Date);
             Q_ASSERT(bsp.toDate(&convOk) == QDate(1991, 1, 24));
             Q_ASSERT(convOk);
             Q_ASSERT(bsp.parseNext() == 5);
-            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == BacnetCoder::Time);
+            Q_ASSERT(!bsp.isContextTag() && bsp.tagNumber() == AppTags::Time);
             Q_ASSERT(bsp.toTime(&convOk) == QTime(18, 45, 0, 0));
             Q_ASSERT(convOk);
         }
@@ -932,6 +1022,7 @@ int main(int argc, char *argv[])
         Q_ASSERT(bsp.toTime(&convOk) == QTime(17, 35, 45, 170));
         Q_ASSERT(convOk);
     }
+
 
 
 return 0;

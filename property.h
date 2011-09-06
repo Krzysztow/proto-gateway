@@ -32,6 +32,12 @@ public:
       */
     virtual int getValue(QVariant *outValue) = 0;
 
+    /**
+      Should be used only then, when we know that property has the newest/vaild value. Most probably
+      it should be used by PropertyOwner when the asynch action is finished.
+      */
+    virtual int getValueInstant(QVariant *outValue) = 0;
+
     /** Is meant to be used in order to set the value of the property.
       \param settingObserver is passed so that when value is changed, it is not infomred back.
       */
@@ -61,6 +67,9 @@ public:
 
     //! Gets the value without any further checks. Always returns Property::Ready.
     virtual int getValue(QVariant *outValue);
+
+    //! In this case does the same as PropertySubject::getValue() one.
+    virtual int getValueInstant(QVariant *outValue);
 
     /** This function is going to be called by the owner, when the asynchronous response to the previous
         get request is received.
@@ -130,6 +139,12 @@ public://functions that override Property virtuals
     virtual void setOwner(PropertyOwner *owner);
     virtual PropertyOwner *owner();
 
+    /**
+      Should be used only then, when we know that property has the newest/vaild value. Most probably
+      it should be used by PropertyOwner when the asynch action is finished.
+      */
+    int getValueInstant(QVariant *outValue);
+
 public://hooks for PropertyObserver descendants
     /** This is a hook function, that is called whenever value of the property is being changed.
       */
@@ -138,11 +153,6 @@ public://hooks for PropertyObserver descendants
 public://functions from PropertyObserver itself
     PropertyObserver(PropertyOwner *container, PropertySubject *property);
     virtual ~PropertyObserver();
-    /**
-      Should be used only then, when we know that property has the newest/vaild value. Most probably
-      it should be used by PropertyOwner when the asynch action is finished.
-      */
-    int getValueInstant(QVariant *outValue);
 
     //! Property::type() implamented
     QVariant::Type type();

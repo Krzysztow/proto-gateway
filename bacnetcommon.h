@@ -7,80 +7,44 @@
 /**
   This header is meant to provide some common data for all BACnet classes within the project.
   */
-namespace Bacnet
-{
-    enum BacnetAddressSize {
-        //this is a size of the address being concatenation of IPv4 address and port number
-        BacnetBipAddrSize = 6
-                        };
 
-    /* From Clause 6 of BACnet specification, we get limitations to the NPDU size for a layer */
-    enum BacnetFrameSize {
-        //as specified in standard
-        NpduMaxSize = 1497,
-        //maximum header size is a sum of all optional and must-be fields
-        NpduMaxHeaderSize = 1 /*version*/ + 1/*NPCI*/ + 2/*DNET*/ + 1/*DLEN*/ +
-                            BacnetBipAddrSize + 2 /*SNET*/ + 1 /*SLEN*/ +
-                            BacnetBipAddrSize + 1 /*hop count*/ + 1 /*msg type*/ +
-                            2 /*vendorId*/,
-                            BvllMaxHeaderSize = 1 /*microprotocol*/ + 1 /*code*/ + 2 /*lengt*/,
-                            //to be on the safe side, subtract maximum NpduHeaderSize
-                            ApduMaxSize = NpduMaxSize - NpduMaxHeaderSize,
-                            //plus microprotocol, function code and length fields (other BVLC services won't use that much)
-                            BvllMaxSize = NpduMaxSize + BvllMaxHeaderSize
-                                      };
-
+namespace BacnetObjectType {
     enum ObjectType {
-        ObjectTypeAccumulator 	= 23,
-        ObjectTypeAnalogInput 	= 0,
-        ObjectTypeAnalogOutput 	= 1,
-        ObjectTypeAnalogValue 	= 2,
-        ObjectTypeAveraging 	= 18,
-        ObjectTypeBinaryInput 	= 3,
-        ObjectTypeBinaryOutput 	= 4,
-        ObjectTypeBinaryValue 	= 5,
-        ObjectTypeCalendar 	= 6,
-        ObjectTypeCommand 	= 7,
-        ObjectTypeDevice 	= 8,
-        ObjectTypeEventEnrollment 	= 9,
-        ObjectTypeFile 	= 10,
-        ObjectTypeGroup 	= 11,
-        ObjectTypeLifeSafetyPoint 	= 21,
-        ObjectTypeLifeSafetyZone 	= 22,
-        ObjectTypeLoop 	= 12,
-        ObjectTypeMultiStateInput 	= 13,
-        ObjectTypeMultiStateOutput 	= 14,
-        ObjectTypeMultiStateValue 	= 19,
-        ObjectTypeNotificationClass 	= 15,
-        ObjectTypeProgram 	= 16,
-        ObjectTypePulseConverter 	= 24,
-        ObjectTypeSchedule 	= 17,
+        Accumulator 	= 23,
+        AnalogInput 	= 0,
+        AnalogOutput 	= 1,
+        AnalogValue 	= 2,
+        Averaging 	= 18,
+        BinaryInput 	= 3,
+        BinaryOutput 	= 4,
+        BinaryValue 	= 5,
+        Calendar 	= 6,
+        Command 	= 7,
+        Device 	= 8,
+        EventEnrollment 	= 9,
+        File 	= 10,
+        Group 	= 11,
+        LifeSafetyPoint 	= 21,
+        LifeSafetyZone 	= 22,
+        Loop 	= 12,
+        MultiStateInput 	= 13,
+        MultiStateOutput 	= 14,
+        MultiStateValue 	= 19,
+        NotificationClass 	= 15,
+        Program 	= 16,
+        PulseConverter 	= 24,
+        Schedule 	= 17,
         // see averaging 	= 18,
         // see multiStateValue 	= 19,
-        ObjectTypeTrendLog 	= 20,
+        TrendLog 	= 20,
         // see lifeSafetyPoint 	= 21,
         // see lifeSafetyZone 	= 22,
         // see accumulator 	= 23,
         // see pulseConverter 	= 24
-        ObjectTypeUndefined = 255//not defiend by standard, but we have space for it - only 10 bits are used
-                          };
-
-    struct ObjectId {
-        ObjectType objectType;
-        quint32 instanceNum;
-    };
-
-    struct WriteAccessSpecificationStruct {
-
-    };
-
-    enum NetworkPriority {
-        PriorityNormal      = 0x00,
-        PriorityUrgent      = 0x01,
-        PriorityCritical    = 0x10,
-        PriorityLifeSafety  = 0x11
-                          };
-};
+        MaximumEnumType = PulseConverter,
+        Undefined = 255//not defiend by standard, but we have space for it - only 10 bits are used
+                };
+}
 
 namespace BacnetAbort {
     enum AbortReason {
@@ -186,55 +150,6 @@ namespace BacnetError {
         CodeNoError
     };
 
-}
-
-namespace BacnetConfirmedService
-{
-    enum BacnetConfirmedServiceRequest {
-        // Alarm and Event Services
-        AcknowledgeAlarm                = 0,
-        ConfirmedCOVNotification 	= 1,    //this will be supported
-        ConfirmedEventNotification 	= 2,
-        GetAlarmSummary                 = 3,
-        GetEnrollmentSummary            = 4,
-        GetEventInformation             = 29,
-        SubscribeCOV                    = 5,    //this will be supported
-        SubscribeCOVProperty            = 28,   //this maybe will be supported
-        LifeSafetyOperation             = 27,
-        // File Access Services
-        AtomicReadFile                  = 6,
-        AtomicWriteFile                 = 7,
-        // Object Access Services
-        AddListElement                  = 8,
-        RemoveListElement               = 9,
-        CreateObject                    = 10,
-        DeleteObject                    = 11,
-        ReadProperty                    = 12,   //this will be supported
-        ReadPropertyConditional 	= 13,
-        ReadPropertyMultiple            = 14,   //this maybe will be suppoted
-        ReadRange                       = 26,
-        WriteProperty                   = 15,   //this will be supported
-        WritePropertyMultiple           = 16,   //this maybe will be supported
-        // Remote Device Management Services
-        DeviceCommunicationControl 	= 17,
-        ConfirmedPrivateTransfer 	= 18,
-        ConfirmedTextMessage            = 19,
-        ReinitializeDevice              = 20,
-        // Virtual Terminal Services
-        VtOpen                          = 21,
-        VtClose                         = 22,
-        VtData                          = 23,
-        // Security Services
-        Authenticate                    = 24,
-        RequestKey                      = 25,
-        // Services added after 1995
-        // readRange 	= 26 see Object Access Services
-        // lifeSafetyOperation 	= 27 see Alarm and Event Services
-        // subscribeCOVProperty 	= 28 see Alarm and Event Services
-        // getEventInformation 	= 29 see Alarm and Event Services
-    };
-
-    typedef BacnetConfirmedServiceRequest BacnetConfirmedServiceChoice;
 }
 
 namespace BacnetProperty
@@ -503,6 +418,194 @@ namespace BacnetProperty
                                                           // see valueSet                            	= 191,
                                                           // see valueChangeTime                    	= 192,
                                                       };
+}
+
+namespace Bacnet
+{
+    enum BacnetAddressSize {
+        //this is a size of the address being concatenation of IPv4 address and port number
+        BacnetBipAddrSize = 6
+                        };
+
+    /* From Clause 6 of BACnet specification, we get limitations to the NPDU size for a layer */
+    enum BacnetFrameSize {
+        //as specified in standard
+        NpduMaxSize = 1497,
+        //maximum header size is a sum of all optional and must-be fields
+        NpduMaxHeaderSize = 1 /*version*/ + 1/*NPCI*/ + 2/*DNET*/ + 1/*DLEN*/ +
+                            BacnetBipAddrSize + 2 /*SNET*/ + 1 /*SLEN*/ +
+                            BacnetBipAddrSize + 1 /*hop count*/ + 1 /*msg type*/ +
+                            2 /*vendorId*/,
+                            BvllMaxHeaderSize = 1 /*microprotocol*/ + 1 /*code*/ + 2 /*lengt*/,
+                            //to be on the safe side, subtract maximum NpduHeaderSize
+                            ApduMaxSize = NpduMaxSize - NpduMaxHeaderSize,
+                            //plus microprotocol, function code and length fields (other BVLC services won't use that much)
+                            BvllMaxSize = NpduMaxSize + BvllMaxHeaderSize
+                                      };
+
+    struct ObjectIdStruct {
+        BacnetObjectType::ObjectType objectType;
+        quint32 instanceNum;
+    };
+
+    struct ReadPropertyStruct {
+        Bacnet::ObjectIdStruct objId;
+        BacnetProperty::Identifier propertyId;
+        quint32 arrayIndex;
+    };
+
+    struct ErrorStruct {
+        BacnetError::ErrorClass errorClass;
+        BacnetError::ErrorCode errorCode;
+    };
+
+    enum {
+        ArrayIndexNotPresent = 0xffffffff
+                           };
+
+    struct WriteAccessSpecificationStruct {
+
+    };
+
+    class BacnetDataInterface;
+    struct PropertyValueStruct {
+        BacnetProperty::Identifier propertyId;
+        quint32 arrayIndex;
+
+        BacnetDataInterface *value;
+        quint8 priority;
+    };
+
+    enum NetworkPriority {
+        PriorityNormal      = 0x00,
+        PriorityUrgent      = 0x01,
+        PriorityCritical    = 0x10,
+        PriorityLifeSafety  = 0x11
+                          };
+
+
+};
+
+namespace BacnetServices
+{
+    enum BacnetConfirmedServiceRequest {
+        // Alarm and Event Services
+        AcknowledgeAlarm                = 0,
+        ConfirmedCOVNotification 	= 1,    //this will be supported
+        ConfirmedEventNotification 	= 2,
+        GetAlarmSummary                 = 3,
+        GetEnrollmentSummary            = 4,
+        GetEventInformation             = 29,
+        SubscribeCOV                    = 5,    //this will be supported
+        SubscribeCOVProperty            = 28,   //this maybe will be supported
+        LifeSafetyOperation             = 27,
+        // File Access Services
+        AtomicReadFile                  = 6,
+        AtomicWriteFile                 = 7,
+        // Object Access Services
+        AddListElement                  = 8,
+        RemoveListElement               = 9,
+        CreateObject                    = 10,
+        DeleteObject                    = 11,
+        ReadProperty                    = 12,   //this will be supported
+        ReadPropertyConditional 	= 13,
+        ReadPropertyMultiple            = 14,   //this maybe will be suppoted
+        ReadRange                       = 26,
+        WriteProperty                   = 15,   //this will be supported
+        WritePropertyMultiple           = 16,   //this maybe will be supported
+        // Remote Device Management Services
+        DeviceCommunicationControl 	= 17,
+        ConfirmedPrivateTransfer 	= 18,
+        ConfirmedTextMessage            = 19,
+        ReinitializeDevice              = 20,
+        // Virtual Terminal Services
+        VtOpen                          = 21,
+        VtClose                         = 22,
+        VtData                          = 23,
+        // Security Services
+        Authenticate                    = 24,
+        RequestKey                      = 25,
+        // Services added after 1995
+        // readRange 	= 26 see Object Access Services
+        // lifeSafetyOperation 	= 27 see Alarm and Event Services
+        // subscribeCOVProperty 	= 28 see Alarm and Event Services
+        // getEventInformation 	= 29 see Alarm and Event Services
+    };
+
+    typedef BacnetConfirmedServiceRequest BacnetConfirmedServiceChoice;
+}
+
+namespace Bacnet {
+    namespace AppTags {
+        enum BacnetTags {
+            InvalidTag      = -1,
+
+            Null            = 0x00,
+            Boolean         = 0x01,
+            UnsignedInteger = 0x02,
+            SignedInteger   = 0x03,
+            Real            = 0x04,
+            Double          = 0x05,
+            OctetString     = 0x06,
+            CharacterString = 0x07,
+            BitString       = 0x08,
+            Enumerated      = 0x09,
+            Date            = 0x0a,
+            Time            = 0x0b,
+            BacnetObjectIdentifier = 0x0c,
+            ASHRAE0         = 0x0d,
+            ASHRAE1         = 0x0e,
+            ASHRAE2         = 0x0f,
+            LastAshraeTag   = ASHRAE2,
+
+            ExtendedTagNumber = 0xff
+                            };
+    }
+}
+
+namespace Bacnet {
+    //this enum should be used only internally. It is not covered by a standard.
+    namespace DataType {
+        enum DataType {
+            //make sure the application tags correspond to their data types!
+            Null            = AppTags::Null,
+            BOOLEAN         = AppTags::Boolean,
+            Unsigned        = AppTags::UnsignedInteger,
+            Signed          = AppTags::SignedInteger,
+            Real            = AppTags::Real,
+            Double          = AppTags::Double,
+            OctetString     = AppTags::OctetString,
+            CharacterString = AppTags::CharacterString,
+            BitString       = AppTags::BitString,
+            Enumerated      = AppTags::Enumerated,
+            Date            = AppTags::Date,
+            Time            = AppTags::Time,
+            BACnetObjectIdentifier = AppTags::BacnetObjectIdentifier,
+
+
+            BACnetObjectType,
+            BACnetDeviceStatus,
+            Unsigned16,
+            BACnetServicesSupported,
+            BACnetObjectTypesSupported,
+            BACnetSegmentation,
+            BACnetVTClass,
+            BACnetVTSession,
+            BACnetSessionKey,
+            BACnetRecipient,
+            BACnetAddressBinding,
+            BACnetTimeStamp,
+            BACnetCOVSubscription,
+            DataTypeBOOLEAN,
+            BACnetArray           = 0x010000,
+            BACnetList            = 0x020000,
+            BACnetSequence        = BACnetArray | BACnetList,
+            BacnetAbstract        = 0x040000,
+            InvalidType     = 0xff0000,
+
+            MaxType = 0xffffff
+                            };
+    }
 }
 
 #endif // BACNETCOMMON_H
