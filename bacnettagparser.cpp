@@ -504,7 +504,7 @@ qint16 BacnetTagParser::parseStructuredData(BacnetTagParser &bParser,
     qint16 ret(0);
 
 
-    *resultData = BacnetDefaultObject::createDataForType(objType, propId, arrayIndex);
+    *resultData = BacnetDefaultObject::createDataForObjectProperty(objType, propId, arrayIndex);
     Q_CHECK_PTR(*resultData);
     if (0 == (*resultData)) {
         //unknown tag, can't create

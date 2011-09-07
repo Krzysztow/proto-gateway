@@ -156,7 +156,7 @@ void DataModel::internalTimeout()
 }
 
 //TEST
-//#define CDM_TEST
+#define CDM_TEST
 #ifndef CDM_TEST
 //int main()
 //{
@@ -192,6 +192,7 @@ struct KElement {
 #include "bacnetprimitivedata.h"
 #include "bacnetpci.h"
 #include "bacnetreadpropertyservice.h"
+#include "analoginputobject.h"
 
 int main(int argc, char *argv[])
 {
@@ -219,20 +220,46 @@ int main(int argc, char *argv[])
     proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 110);
 
 
+    PropertySubject *subject2 = DataModel::instance()->createProperty(3, QVariant::Double);
+    subject2->setValue(test);
+    proto2->addProperty(subject2);
+    PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(3);
+    obs2->setOwner(proto1);
+    BacnetObject *aio = proto1->_device->bacnetObject(BacnetObjectType::AnalogInput << 22 | 1);
+    ((AnalogInputObject*)aio)->_cdmProperties.insert(BacnetProperty::PresentValue, obs2);
+
+
     //READ PROPERTY ENCODED
 
-    quint8 readPropertyService[] = {
-        0x00,
-        0x00,
-        0x01,
-        0x0C,
-        0x0C,
-        0x00, 0x00, 0x00, 0x05,
-        0x19,
-        0x55
-    };
+//    quint8 readPropertyService[] = {
+//        0x00,
+//        0x00,
+//        0x01,
+//        0x0C,
+//        0x0C,
+//        0x00, 0x00, 0x00, 0x05,
+//        0x19,
+//        0x55
+//    };
+//    proto1->getBytes(readPropertyService, sizeof readPropertyService);
 
-    proto1->getBytes(readPropertyService, sizeof readPropertyService);
+
+    quint8 wpService[] = {
+        0x00,
+        0x04,
+        0x59,
+        0x0F,
+
+        0x0c,
+        0x00, 0x00/*0x80*/, 0x00, 0x01,
+        0x19,
+        0x55,
+        0x3e,
+        0x44,
+        0x43, 0x34, 0x00, 0x00,
+        0x3f
+    };
+    proto1->getBytes(wpService, sizeof(wpService));
 
     return a.exec();
 

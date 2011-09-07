@@ -1,6 +1,6 @@
 #include "bacneterrorack.h"
 
-BacnetErrorAck::    BacnetErrorAck(Bacnet::ErrorStruct error):
+BacnetErrorAck::    BacnetErrorAck(Bacnet::Error error):
         _error(error)
 {
 }

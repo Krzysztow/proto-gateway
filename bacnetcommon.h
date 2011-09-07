@@ -454,11 +454,6 @@ namespace Bacnet
         quint32 arrayIndex;
     };
 
-    struct ErrorStruct {
-        BacnetError::ErrorClass errorClass;
-        BacnetError::ErrorCode errorCode;
-    };
-
     enum {
         ArrayIndexNotPresent = 0xffffffff
                            };
@@ -595,6 +590,7 @@ namespace Bacnet {
             BACnetRecipient,
             BACnetAddressBinding,
             BACnetTimeStamp,
+            BACnetDateTime,
             BACnetCOVSubscription,
             DataTypeBOOLEAN,
             BACnetArray           = 0x010000,

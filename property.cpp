@@ -109,7 +109,7 @@ int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *requeste
 
 int PropertySubject::setValueSafe(QVariant &inValue, PropertyObserver *requester)
 {
-    if (inValue.type() != _value.type()) {
+    if (!inValue.canConvert(_value.type())) {
         Q_ASSERT(inValue.type() == _value.type());
         return Property::TypeMismatch;
     }
