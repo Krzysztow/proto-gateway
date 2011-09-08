@@ -41,7 +41,7 @@ int PropertySubject::setValue(QVariant &inValue)
     setValueInstantly(inValue, 0);
     return Property::ResultOk;
 }
-
+#warning "Don't compare types - check if one can convert one to the other!"
 int PropertySubject::getValue(QVariant *outValue)
 {
     if (0 != outValue) {

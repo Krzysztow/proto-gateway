@@ -22,6 +22,7 @@ public:
     virtual bool isReady() {return true;}
     virtual bool hasError() {return false;}
     virtual Bacnet::Error &error() {}
+    virtual qint32 execute(BacnetDeviceObject *device) {return -1;}
 
     virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
 public:

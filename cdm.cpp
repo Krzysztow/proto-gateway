@@ -228,35 +228,35 @@ int main(int argc, char *argv[])
 
     //READ PROPERTY ENCODED
 
-//    quint8 readPropertyService[] = {
-//        0x00,
-//        0x00,
-//        0x01,
-//        0x0C,
-//        0x0C,
-//        0x00, 0x00, 0x00, 0x05,
-//        0x19,
-//        0x55
-//    };
-//    proto1->getBytes(readPropertyService, sizeof readPropertyService);
-
-
-    quint8 wpService[] = {
+    quint8 readPropertyService[] = {
         0x00,
-        0x04,
-        0x59,
-        0x0F,
-
-        0x0c,
-        0x00, 0x00/*0x80*/, 0x00, 0x01,
+        0x00,
+        0x01,
+        0x0C,
+        0x0C,
+        0x00, 0x00, 0x00, 0x05,
         0x19,
-        0x55,
-        0x3e,
-        0x44,
-        0x43, 0x34, 0x00, 0x00,
-        0x3f
+        0x55
     };
-    bHndlr->getBytes(wpService, sizeof(wpService));
+    bHndlr->getBytes(readPropertyService, sizeof readPropertyService);
+
+
+//    quint8 wpService[] = {
+//        0x00,
+//        0x04,
+//        0x59,
+//        0x0F,
+
+//        0x0c,
+//        0x00, 0x00/*0x80*/, 0x00, 0x01,
+//        0x19,
+//        0x55,
+//        0x3e,
+//        0x44,
+//        0x43, 0x34, 0x00, 0x00,
+//        0x3f
+//    };
+//    bHndlr->getBytes(wpService, sizeof(wpService));
 
     return a.exec();
 
