@@ -35,8 +35,8 @@ public:
 class BacnetPciData
 {
 public:
-    virtual qint16 fillRawResponse(quint8 *buffer);
-    virtual quint8 pduType() {return 0;};
+    virtual qint16 toRaw(quint8 *buffer, quint16 length) = 0;
+    virtual quint8 pduType() = 0;
 };
 
 class BacnetConfirmedRequestData:
@@ -47,7 +47,11 @@ public:
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
 
     inline BacnetServices::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
+    inline quint8 invokedId() {return _invokeId;}
+
+public://overridden from BacnetPciData
     virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     bool _segmented;
@@ -78,7 +82,12 @@ class BacnetSimpleAckData:
 {
 public:
     BacnetSimpleAckData() {}
+    BacnetSimpleAckData(quint8 invokeId, quint8 serviceChoice);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     quint8 _invokeId;
@@ -90,7 +99,14 @@ class BacnetComplexAckData:
 {
 public:
     BacnetComplexAckData() {}
+    BacnetComplexAckData(quint8 invokeId, quint8 serviceAckChoice,
+                         quint8 sequenceNumber = 0, quint8 propWindSize = 0,
+                         bool segmented = false, bool moreFollows = false);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     bool _segmented;
@@ -126,7 +142,12 @@ class BacnetErrorData:
 {
 public:
     BacnetErrorData() {}
+    BacnetErrorData(quint8 origInvokeId, quint8 errorChoice);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     quint8 _origInvokeId;

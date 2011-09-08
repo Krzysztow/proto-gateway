@@ -17,14 +17,14 @@ public:
 
     //remove these stupid functions
     virtual BacnetService *getResponse() {return 0;}
-    virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object) {return true;}
+    virtual bool asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object) {return true;}
 
     virtual bool isReady() {return true;}
     virtual bool hasError() {return false;}
-    virtual Bacnet::Error &error() {};
+    virtual Bacnet::Error &error() {}
 
+    virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
 public:
-    qint32 toRaw(quint8 *startPtr, quint16 buffLength);
 
     void setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyStruct &ackReadPrptyData);
 

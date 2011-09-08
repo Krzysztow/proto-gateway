@@ -42,6 +42,46 @@ qint16 BacnetConfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
     return (ptr - dataPtr);
 }
 
+qint16 BacnetConfirmedRequestData::toRaw(quint8 *buffer, quint16 length)
+{
+    if (_segmented) {
+        if (length < 5) {
+            Q_ASSERT(false);
+            return -1;//can't write to buffer
+        }
+    } else {
+        if (length < 3) {
+            Q_ASSERT(false);
+            return -1;
+        }
+    }
+
+    quint8 *actualPtr(buffer);
+    *actualPtr = (0x0f & BacnetPci::TypeConfirmedRequest) << 4;
+    if (_segmented)
+        *actualPtr |= BitFields::Bit3;
+    if (_moreFollows)
+        *actualPtr |= BitFields::Bit2;
+    if (_segmentedRespAccepted)
+        *actualPtr |= BitFields::Bit1;
+    ++actualPtr;
+    Q_ASSERT(_maxSegments <= 0x07);
+    Q_ASSERT(_maxResponses <= 0x0f);
+    *actualPtr = ( (_maxSegments & 0x07) << 4) | ( (_maxResponses & 0xf) );
+    ++actualPtr;
+    *actualPtr = _invokeId;
+    ++actualPtr;
+    if (_segmented) {
+        *actualPtr = _sequenceNum;
+        ++actualPtr;
+        *actualPtr = _propWindowSize;
+        ++actualPtr;
+    }
+    *actualPtr = _serviceChoice;
+    ++actualPtr;
+    return (actualPtr - buffer);
+}
+
 qint16 BacnetUnconfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
 {
     Q_ASSERT(length >= 1);
@@ -54,6 +94,12 @@ qint16 BacnetUnconfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
     ++ptr;
 
     return (ptr - dataPtr);
+}
+
+BacnetSimpleAckData::BacnetSimpleAckData(quint8 invokeId, quint8 serviceChoice):
+        _invokeId(invokeId),
+        _serviceAckChoice(serviceChoice)
+{
 }
 
 qint16 BacnetSimpleAckData::fromRaw(quint8 *dataPtr, quint16 length)
@@ -70,6 +116,41 @@ qint16 BacnetSimpleAckData::fromRaw(quint8 *dataPtr, quint16 length)
     ++ptr;
 
     return (ptr - dataPtr);
+}
+
+quint8 BacnetSimpleAckData::pduType()
+{
+    return BacnetPci::TypeSimpleAck;
+}
+
+qint16 BacnetSimpleAckData::toRaw(quint8 *buffer, quint16 length)
+{
+    if (length < 3) {
+        Q_ASSERT(false);
+        return -1;
+    }
+
+    quint8 *actualPtr(buffer);
+    *actualPtr = ((0x0f & BacnetPci::TypeSimpleAck) << 4);
+    ++actualPtr;
+    *actualPtr = _invokeId;
+    ++actualPtr;
+    *actualPtr = _serviceAckChoice;
+    ++actualPtr;
+    return (actualPtr - buffer);
+}
+
+BacnetComplexAckData::BacnetComplexAckData(quint8 invokeId, quint8 serviceAckChoice,
+                                           quint8 sequenceNumber, quint8 propWindSize,
+                                           bool segmented, bool moreFollows):
+_segmented(segmented),
+_moreFollows(moreFollows),
+_origInvokeId(invokeId),
+_seqNum(sequenceNumber),
+_propWindSize(propWindSize),
+_serviceAckChoice(serviceAckChoice)
+{
+    Q_ASSERT(segmented ? (_propWindSize > 0) : true);
 }
 
 qint16 BacnetComplexAckData::fromRaw(quint8 *dataPtr, quint16 length)
@@ -97,6 +178,43 @@ qint16 BacnetComplexAckData::fromRaw(quint8 *dataPtr, quint16 length)
     ++ptr;
 
     return (ptr - dataPtr);
+}
+
+quint8 BacnetComplexAckData::pduType()
+{
+    return BacnetPci::TypeComplexAck;
+}
+
+qint16 BacnetComplexAckData::toRaw(quint8 *buffer, quint16 length)
+{
+    if (_segmented) {
+        Q_ASSERT(length >= 5);
+        if (length < 5)
+            return -1;
+    } else {
+        Q_ASSERT(length >= 3);
+        if (length < 3)
+            return -1;
+    }
+
+    quint8* actualPtr(buffer);
+    *actualPtr = ( (0x0f & BacnetPci::TypeComplexAck) << 4 );
+    if (_segmented)
+        *actualPtr |= BitFields::Bit3;
+    if (_moreFollows)
+        *actualPtr |= BitFields::Bit2;
+    ++actualPtr;
+    *actualPtr = _origInvokeId;
+    ++actualPtr;
+    if (_segmented) {
+        *actualPtr = _seqNum;
+        ++actualPtr;
+        *actualPtr = _propWindSize;
+        ++actualPtr;
+    }
+    *actualPtr = _serviceAckChoice;
+    ++actualPtr;
+    return (actualPtr - buffer);
 }
 
 qint16 BacnetSegmentedAckData::fromRaw(quint8 *dataPtr, quint16 length)
@@ -165,10 +283,11 @@ qint16 BacnetAbortData::fromRaw(quint8 *dataPtr, quint16 length)
     return (ptr - dataPtr);
 }
 
-qint16 BacnetPciData::fillRawResponse(quint8 *buffer)
+qint16 BacnetPciData::toRaw(quint8 *buffer, quint16 length)
 {
     Q_UNUSED(buffer);
-    return 0;
+    Q_UNUSED(length);
+    return -1;
 }
 
 BacnetPciData *BacnetPci::createPciData(quint8 *pciPtr, quint16 length, qint16 *retCode)
@@ -232,4 +351,33 @@ BacnetPciData *BacnetPci::createPciData(quint8 *pciPtr, quint16 length, qint16 *
 quint8 BacnetConfirmedRequestData::pduType()
 {
     return BacnetPci::TypeConfirmedRequest;
+}
+
+
+BacnetErrorData::BacnetErrorData(quint8 origInvokeId, quint8 errorChoice):
+        _origInvokeId(origInvokeId),
+        _errorChoice(errorChoice)
+{
+}
+
+quint8 BacnetErrorData::pduType()
+{
+    return BacnetPci::TypeError;
+}
+
+qint16 BacnetErrorData::toRaw(quint8 *dataPtr, quint16 length)
+{
+    if (length < 3) {
+        Q_ASSERT(false);
+        return -1;//can't fit in the buffer length
+    }
+
+    quint8 *actualPtr(dataPtr);
+    *actualPtr = ((0x0f & BacnetPci::TypeError) << 4);
+    ++actualPtr;
+    *actualPtr = _origInvokeId;
+    ++actualPtr;
+    *actualPtr = _errorChoice;
+    ++actualPtr;
+    return (actualPtr - dataPtr);
 }

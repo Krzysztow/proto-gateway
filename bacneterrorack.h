@@ -5,6 +5,7 @@
 #include "bacnetcommon.h"
 #include "error.h"
 
+class BacnetDeviceObject;
 class BacnetErrorAck:
         public BacnetService
 {
@@ -14,7 +15,7 @@ public:
 
     //! \warning The response is created only once. Caller takes ownership over the response.
     virtual BacnetService *getResponse() {return 0;}
-    virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object) {return true;}
+    virtual bool asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object) {return true;}
 
     virtual bool isReady() {return true;}
     virtual bool hasError() {return false;}

@@ -193,6 +193,7 @@ struct KElement {
 #include "bacnetpci.h"
 #include "bacnetreadpropertyservice.h"
 #include "analoginputobject.h"
+#include "bacnetdeviceobject.h"
 
 int main(int argc, char *argv[])
 {
@@ -200,34 +201,30 @@ int main(int argc, char *argv[])
 
     DataModel *cdm = DataModel::instance();
 
-    AsynchSetter *proto1 = new AsynchSetter();
+    AsynchSetter *bHndlr = new AsynchSetter();
 
     QVariant test;
     test.setValue((double)72.3);
 
     AsynchOwner *proto2 = new AsynchOwner();
-
     PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Double);
     subject->setValue(test);
+    proto2->addProperty(subject);
+
+    BacnetDeviceObject *device = new BacnetDeviceObject(1);
+    device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
+    device->addInternalProperty(BacnetProperty::PresentValue, obs);
+    bHndlr->addDevice(0, device);
 
-    proto2->addProperty(subject);
-    proto1->addProperty(obs, BacnetProperty::PresentValue);
-
-    subject = DataModel::instance()->createProperty(2, QVariant::Int);
-    proto2->addProperty(subject);
-    proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 112);
-    proto1->addProperty(DataModel::instance()->createPropertyObserver(2), 110);
-
-
-    PropertySubject *subject2 = DataModel::instance()->createProperty(3, QVariant::Double);
+    PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);
     subject2->setValue(test);
     proto2->addProperty(subject2);
-    PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(3);
-    obs2->setOwner(proto1);
-    BacnetObject *aio = proto1->_device->bacnetObject(BacnetObjectType::AnalogInput << 22 | 1);
-    ((AnalogInputObject*)aio)->_cdmProperties.insert(BacnetProperty::PresentValue, obs2);
 
+    PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
+    BacnetObject *aio = new AnalogInputObject(1, device);
+    aio->setObjectName("HW_Setpoint");
+    aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
     //READ PROPERTY ENCODED
 
@@ -259,7 +256,7 @@ int main(int argc, char *argv[])
         0x43, 0x34, 0x00, 0x00,
         0x3f
     };
-    proto1->getBytes(wpService, sizeof(wpService));
+    bHndlr->getBytes(wpService, sizeof(wpService));
 
     return a.exec();
 
