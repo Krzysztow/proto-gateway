@@ -17,7 +17,7 @@ void BacnetApplicationLayerHandler::setNetworkHandler(BacnetNetworkLayerHandler 
     _networkHndlr = networkHndlr;
 }
 
-void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, quint16 dataLength, void sth)
+void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, quint16 dataLength)
 {
     BacnetConfirmedRequestData serviceData;
     qint16 ret = serviceData.fromRaw(dataPtr, dataLength);
@@ -29,21 +29,21 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
 
     //configure it dynamically
     switch (serviceData.service()) {
-    case (BacnetConfirmedService::ConfirmedCOVNotification): {
+    case (BacnetServices::ConfirmedCOVNotification): {
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
-    case (BacnetConfirmedService::SubscribeCOV): {
+    case (BacnetServices::SubscribeCOV): {
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
-    case (BacnetConfirmedService::ReadProperty): {
+    case (BacnetServices::ReadProperty): {
 //            BacnetReadProperty readPrpty;
 //            readPrpty.setFromRaw()
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
-    case (BacnetConfirmedService::WriteProperty): {
+    case (BacnetServices::WriteProperty): {
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }

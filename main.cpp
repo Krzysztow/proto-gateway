@@ -5,6 +5,8 @@
 #include "bacnetbiptransportlayer.h"
 #include "bacnetnetworklayer.h"
 
+#ifdef MAIN_BACNET
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -17,3 +19,5 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+
+#endif

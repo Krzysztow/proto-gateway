@@ -32,7 +32,46 @@ SOURCES += main.cpp \
     bacnetcoder.cpp \
     services/bacnetreadproperty.cpp \
     bacnettagparser.cpp \
-    property.cpp
+    property.cpp \
+    asynchowner.cpp \
+    bacnettsm2.cpp \
+    bacnetwritepropertyservice.cpp \
+    externalobjectshandler.cpp \
+    cdm.cpp \
+    bacnetwritepropertyservicehandler.cpp \
+    bacnetreadpropertyservicehandler.cpp \
+    asynchronousconfirmedhandler.cpp \
+    asynchsetter.cpp \
+    bacnettsm.cpp \
+    bacnetreadpropertyack.cpp \
+    bacnetreadpropertyservice.cpp \
+    bacnetcommon.cpp \
+    readpropertyservice.cpp \
+    bacnetobjectinternalsupport.cpp \
+    bacnetexternalobjects.cpp \
+    analoginputobject.cpp \
+    bacnetdeviceobject.cpp \
+    bacnetobject.cpp \
+    bacnetprimitivedata.cpp \
+    bacneterrorack.cpp \
+    servicefactory.cpp \
+    asynchronousbacnettsmaction.cpp \
+    bacnetservice.cpp \
+    error.cpp \
+    propertyvalue.cpp \
+    bacnetdataabstract.cpp \
+    bacnetconstructeddata.cpp \
+    bacnetdefaultobject.cpp \
+    bacnetsubscribecov.cpp \
+    bacnetunconfirmedcov.cpp \
+    bacnetconfirmedcov.cpp \
+    sequenceof.cpp \
+    bacnetdata.cpp \
+    bacnetserviceack.cpp \
+    propertyowner.cpp \
+    propertyfactory.cpp \
+#    check.cpp \
+    cos.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -55,4 +94,46 @@ HEADERS += \
     bacnetcoder.h \
     services/bacnetreadproperty.h \
     bacnettagparser.h \
-    property.h
+    property.h \
+    bacnetwritepropertyservice.h \
+    bacnetwritepropertyservicehandler.h \
+    externalobjectshandler.h \
+    bacnettsm2.h \
+    asynchronousconfirmedhandler.h \
+    asynchsetter.h \
+    bacnettsm.h \
+    bacnetreadpropertyack.h \
+    bacnetreadpropertyservicehandler.h \
+    cdm.h \
+    bacnetservice.h \
+    bacneterrorack.h \
+    bacnetreadpropertyservice.h \
+    bacnetconfirmedservicehandler.h \
+    bacnetexternalobjects.h \
+    asynchronousactionhandler.h \
+    asynchowner.h \
+    analoginputobject.h \
+    bacnetobjectinternalsupport.h \
+    bacnetdeviceobject.h \
+    bacnetobject.h \
+    servicefactory.h \
+    asynchronousbacnettsmaction.h \
+    error.h \
+    bacnetprimitivedata.h \
+    bacnetdefaultobject.h \
+    bacnetdataabstract.h \
+    bacnetconstructeddata.h \
+    propertyvalue.h \
+    bacnetsubscribecov.h \
+    bacnetunconfirmedcov.h \
+    sequenceof.h \
+    bacnetconfirmedcov.h \
+    bacnetdata.h \
+    readpropertyservice.h \
+    bacnetserviceack.h \
+    propertyowner.h \
+    propertyfactory.h \
+#    check.h \
+    cos.h
+
+OTHER_FILES +=
