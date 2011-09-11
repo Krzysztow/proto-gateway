@@ -13,7 +13,8 @@ class Property
 {
 public:
     enum ActiontResult {
-        UnknownError    = -6,
+        UnknownError    = -7,
+        UnknownProperty = -6,
         InternalTimeout = -5,
         Timeout         = -4,
         IvalidRange     = -3,
@@ -47,7 +48,7 @@ public:
       \sa PropertySubject::asynchSetValueResponse() & PropertyObserver::asynchSetValueResponse() for information on specific usage.
 
       \note Why this has to be a function of this interface? And why not to pass PropertyOwner - this one is informed at the end.
-      The problem is we should (should we) have information about the property proxy, that was used so that we don't inform it about
+      The problem is we should (should we?) have information about the property proxy, that was used so that we don't inform it about
       the change - if it was, then doubled reaction to asynchronous callbacks would be called.
       */
     virtual void asynchActionFinished(int asynchId, Property::ActiontResult actionResult) = 0;

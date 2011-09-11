@@ -14,9 +14,11 @@ class BacnetReadPropertyAck:
 public:
     BacnetReadPropertyAck();
     ~BacnetReadPropertyAck();
+    virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
+    virtual qint32 fromRaw(quint8 *startPtr, quint16 buffLength);
 
     //remove these stupid functions
-    virtual BacnetService *getResponse() {return 0;}
+    virtual BacnetService *takeResponse() {return 0;}
     virtual bool asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object) {return true;}
 
     virtual bool isReady() {return true;}
@@ -24,10 +26,11 @@ public:
     virtual Bacnet::Error &error() {}
     virtual qint32 execute(BacnetDeviceObject *device) {return -1;}
 
-    virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
 public:
-
     void setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyStruct &ackReadPrptyData);
+    Bacnet::BacnetDataInterface *data();
+    Bacnet::ReadPropertyStruct &value();
+
 
     //data that has been encoded in the ack
     Bacnet::ReadPropertyStruct _value;

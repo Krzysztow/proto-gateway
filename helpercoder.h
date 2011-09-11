@@ -35,7 +35,6 @@ namespace HelperCoder
 
     quint8 uint32ToVarLengthRaw(quint8 *dstPtr, quint32 value);
     quint8 sint32ToVarLengthRaw(quint8 *dstPtr, qint32 value);
-
 }
 
 inline quint8 HelperCoder::uint16FromRaw(quint8 *ptr, quint16 *result)

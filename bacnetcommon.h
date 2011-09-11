@@ -372,7 +372,7 @@ namespace BacnetProperty
         WindowInterval                             	= 147,
         WindowSamples                              	= 148,
         ZoneMembers                                	= 165,
-        PropertyUndefined                               = 255
+        UndefinedProperty                               = 255
                                                           // see maximumValueTimestamp              	= 149,
                                                           // see minimumValueTimestamp              	= 150,
                                                           // see varianceValue                       	= 151,
@@ -447,6 +447,9 @@ namespace Bacnet
         BacnetObjectType::ObjectType objectType;
         quint32 instanceNum;
     };
+
+    quint32 objIdToNum(ObjectIdStruct &objId);
+    ObjectIdStruct numToObjId(unsigned int numObjId);
 
     struct ReadPropertyStruct {
         Bacnet::ObjectIdStruct objId;

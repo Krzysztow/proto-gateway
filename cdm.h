@@ -38,13 +38,12 @@ public:
                     - or increase MAX_ASYNCH_ID value;
         if negative is returned that means there are no more available asynch ids.
       */
-    int getAsynchId();
+    int generateAsynchId();
     void setAsynchIdData(int asynchId, PropertySubject *subject, PropertyObserver *requester = 0);
     //Returns the asynchronous id to the DataModel instance. No one (owner or requester) is informed.
     void releaseAsynchId(int id);
     PropertyObserver *asynchActionRequester(int asynchId);
     PropertySubject *asynchActionSubject(int asynchId);
-
 
 private slots:
     void internalTimeout();
@@ -65,7 +64,7 @@ private:
     QMap<quint32, PropertySubject*> _properties;
     /** This is an array saying which ids are currently in use. Its size is as great as is necessarry to store MAX_ASYNCH_ID bits.
         Same the maximum number of parallely occuring asynchronous actions is MAX_ASYNCH_ID. When changing this value,
-        make sure that int type returned by \sa getAsynchId() and used in clearAsynchId() are enough to store it.
+        make sure that int type returned by \sa generateAsynchId() and used in clearAsynchId() are enough to store it.
       */
     static const int MAX_ASYNCH_ID = 255;
 
@@ -81,6 +80,10 @@ private:
     };
     QVector<AsynchIdEntry> _asynchIdStates;
     QTimer *_transactionTimer;
+
+
+
+
 
     static const int UNUSED_TIME_VALUE;
     inline bool isAsynchIdUnused(int asynchId) {return (UNUSED_TIME_VALUE == _asynchIdStates[asynchId].timeLeft);}

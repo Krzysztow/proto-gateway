@@ -187,7 +187,12 @@ void PropertySubject::setValueInstantly(QVariant &inValue, PropertyObserver *obs
 
 void PropertySubject::setValueSilent(QVariant &inValue)
 {
-    Q_ASSERT(_value.type() == inValue.type());
+    Q_ASSERT(inValue.canConvert(_value.type()));
+    if (inValue.convert(_value.type())) {
+        _value = inValue;
+    }
+    else
+        qWarning("Couldn't convert value (%d to %d)!", inValue.type(), _value.type());
 }
 
 void PropertySubject::addObserver(PropertyObserver *observer)

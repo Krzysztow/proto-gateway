@@ -14,7 +14,7 @@ public:
     ~BacnetErrorAck();
 
     //! \warning The response is created only once. Caller takes ownership over the response.
-    virtual BacnetService *getResponse() {return 0;}
+    virtual BacnetService *takeResponse() {return 0;}
     virtual bool asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object) {return true;}
 
     virtual bool isReady() {return true;}

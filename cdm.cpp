@@ -34,6 +34,7 @@ DataModel *DataModel::instance()
 PropertySubject *DataModel::createProperty(quint32 propId, QVariant::Type propertyType)
 {
     if (_properties.contains(propId)) {
+        Q_ASSERT_X(false, "DataModel::createProperty()", "The property subject may be created only once!");
         return 0;
     }
 
@@ -67,7 +68,7 @@ void DataModel::initiateAsynchIds()
     }
 }
 
-int DataModel::getAsynchId()
+int DataModel::generateAsynchId()
 {
     bool found = false;
     int id(0);
@@ -149,9 +150,9 @@ void DataModel::internalTimeout()
                     _asynchIdStates[id].timeLeft = -1;//mark it to be cleaned next time
                 }
             }
-        } else {//transaction relatively new
+        } /*else {//transaction relatively new
             _asynchIdStates[id].timeLeft -= _internalTimeout100ms;
-        }
+        }*/
     }
 }
 
@@ -194,6 +195,8 @@ struct KElement {
 #include "bacnetreadpropertyservice.h"
 #include "analoginputobject.h"
 #include "bacnetdeviceobject.h"
+#include "externalobjectshandler.h"
+#include "bacnettsm2.h"
 
 int main(int argc, char *argv[])
 {
@@ -201,7 +204,8 @@ int main(int argc, char *argv[])
 
     DataModel *cdm = DataModel::instance();
 
-    AsynchSetter *bHndlr = new AsynchSetter();
+    Bacnet::BacnetTSM2 *tsm = new BacnetTSM2();
+    AsynchSetter *bHndlr = new AsynchSetter(tsm);
 
     QVariant test;
     test.setValue((double)72.3);
@@ -222,12 +226,22 @@ int main(int argc, char *argv[])
     proto2->addProperty(subject2);
 
     PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
-    BacnetObject *aio = new AnalogInputObject(1, device);
+    AnalogInputObject *aio = new AnalogInputObject(1, device);
     aio->setObjectName("HW_Setpoint");
     aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
-    //READ PROPERTY ENCODED
+    ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
+    PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
+    extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
+                                  BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
+                                  0x00000001,
+                                  BacnetExternalObjects::Access_ReadRequest);
 
+    PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
+    proto2->addProperty(extObserver);
+
+
+    //READ PROPERTY ENCODED
     quint8 readPropertyService[] = {
         0x00,
         0x00,
@@ -240,23 +254,23 @@ int main(int argc, char *argv[])
     };
     bHndlr->getBytes(readPropertyService, sizeof readPropertyService);
 
+    //WRITE PROEPRTY ENCODED
+    quint8 wpService[] = {
+        0x00,
+        0x04,
+        0x59,
+        0x0F,
 
-//    quint8 wpService[] = {
-//        0x00,
-//        0x04,
-//        0x59,
-//        0x0F,
-
-//        0x0c,
-//        0x00, 0x00/*0x80*/, 0x00, 0x01,
-//        0x19,
-//        0x55,
-//        0x3e,
-//        0x44,
-//        0x43, 0x34, 0x00, 0x00,
-//        0x3f
-//    };
-//    bHndlr->getBytes(wpService, sizeof(wpService));
+        0x0c,
+        0x00, 0x00/*0x80*/, 0x00, 0x01,
+        0x19,
+        0x55,
+        0x3e,
+        0x44,
+        0x43, 0x34, 0x00, 0x00,
+        0x3f
+    };
+    bHndlr->getBytes(wpService, sizeof(wpService));
 
     return a.exec();
 

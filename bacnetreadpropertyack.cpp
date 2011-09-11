@@ -4,6 +4,7 @@
 
 #include "bacnetdata.h"
 #include "bacnetcoder.h"
+#include "bacnettagparser.h"
 
 BacnetReadPropertyAck::BacnetReadPropertyAck():
         _data(0)
@@ -91,3 +92,81 @@ qint32 BacnetReadPropertyAck::toRaw(quint8 *startPtr, quint16 buffLength)
 
     return actualPtr - startPtr;
 }
+
+qint32 BacnetReadPropertyAck::fromRaw(quint8 *startPtr, quint16 buffLength)
+{
+    BacnetTagParser bParser(startPtr, buffLength);
+
+    qint16 ret;
+    qint16 consumedBytes(0);
+    bool convOkOrCtxt;
+
+    //parse object identifier
+    ret = bParser.parseNext();
+    _value.objId = bParser.toObjectId(&convOkOrCtxt);
+    if (ret < 0 || !bParser.isContextTag(0))
+        return -1;
+    consumedBytes += ret;
+
+    //parse property identifier
+    ret = bParser.parseNext();
+    _value.propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOkOrCtxt);
+    if (ret < 0 || !bParser.isContextTag(1))
+        return -2;
+    consumedBytes += ret;
+
+    //parse OPTIONAL array index
+    ret = bParser.nextTagNumber(&convOkOrCtxt);
+    if (2 == ret && convOkOrCtxt) {//there is an array index
+        ret = bParser.parseNext();
+        _value.arrayIndex = bParser.toUInt(&convOkOrCtxt);
+        if (ret <0 | !convOkOrCtxt)
+            return -3;
+        consumedBytes += ret;
+    } else {
+        _value.arrayIndex = Bacnet::ArrayIndexNotPresent;
+    }
+
+    //we are supposed to parse Abstract type, which type depends on the object type and property Id
+    Q_ASSERT(0 == _data);
+    _data = 0;//just in case
+    ret = BacnetTagParser::parseStructuredData(bParser, _value.objId.objectType, _value.propertyId,
+                                               _value.arrayIndex, 3, &_data);
+
+
+    if (ret <= 0) //something worng, check it
+        return -4;
+    consumedBytes += ret;
+
+    return consumedBytes;
+}
+
+Bacnet::BacnetDataInterface *BacnetReadPropertyAck::data()
+{
+    return _data;
+}
+
+Bacnet::ReadPropertyStruct &BacnetReadPropertyAck::value()
+{
+    return _value;
+}
+
+//#define BACNET_RP_ACK_TEST
+#ifdef BACNET_RP_ACK_TEST
+int main()
+{
+    quint8 rpAckData[] = {
+        0x0c, 0x00, 0x00, 0x00, 0x05, 0x19, 0x55, 0x3e, 0x44, 0x42, 0x90, 0x99, 0x9a, 0x3f
+    };
+    const quint16 rpAckLength = sizeof(rpAckData);
+
+    BacnetReadPropertyAck rpAck;
+    quint8 ret =rpAck.fromRaw(rpAckData, rpAckLength);
+
+    qDebug("Paresed %d bytes out of %d", ret, rpAckLength);
+    Q_ASSERT(ret > 0);
+    Q_ASSERT(rpAckLength == ret);
+
+    return 0;
+}
+#endif

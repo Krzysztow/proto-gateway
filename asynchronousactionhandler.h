@@ -5,11 +5,11 @@
 
 class BacnetObject;
 class BacnetDeviceObject;
-class AsynchronousActionHandler
+class InternalRequestHandler
 {
 public:
-    AsynchronousActionHandler() {}
-    virtual ~AsynchronousActionHandler() {}
+    InternalRequestHandler() {}
+    virtual ~InternalRequestHandler() {}
 
 //    virtual QList<int> execute() = 0;
     virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device) = 0;
