@@ -3,6 +3,7 @@
 
 #include <QtCore>
 
+#include "readpropertyservicedata.h"
 #include "bacnetservice.h"
 #include "bacnetcommon.h"
 #include "error.h"
@@ -12,7 +13,7 @@ class BacnetDeviceObject;
 class BacnetTagParser;
 class BacnetAck;
 class BacnetReadPropertyAck;
-class BacnetReadPropertyService:
+class ReadPropertyServiceHandler:
         public BacnetService
 {
 public:
@@ -43,20 +44,20 @@ private:
     bool finishReading_helper(BacnetObject *device, int resultCode = 0);
 
 public:
-    BacnetReadPropertyService();
-    BacnetReadPropertyService(Bacnet::ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
+    ReadPropertyServiceHandler();
+    ReadPropertyServiceHandler(Bacnet::ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
                               quint32 arrayIndex = Bacnet::ArrayIndexNotPresent);
 
-    ~BacnetReadPropertyService();
+    ~ReadPropertyServiceHandler();
 
 //private:
-    Bacnet::ReadPropertyStruct _value;
+    Bacnet::ReadPropertyServiceData _value;
     Bacnet::Error _error;
 
     //! \todo Turn it into some asynch object.
     quint32 _asynchId;
 
-    //! BacnetReadPropertyServiceAck
+    //! ReadPropertyServiceHandlerAck
     BacnetReadPropertyAck *_response;
 };
 

@@ -9,8 +9,12 @@
 struct WriteAccessSpecificationStruct;
 class BacnetDataBase;
 class BacnetDeviceObject;
-namespace Bacnet{class Error;}
+namespace Bacnet{
+    class Error;
+    class ReadPropertyServiceData;
+}
 namespace BacnetProperty{enum Identifier;}
+
 class Property;
 
 class BacnetObject
@@ -25,7 +29,7 @@ public:
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId) = 0;
 
     //! Returns the data associated with the propertyId.
-    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyStruct *rpStruct, Bacnet::Error *error) = 0;
+    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error) = 0;
 
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error) = 0;
 

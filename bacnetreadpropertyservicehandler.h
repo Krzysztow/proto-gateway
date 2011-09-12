@@ -4,19 +4,19 @@
 #include "bacnetconfirmedservicehandler.h"
 
 
-class BacnetReadPropertyService;
 class PropertySubject;
 
 namespace Bacnet {
 
     class ExternalObjectsHandler;
+    class ReadPropertyServiceData;
 
-    class BacnetReadPropertyServiceHandler:
+    class ReadPropertyServiceHandlerHandler:
             public BacnetConfirmedServiceHandler
     {
     public:
-        BacnetReadPropertyServiceHandler(BacnetReadPropertyService *rpData, ExternalObjectsHandler *respHandler);
-        virtual ~BacnetReadPropertyServiceHandler();
+        ReadPropertyServiceHandlerHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler);
+        virtual ~ReadPropertyServiceHandlerHandler();
 
     public://functions overridden from BacnetConfirmedServiceHandler
         virtual qint32 toRaw(quint8 *buffer, quint16 length);
@@ -27,7 +27,7 @@ namespace Bacnet {
 
     private:
         //BACnet specific
-        BacnetReadPropertyService *_rpData;
+        ReadPropertyServiceData *_rpData;
         quint8 sendTryOuts;
         //CDM handling
         ExternalObjectsHandler *_responseHandler;

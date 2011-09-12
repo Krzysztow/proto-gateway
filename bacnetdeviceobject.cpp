@@ -1,11 +1,12 @@
 #include "bacnetdeviceobject.h"
-#include "bacnetdefaultobject.h"
 
 #include <QVariant>
 
+#include "bacnetdefaultobject.h"
 #include "bacnetprimitivedata.h"
 #include "error.h"
 #include "asynchsetter.h"
+#include "readpropertyservicedata.h"
 
 using namespace Bacnet;
 
@@ -40,7 +41,7 @@ int BacnetDeviceObject::ensurePropertyReadyRead(BacnetProperty::Identifier prope
         return Property::UnknownError;
 }
 
-Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::ReadPropertyStruct *rpStruct, Bacnet::Error *error)
+Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error)
 {
     Q_CHECK_PTR(rpStruct);
     //handle array case

@@ -5,7 +5,7 @@
 #include "bacnetreadpropertyack.h"
 #include "bacneterrorack.h"
 
-BacnetReadPropertyService::BacnetReadPropertyService(Bacnet::ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
+ReadPropertyServiceHandler::ReadPropertyServiceHandler(Bacnet::ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
                           quint32 arrayIndex):
 _response(0)
 {
@@ -14,71 +14,22 @@ _response(0)
     _value.arrayIndex = arrayIndex;
 }
 
-BacnetReadPropertyService::BacnetReadPropertyService():
+ReadPropertyServiceHandler::ReadPropertyServiceHandler():
         _response(0)
 {
 }
 
-BacnetReadPropertyService::~BacnetReadPropertyService()
+ReadPropertyServiceHandler::~ReadPropertyServiceHandler()
 {
     delete _response;
 }
 
-qint32 BacnetReadPropertyService::fromRaw(quint8 *serviceData, quint8 buffLength)
+qint32 ReadPropertyServiceHandler::fromRaw(quint8 *serviceData, quint8 buffLength)
 {
-    //clear error codes. since we handle new request
-    _error.setError(BacnetError::ClassNoError, BacnetError::CodeNoError);
-
-    BacnetTagParser bParser(serviceData, buffLength);
-
-    qint16 ret;
-    qint16 consumedBytes(0);
-    BacnetReject::RejectReason reason;
-    bool convOk;
-
-    //parse object identifier
-    ret = bParser.parseNext();
-    _value.objId = bParser.toObjectId(&convOk);
-    if (ret < 0 || !bParser.isContextTag(0))
-        return -1;
-//    if ( (reason = checkForError_helper(bParser, ret, 0, convOk)) != BacnetReject::ReasonNotRejected) {
-//        return reason;
-//    }
-    consumedBytes += ret;
-
-    //parse property identifier
-    ret = bParser.parseNext();
-    _value.propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
-//    if ( (reason = checkForError_helper(bParser, ret, 1, convOk)) != BacnetReject::ReasonNotRejected) {
-//        return reason;
-//    }
-    if (ret < 0 || !bParser.isContextTag(1))
-        return -2;
-    consumedBytes += ret;
-
-    //parse OPTIONAL array index
-    ret = bParser.parseNext();
-    if (0 != ret) {//there is something - index or error
-        _value.arrayIndex = bParser.toUInt(&convOk);
-//        if ( (reason = checkForError_helper(bParser, ret, 2, convOk)) != BacnetReject::ReasonNotRejected) {
-//            return reason;
-//        }
-        if (ret <0 || !bParser.isContextTag(2))
-            return -3;
-        consumedBytes += ret;
-    } else {
-        _value.arrayIndex = Bacnet::ArrayIndexNotPresent;
-    }
-
-    Q_ASSERT(consumedBytes == buffLength);
-    if (consumedBytes != buffLength) {
-        return BacnetReject::ReasonTooManyArguments;
-    }
-
-    return consumedBytes;
+    return _value.fromRaw(serviceData, buffLength);
 }
 
-//BacnetReject::RejectReason BacnetReadPropertyService::checkForError_helper(BacnetTagParser &bParser, qint16 parseRet, quint8 expectedTag, bool convertedOk)
+//BacnetReject::RejectReason ReadPropertyServiceHandler::checkForError_helper(BacnetTagParser &bParser, qint16 parseRet, quint8 expectedTag, bool convertedOk)
 //{
 //    if (parseRet < 0) {
 //        return BacnetReject::ReasonMissingRequiredParameter;
@@ -90,7 +41,7 @@ qint32 BacnetReadPropertyService::fromRaw(quint8 *serviceData, quint8 buffLength
 //    return BacnetReject::ReasonNotRejected;
 //}
 
-qint32 BacnetReadPropertyService::execute(BacnetDeviceObject *device)
+qint32 ReadPropertyServiceHandler::execute(BacnetDeviceObject *device)
 {
     Q_CHECK_PTR(device);
     Q_ASSERT(BacnetError::ClassNoError == _error.errorClass);
@@ -107,7 +58,7 @@ qint32 BacnetReadPropertyService::execute(BacnetDeviceObject *device)
     return readyness;
 }
 
-QList<int> BacnetReadPropertyService::asynchIds()
+QList<int> ReadPropertyServiceHandler::asynchIds()
 {
     if (0 >= _asynchId)
         return QList<int>() << _asynchId;
@@ -115,13 +66,13 @@ QList<int> BacnetReadPropertyService::asynchIds()
     return QList<int>();
 }
 
-bool BacnetReadPropertyService::isReady()
+bool ReadPropertyServiceHandler::isReady()
 {
     return (0 == _asynchId);
 }
 
-//bool BacnetReadPropertyService::asynchActionFinished(int asynchId, int result, BacnetObject *object)
-bool BacnetReadPropertyService::asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object)
+//bool ReadPropertyServiceHandler::asynchActionFinished(int asynchId, int result, BacnetObject *object)
+bool ReadPropertyServiceHandler::asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object)
 {
     Q_UNUSED(device);
     Q_ASSERT((quint32)asynchId == _asynchId);
@@ -133,7 +84,7 @@ bool BacnetReadPropertyService::asynchActionFinished(int asynchId, int result, B
     return false;
 }
 
-bool BacnetReadPropertyService::finishReading_helper(BacnetObject *device, int resultCode)
+bool ReadPropertyServiceHandler::finishReading_helper(BacnetObject *device, int resultCode)
 {
     _asynchId = 0;
     delete _response;//just in case
@@ -160,17 +111,17 @@ bool BacnetReadPropertyService::finishReading_helper(BacnetObject *device, int r
     return true;
 }
 
-bool BacnetReadPropertyService::hasError()
+bool ReadPropertyServiceHandler::hasError()
 {
     return _error.hasError();
 }
 
-Bacnet::Error &BacnetReadPropertyService::error()
+Bacnet::Error &ReadPropertyServiceHandler::error()
 {
     return _error;
 }
 
-BacnetService *BacnetReadPropertyService::takeResponse()
+BacnetService *ReadPropertyServiceHandler::takeResponse()
 {
     if (0 != _response) {
         BacnetReadPropertyAck *tmp = _response;
@@ -180,50 +131,14 @@ BacnetService *BacnetReadPropertyService::takeResponse()
         return new BacnetErrorAck(_error);
     } else {
         qDebug("BacnetReadPropertyAck::takeResponse() - response not prepared but requested!");
-        Q_ASSERT_X(false, "BacnetReadPropertyService::takeResponse()", "Response not ready, but requested!");
+        Q_ASSERT_X(false, "ReadPropertyServiceHandler::takeResponse()", "Response not ready, but requested!");
         return 0;
     }
 }
 
-qint32 BacnetReadPropertyService::toRaw(quint8 *startPtr, quint8 buffLength)
+qint32 ReadPropertyServiceHandler::toRaw(quint8 *startPtr, quint8 buffLength)
 {
-    Q_CHECK_PTR(startPtr);
-    quint8 *actualPtr(startPtr);
-    quint16 leftLength(buffLength);
-    qint32 ret;
-
-    //! \todo There is some duplication between Request and Ack toRaw() functions. Unify it.
-    //encode Object identifier
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, leftLength, _value.objId, true, 0);
-    if (ret <= 0) {//something wrong?
-        Q_ASSERT_X(false, "BacnetReadProperty::toRaw()", "Cannot encode objId");
-        qDebug("BacnetReadProperty::toRaw() : propertyencoding problem: objId : %d", ret);
-        return ret;
-    }
-    actualPtr += ret;
-    leftLength -= ret;
-    //encode proeprty identifier
-    ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _value.propertyId, true, 1);
-    if (ret <= 0) {//something wrong?
-        Q_ASSERT_X(false, "BacnetReadProperty::toRaw()", "Cannot encode propId");
-        qDebug("BacnetReadPropertyAck::toRaw() : propertyencoding problem: propId : %d", ret);
-        return ret;
-    }
-    actualPtr += ret;
-    leftLength -= ret;
-    //encode array index if present - OPTIONAL
-    if (Bacnet::ArrayIndexNotPresent != _value.arrayIndex) {//present
-        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _value.arrayIndex, true, 2);
-        if (ret <= 0) {//something wrong?
-            Q_ASSERT_X(false, "BacnetReadPropertyAck::toRaw()", "Cannot encode arrayIndex");
-            qDebug("BacnetReadPropertyAck::toRaw() : propertyencoding problem: arrayIndex : %d", ret);
-            return ret;
-        }
-        actualPtr += ret;
-        leftLength -= ret;
-    }
-
-    return actualPtr - startPtr;
+    return _value.toRaw(startPtr, buffLength);
 }
 
 //#define READ_PRPTY_TEST
@@ -237,7 +152,7 @@ int main()
         0x55
     };
 
-    BacnetReadPropertyService readSrvc;
+    ReadPropertyServiceHandler readSrvc;
     qint32 ret = readSrvc.fromRaw(readPrprtData, sizeof(readPrprtData));
 
     qDebug("Read %d bytes!", ret);

@@ -451,12 +451,6 @@ namespace Bacnet
     quint32 objIdToNum(ObjectIdStruct &objId);
     ObjectIdStruct numToObjId(unsigned int numObjId);
 
-    struct ReadPropertyStruct {
-        Bacnet::ObjectIdStruct objId;
-        BacnetProperty::Identifier propertyId;
-        quint32 arrayIndex;
-    };
-
     enum {
         ArrayIndexNotPresent = 0xffffffff
                            };

@@ -3,6 +3,7 @@
 
 #include "bacnetservice.h"
 #include "bacnetcommon.h"
+#include "readpropertyservicedata.h"
 
 namespace Bacnet {
     class BacnetDataInterface;
@@ -27,13 +28,13 @@ public:
     virtual qint32 execute(BacnetDeviceObject *device) {return -1;}
 
 public:
-    void setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyStruct &ackReadPrptyData);
+    void setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyServiceData &ackReadPrptyData);
     Bacnet::BacnetDataInterface *data();
-    Bacnet::ReadPropertyStruct &value();
+    Bacnet::ReadPropertyServiceData &value();
 
 
     //data that has been encoded in the ack
-    Bacnet::ReadPropertyStruct _value;
+    Bacnet::ReadPropertyServiceData _value;
     Bacnet::BacnetDataInterface *_data;
 };
 

@@ -5,6 +5,7 @@
 #include "error.h"
 #include "bacnetcommon.h"
 #include "bacnetdeviceobject.h"
+#include "readpropertyservicedata.h"
 
 using namespace Bacnet;
 
@@ -46,7 +47,7 @@ int AnalogInputObject::ensurePropertyReadyRead(BacnetProperty::Identifier proper
 }
 
 //! Returns the data associated with the propertyId.
-Bacnet::BacnetDataInterface *AnalogInputObject::propertyReadInstantly(Bacnet::ReadPropertyStruct *rpStruct, Bacnet::Error *error)
+Bacnet::BacnetDataInterface *AnalogInputObject::propertyReadInstantly(ReadPropertyServiceData *rpStruct, Bacnet::Error *error)
 {
     Q_CHECK_PTR(rpStruct);
 

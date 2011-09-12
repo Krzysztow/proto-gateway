@@ -6,7 +6,7 @@
 
 namespace Bacnet {class BacnetTSM2;};
 class BacnetConfirmedRequestData;
-class BacnetReadPropertyService;
+class ReadPropertyServiceHandler;
 class BacnetService;
 class BacnetPciData;
 

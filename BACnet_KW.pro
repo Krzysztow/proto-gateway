@@ -46,7 +46,6 @@ SOURCES += main.cpp \
     bacnetreadpropertyack.cpp \
     bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
-    readpropertyservice.cpp \
     bacnetobjectinternalsupport.cpp \
     bacnetexternalobjects.cpp \
     analoginputobject.cpp \
@@ -71,7 +70,8 @@ SOURCES += main.cpp \
     propertyowner.cpp \
     propertyfactory.cpp \
 #    check.cpp \
-    cos.cpp
+    cos.cpp \
+    readpropertyservicedata.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -129,11 +129,11 @@ HEADERS += \
     sequenceof.h \
     bacnetconfirmedcov.h \
     bacnetdata.h \
-    readpropertyservice.h \
     bacnetserviceack.h \
     propertyowner.h \
     propertyfactory.h \
 #    check.h \
-    cos.h
+    cos.h \
+    readpropertyservicedata.h
 
 OTHER_FILES +=

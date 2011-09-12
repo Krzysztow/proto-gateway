@@ -25,7 +25,7 @@ void AsynchSetter::getBytes(quint8 *data, quint16 length)
 
     //READ PROPERTY TEST
     //    Q_ASSERT(ret > 0);//send reject
-//    BacnetReadPropertyService *service = new BacnetReadPropertyService();
+//    ReadPropertyServiceHandler *service = new ReadPropertyServiceHandler();
 //    ret = service->fromRaw(data + ret, length - ret);
 //    Q_ASSERT(ret > 0);//send reject
 

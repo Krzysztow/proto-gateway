@@ -5,6 +5,7 @@
 #include "bacnetdata.h"
 #include "bacnetcoder.h"
 #include "bacnettagparser.h"
+#include "readpropertyservicedata.h"
 
 BacnetReadPropertyAck::BacnetReadPropertyAck():
         _data(0)
@@ -16,7 +17,7 @@ BacnetReadPropertyAck::~BacnetReadPropertyAck()
     delete _data;
 }
 
-void BacnetReadPropertyAck::setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyStruct &ackReadPrptyData)
+void BacnetReadPropertyAck::setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyServiceData &ackReadPrptyData)
 {
     Q_CHECK_PTR(data);
     Q_ASSERT(0 == _data);
@@ -146,7 +147,7 @@ Bacnet::BacnetDataInterface *BacnetReadPropertyAck::data()
     return _data;
 }
 
-Bacnet::ReadPropertyStruct &BacnetReadPropertyAck::value()
+Bacnet::ReadPropertyServiceData &BacnetReadPropertyAck::value()
 {
     return _value;
 }

@@ -122,12 +122,12 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
     }
 
     //! \todo Itroduce BacnetObjId class with conversion functions
-    BacnetReadPropertyService *service =
-            new BacnetReadPropertyService(numToObjId(readElement._objectIdentifier),
+    ReadPropertyServiceData *service =
+            new ReadPropertyServiceData(numToObjId(readElement._objectIdentifier),
                                           readElement._propertyId, readElement._propertyArrayIdx);
     Q_CHECK_PTR(service);
-    BacnetReadPropertyServiceHandler *serviceHandler =
-            new BacnetReadPropertyServiceHandler(service, this);
+    ReadPropertyServiceHandlerHandler *serviceHandler =
+            new ReadPropertyServiceHandlerHandler(service, this);
     Q_CHECK_PTR(serviceHandler);
 
     RequestInfo ri = {asynchId, RequestRead, property};

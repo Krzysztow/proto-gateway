@@ -18,7 +18,7 @@ BacnetService *ServiceFactory::createService(quint8 *servicePtr, quint16 length,
         }
     case (BacnetServices::ReadProperty) :
         {
-            BacnetReadPropertyService *rpService = new BacnetReadPropertyService();
+            ReadPropertyServiceHandler *rpService = new ReadPropertyServiceHandler();
             *retCode = rpService->fromRaw(servicePtr, length);
             return rpService;
         }

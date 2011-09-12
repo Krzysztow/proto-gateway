@@ -22,7 +22,7 @@ public://functions overridden from
     //! Used to check if we can read from the device. If not yet, the asynchronous id for read request should be returned or error status.
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
     //! Returns the data associated with the propertyId.
-    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyStruct *rpStruct, Bacnet::Error *error);
+    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
 
 public://functions overridden from PropertyOwner

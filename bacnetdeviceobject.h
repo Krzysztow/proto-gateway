@@ -21,7 +21,7 @@ public:
 public://overridden from BacnetObject
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
 
-    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyStruct *rpStruct, Bacnet::Error *error);
+    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
 
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
 
