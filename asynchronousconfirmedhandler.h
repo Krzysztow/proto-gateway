@@ -4,24 +4,30 @@
 #include "asynchronousactionhandler.h"
 #include "bacnetaddress.h"
 
-namespace Bacnet {class BacnetTSM2;};
+namespace Bacnet {
+    class BacnetTSM2;
+    class ExternalObjectsHandler;
+}
 class BacnetConfirmedRequestData;
 class ReadPropertyServiceHandler;
 class BacnetService;
 class BacnetPciData;
+class InternalObjectsHandler;
+
 
 class InternalConfirmedRequestHandler:
         public InternalRequestHandler
 {
 public:
-    InternalConfirmedRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device);
-    ~InternalConfirmedRequestHandler();
+    InternalConfirmedRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                    InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler);
+    virtual ~InternalConfirmedRequestHandler();
 
     void setRequester(BacnetAddress &address);
     void setRequestData(BacnetConfirmedRequestData *reqData);
     void setService(BacnetService *service);
 
-public://overwritten from AsynchronousActionHandler
+public://overwritten from InternalRequestHandler
     virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
     virtual bool isFinished();
     virtual void finalize(bool *deleteAfter);
@@ -35,6 +41,8 @@ private:
     BacnetConfirmedRequestData *_reqData;
     BacnetService *_service;
     BacnetDeviceObject *_device;
+    InternalObjectsHandler *_internalHandler;
+    Bacnet::ExternalObjectsHandler *_externalHandler;
 };
 
 #endif // ASYNCHRONOUSRPHANDLER_H

@@ -96,6 +96,29 @@ qint16 BacnetUnconfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
     return (ptr - dataPtr);
 }
 
+BacnetUnconfirmedRequestData::BacnetUnconfirmedRequestData(quint8 serviceChoice):
+        _serviceChoice(serviceChoice)
+{
+}
+
+quint8 BacnetUnconfirmedRequestData::pduType()
+{
+    return BacnetPci::TypeUnconfirmedRequest;
+}
+
+qint16 BacnetUnconfirmedRequestData::toRaw(quint8 *buffer, quint16 length)
+{
+    Q_ASSERT(length >= 2);
+    if (length <= 2)
+        return BacnetPci::BufferTooSmall;
+
+    *buffer = (BacnetPci::TypeUnconfirmedRequest & 0x0f) << 4;
+    ++buffer;
+    *buffer = _serviceChoice;
+
+    return 2;
+}
+
 BacnetSimpleAckData::BacnetSimpleAckData(quint8 invokeId, quint8 serviceChoice):
         _invokeId(invokeId),
         _serviceAckChoice(serviceChoice)
@@ -252,6 +275,12 @@ qint16 BacnetErrorData::fromRaw(quint8 *dataPtr, quint16 length)
     return (ptr - dataPtr);
 }
 
+BacnetRejectData::BacnetRejectData(quint8 originalInvokeId, quint8 rejectReason):
+        _origInvokeId(originalInvokeId),
+        _rejectReason(rejectReason)
+{
+}
+
 qint16 BacnetRejectData::fromRaw(quint8 *dataPtr, quint16 length)
 {
     Q_ASSERT(length >= 3);
@@ -265,6 +294,25 @@ qint16 BacnetRejectData::fromRaw(quint8 *dataPtr, quint16 length)
     _rejectReason = *ptr;
 
     return (ptr - dataPtr);
+}
+
+qint16 BacnetRejectData::toRaw(quint8 *buffer, quint16 length)
+{
+    Q_ASSERT(length >= 3);
+    if (length < 3)
+        return BacnetPci::BufferTooSmall;
+
+    *buffer = (BacnetPci::TypeReject & 0x0F) << 4;
+    ++buffer;
+    *buffer = _origInvokeId;
+    ++buffer;
+    *buffer = _rejectReason;
+    return 3;
+}
+
+quint8 BacnetRejectData::pduType()
+{
+    return BacnetPci::TypeReject;
 }
 
 qint16 BacnetAbortData::fromRaw(quint8 *dataPtr, quint16 length)

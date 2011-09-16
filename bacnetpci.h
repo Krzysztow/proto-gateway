@@ -71,7 +71,13 @@ class BacnetUnconfirmedRequestData:
 {
 public:
     BacnetUnconfirmedRequestData() {}
+    BacnetUnconfirmedRequestData(quint8 serviceChoice);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline BacnetServices::BacnetUnconfirmedServiceChoice service() {return (BacnetServices::BacnetUnconfirmedServiceChoice)_serviceChoice;}
+
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     quint8 _serviceChoice;
@@ -159,7 +165,12 @@ class BacnetRejectData:
 {
 public:
     BacnetRejectData() {}
+    BacnetRejectData(quint8 originalInvokeId, quint8 rejectReason);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     quint8 _origInvokeId;

@@ -169,7 +169,7 @@ void DataModel::internalTimeout()
 
 #include "propertyowner.h"
 #include "asynchowner.h"
-#include "asynchsetter.h"
+#include "internalobjectshandler.h"
 
 #include <QCoreApplication>
 #include <QObject>
@@ -197,6 +197,7 @@ struct KElement {
 #include "bacnetdeviceobject.h"
 #include "externalobjectshandler.h"
 #include "bacnettsm2.h"
+#include "bacnetinternaladdresshelper.h"
 
 int main(int argc, char *argv[])
 {
@@ -205,10 +206,16 @@ int main(int argc, char *argv[])
     DataModel *cdm = DataModel::instance();
 
     Bacnet::BacnetTSM2 *tsm = new BacnetTSM2();
-    AsynchSetter *bHndlr = new AsynchSetter(tsm);
+    InternalObjectsHandler *bHndlr = new InternalObjectsHandler(tsm);
 
     QVariant test;
     test.setValue((double)72.3);
+
+    BacnetAddress srcAddr;
+
+    BacnetAddress destAddr;
+    quint32 destAddrRaw(0x00000001);
+    BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&destAddrRaw, &destAddr);
 
     AsynchOwner *proto2 = new AsynchOwner();
     PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Double);
@@ -219,7 +226,7 @@ int main(int argc, char *argv[])
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
     device->addInternalProperty(BacnetProperty::PresentValue, obs);
-    bHndlr->addDevice(0, device);
+    bHndlr->addDevice(BacnetInternalAddressHelper::internalAddress(destAddr), device);
 
     PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);
     subject2->setValue(test);
@@ -230,7 +237,15 @@ int main(int argc, char *argv[])
     aio->setObjectName("HW_Setpoint");
     aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
+    BacnetDeviceObject *device1 = new BacnetDeviceObject(3);
+    device1->setObjectName("BestDeviceEver");
+    quint32 addr(0x00000003);
+    BacnetAddress bAddr;
+    BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
+    bHndlr->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
+
     ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
+    bHndlr->_externalHandler = extHandler;
     PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
     extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
                                   BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
@@ -239,7 +254,6 @@ int main(int argc, char *argv[])
 
     PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
     proto2->addProperty(extObserver);
-
 
     //READ PROPERTY ENCODED
     quint8 readPropertyService[] = {
@@ -252,7 +266,7 @@ int main(int argc, char *argv[])
         0x19,
         0x55
     };
-    bHndlr->getBytes(readPropertyService, sizeof readPropertyService);
+    bHndlr->getBytes(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
 
     //WRITE PROEPRTY ENCODED
     quint8 wpService[] = {
@@ -270,7 +284,16 @@ int main(int argc, char *argv[])
         0x43, 0x34, 0x00, 0x00,
         0x3f
     };
-    bHndlr->getBytes(wpService, sizeof(wpService));
+    bHndlr->getBytes(wpService, sizeof(wpService), srcAddr, destAddr);
+
+    //WHO IS
+    quint8 wiService[] = {
+        0x10,
+        0x08,
+        0x09, 0x03,
+        0x19, 0x03
+    };
+    bHndlr->getBytes(wiService, sizeof(wiService), srcAddr, destAddr);
 
     return a.exec();
 

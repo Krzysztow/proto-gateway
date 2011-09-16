@@ -7,6 +7,8 @@ namespace Bacnet {
     class Error {
     public:
         Error();
+        Error(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode);
+
         bool hasError();
         void setError(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode);
     public:

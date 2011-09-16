@@ -8,6 +8,12 @@ Error::Error():
 {
 }
 
+Error::Error(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode):
+        errorClass(errorClass),
+        errorCode(errorCode)
+{
+}
+
 bool Error::hasError()
 {
     return (errorClass != BacnetError::ClassNoError);

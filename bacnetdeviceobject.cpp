@@ -5,7 +5,7 @@
 #include "bacnetdefaultobject.h"
 #include "bacnetprimitivedata.h"
 #include "error.h"
-#include "asynchsetter.h"
+#include "internalobjectshandler.h"
 #include "readpropertyservicedata.h"
 
 using namespace Bacnet;
@@ -222,11 +222,15 @@ void BacnetDeviceObject::asynchActionFinished(int asynchId, Property *property, 
     this->propertyChanged(asynchId, actionResult, this);
 }
 
-void BacnetDeviceObject::setHandler(AsynchSetter *bHandler)
+void BacnetDeviceObject::setHandler(InternalObjectsHandler *bHandler)
 {
     _handler = bHandler;
 }
 
+const QMap<quint32, BacnetObject*> &BacnetDeviceObject::childObjects()
+{
+    return _childObjects;
+}
 
 //QVariant::Type BacnetDeviceObject::variantTypeForProperty_helper(BacnetProperty::Identifier propertyId)
 //{

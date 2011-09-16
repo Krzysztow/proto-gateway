@@ -1,9 +1,5 @@
 #include "bacnetservice.h"
 
-BacnetService::BacnetService()
-{
-}
-
 BacnetService::~BacnetService()
 {
 }

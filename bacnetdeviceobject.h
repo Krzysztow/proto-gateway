@@ -8,7 +8,7 @@
 #include "bacnetdata.h"
 #include "bacnetobjectinternalsupport.h"
 
-class AsynchSetter;
+class InternalObjectsHandler;
 class BacnetDeviceObject:
         public BacnetObject,
         public BacnetObjectInternalSupport
@@ -20,16 +20,16 @@ public:
 
 public://overridden from BacnetObject
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
-
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
-
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
 
 public://functions specific to BACnet device
     BacnetObject *bacnetObject(quint32 instanceNumber);
     bool addBacnetObject(BacnetObject *object);
     void propertyChanged(int asynchId, int result, BacnetObject *object);
-    void setHandler(AsynchSetter *bHandler);
+    void setHandler(InternalObjectsHandler *bHandler);
+    const QMap<quint32, BacnetObject*> &childObjects();
+    Bacnet::BacnetDataInterface *constProperty(BacnetProperty::Identifier propertyId);
 
 public://functions overridden from PropertyOwner
     /** This function is a hook. Is invoked whenever some foreign protocol asks the property for a value. We have
@@ -62,7 +62,7 @@ public:
 //    QMap<BacnetProperty::Identifier, Property*> _cdmProperties;
 
     QMap<quint32, BacnetObject*> _childObjects;
-    AsynchSetter *_handler;
+    InternalObjectsHandler *_handler;
 };
 
 #endif // BACNETDEVICEOBJECT_H

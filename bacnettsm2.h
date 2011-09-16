@@ -5,6 +5,7 @@
 
 #include "bacnetaddress.h"
 #include "bacnetcommon.h"
+#include "bacnetservicedata.h"
 
 namespace Bacnet {
 
@@ -21,6 +22,9 @@ namespace Bacnet {
         bool sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend);
 
         bool send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+
+        void sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetReject::RejectReason reason, quint8 invokeId);
+        void sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
     public:
         QList<BacnetConfirmedServiceHandler*> _asynchHandlers;

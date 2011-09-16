@@ -3,6 +3,7 @@
 #include "helpercoder.h"
 #include "asynchronousbacnettsmaction.h"
 #include "bacnetconfirmedservicehandler.h"
+#include "bacnetpci.h"
 
 using namespace Bacnet;
 
@@ -80,4 +81,33 @@ void BacnetTSM2::generateResponse()
         }
     }
 
+}
+
+void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetReject::RejectReason reason, quint8 invokeId)
+{
+    BacnetRejectData rejectData(invokeId, reason);
+    quint8 rData[64];
+    qint32 ret = rejectData.toRaw(rData, 64);
+    Q_ASSERT(ret > 0);
+    HelperCoder::printArray(rData, ret, "Sending reject message with:");
+}
+
+void BacnetTSM2::sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
+{
+    BacnetUnconfirmedRequestData header(serviceChoice);
+    quint8 rData[64];
+    quint8 total(0);
+    quint16 length = sizeof(rData);
+    qint32 ret = header.toRaw(rData, length);
+    Q_ASSERT(ret >= 0);
+    if (ret < 0)
+        return;
+    length -= ret;
+    total += ret;
+    ret = data.toRaw(rData + ret, length);
+    Q_ASSERT(ret >= 0);
+    if (ret < 0)
+        return;
+    total += ret;
+    HelperCoder::printArray(rData, total, "sendUnconfirmed: ");
 }

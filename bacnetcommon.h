@@ -443,6 +443,13 @@ namespace Bacnet
                             BvllMaxSize = NpduMaxSize + BvllMaxHeaderSize
                                       };
 
+    enum BacnetSegmentation {
+        SegmentedBoth       = 0,
+        SegmentedTransmit   = 1,
+        SegmentedReceive    = 2,
+        SegmentedNOT        = 3
+    };
+
     struct ObjectIdStruct {
         BacnetObjectType::ObjectType objectType;
         quint32 instanceNum;
@@ -452,7 +459,10 @@ namespace Bacnet
     ObjectIdStruct numToObjId(unsigned int numObjId);
 
     enum {
-        ArrayIndexNotPresent = 0xffffffff
+        ArrayIndexNotPresent = 0xffffffff,
+        MaximumInstanceNumber = 0x3fffff,
+        InvalidInstanceNumber = 0xffffffff,
+        SNGVendorIdentifier = 0x00ff00ff
                            };
 
     struct WriteAccessSpecificationStruct {
@@ -525,6 +535,22 @@ namespace BacnetServices
     };
 
     typedef BacnetConfirmedServiceRequest BacnetConfirmedServiceChoice;
+
+    enum BacnetUnconfirmedServiceRequest {
+        I_Am            = 0,
+        I_Have          = 1,
+        UnconfirmedCOVNotification      = 2,
+        UnconfirmedEventNotification    = 3,
+        UnconfirmedPrivateTransfer      = 4,
+        UnconfirmedTextMessage          = 5,
+        TimeSynchronization             = 6,
+        WhoHas                          = 7,
+        WhoIs                           = 8,
+        UtcTimeSynchronization          = 9
+    };
+
+    typedef BacnetUnconfirmedServiceRequest BacnetUnconfirmedServiceChoice;
+
 }
 
 namespace Bacnet {

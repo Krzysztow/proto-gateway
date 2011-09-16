@@ -41,7 +41,7 @@ SOURCES += main.cpp \
     bacnetwritepropertyservicehandler.cpp \
     bacnetreadpropertyservicehandler.cpp \
     asynchronousconfirmedhandler.cpp \
-    asynchsetter.cpp \
+    internalobjectshandler.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \
     bacnetreadpropertyservice.cpp \
@@ -71,7 +71,15 @@ SOURCES += main.cpp \
     propertyfactory.cpp \
 #    check.cpp \
     cos.cpp \
-    readpropertyservicedata.cpp
+    readpropertyservicedata.cpp \
+    bacnetinternaladdresshelper.cpp \
+    whoisservicehandler.cpp \
+    whoisservicedata.cpp \
+    iamservicedata.cpp \
+    internalunconfirmedrequesthandler.cpp \
+    internalwhoisrequesthandler.cpp \
+    internalwhohasrequesthandler.cpp \
+    whohasservicedata.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -134,6 +142,15 @@ HEADERS += \
     propertyfactory.h \
 #    check.h \
     cos.h \
-    readpropertyservicedata.h
+    readpropertyservicedata.h \
+    bacnetinternaladdresshelper.h \
+    whoisservicehandler.h \
+    whoisservicedata.h \
+    bacnetservicedata.h \
+    iamservicedata.h \
+    internalunconfirmedrequesthandler.h \
+    internalwhoisrequesthandler.h \
+    internalwhohasrequesthandler.h \
+    whohasservicedata.h
 
 OTHER_FILES +=

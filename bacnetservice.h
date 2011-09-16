@@ -18,7 +18,6 @@ class BacnetObject;
 class BacnetService
 {
 public:
-    BacnetService();
     virtual ~BacnetService();
 
     //! \warning The response is created only once. Caller takes ownership over the response.
