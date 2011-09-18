@@ -139,3 +139,77 @@ qint32 BacnetCoder::closingTagToRaw(quint8 *ptrStart, quint16 buffLength, quint8
     *ptrStart |= BACNET_CLOSING_TAG;
     return ret;
 }
+
+qint32 BacnetCoder::stringToRaw(quint8 *ptrStart, quint16 buffLength, QString value, bool isContext, quint8 tagNumber, CharacterSet charSet)
+{
+    Q_CHECK_PTR(ptrStart);
+    quint8 encodedLength(0);
+    qint32 ret;
+
+    switch (charSet)
+    {
+    case (BacnetCoder::AnsiX3_4): {
+            encodedLength = value.length();
+            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+                                                  tagNumber, isContext, encodedLength + 1);
+            if (ret < 0) return ret;
+            QByteArray tempBytes = value.toAscii();
+            *(ptrStart + ret) = charSet;
+            memcpy(ptrStart + ret + 1, tempBytes.data(), encodedLength);
+
+            return ret + 1 + encodedLength;
+        }
+    case (BacnetCoder::IbmDbcs): //break;//fall through
+    case (BacnetCoder::JisC6266): {
+            qWarning("This encoding is not supported!");
+            //                Q_ASSERT(false);
+            return -3;//encoding not supported
+        }
+    case (BacnetCoder::UCS_4): {
+            encodedLength = 4 * value.length();
+            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+                                                  tagNumber, isContext, encodedLength + 1);            if (ret < 0) return ret;
+            *(ptrStart + ret) = charSet;
+            QVector<uint> tempBytes = value.toUcs4();
+            quint32 *destLetterPtr = (quint32*)(ptrStart + ret + 1);
+            const int iterNum = value.length();
+            for (int i = 0; i<iterNum; ++i) {
+                HelperCoder::uint32ToRaw(tempBytes.at(i), (quint8*)destLetterPtr);
+                ++destLetterPtr;
+            }
+            return ret + 1 + encodedLength;
+        }
+    case (BacnetCoder::UCS_2): {
+            encodedLength = 2 * value.length();
+            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+                                                  tagNumber, isContext, encodedLength + 1);
+            if (ret < 0) return ret;
+            *(ptrStart + ret) = charSet;
+            const ushort *tempBytes = value.utf16();
+            quint16 *destLetterPtr = (quint16*)(ptrStart + ret + 1);
+            const int iterNum = value.length();
+            for (int i = 0; i<iterNum; ++i) {
+                HelperCoder::uin16ToRaw(*(tempBytes + i), (quint8*)destLetterPtr);
+                ++destLetterPtr;
+            }
+
+            return ret + 1 + encodedLength;
+            break;
+        }
+    case (BacnetCoder::ISO_8859_1): {
+            encodedLength = value.length();
+            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+                                                  tagNumber, isContext, encodedLength + 1);
+            if (ret < 0) return ret;
+            QByteArray tempBytes = value.toLatin1();
+
+            *(ptrStart + ret) = charSet;
+            memcpy(ptrStart + ret + 1, tempBytes.data(), encodedLength);
+
+            return ret + 1 + encodedLength;
+        }
+    default:
+        return -3;//encoding not supported
+    }
+}
+

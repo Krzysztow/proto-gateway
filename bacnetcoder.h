@@ -51,6 +51,7 @@ namespace BacnetCoder
     qint32 sintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 value, bool isContextTag, quint8 tagNumber);
     qint32 closingTagToRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
     qint32 openingTagToRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
+    qint32 stringToRaw(quint8 *ptrStart, quint16 buffLength, QString value, bool isContext, quint8 tagNumber, CharacterSet charSet = AnsiX3_4);
 };
 
 

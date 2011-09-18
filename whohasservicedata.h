@@ -13,6 +13,7 @@ namespace Bacnet {
     {
     public:
         WhoHasServiceData();
+        ~WhoHasServiceData();
 
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);

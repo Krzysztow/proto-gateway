@@ -481,88 +481,88 @@ DataType::DataType OctetString::typeId()
     return DataType::OctetString;
 }
 
-//Character STRING
-qint32 CharacterString::toRaw_helper(quint8 *ptrStart, quint16 buffLength, bool isContext, quint8 tagNumber)
-{
-    Q_CHECK_PTR(ptrStart);
-    quint8 encodedLength(0);
-    qint32 ret;
-
-    switch (_charSet)
-    {
-    case (BacnetCoder::AnsiX3_4): {
-            encodedLength = _value.length();
-            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
-                                                  tagNumber, isContext, encodedLength + 1);
-            if (ret < 0) return ret;
-            QByteArray tempBytes = _value.toAscii();
-            *(ptrStart + ret) = _charSet;
-            memcpy(ptrStart + ret + 1, tempBytes.data(), encodedLength);
-
-            return ret + 1 + encodedLength;
-        }
-    case (BacnetCoder::IbmDbcs): //break;//fall through
-    case (BacnetCoder::JisC6266): {
-            qWarning("This encoding is not supported!");
-            //                Q_ASSERT(false);
-            return -3;//encoding not supported
-        }
-    case (BacnetCoder::UCS_4): {
-            encodedLength = 4 * _value.length();
-            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
-                                                  tagNumber, isContext, encodedLength + 1);            if (ret < 0) return ret;
-            *(ptrStart + ret) = _charSet;
-            QVector<uint> tempBytes = _value.toUcs4();
-            quint32 *destLetterPtr = (quint32*)(ptrStart + ret + 1);
-            const int iterNum = _value.length();
-            for (int i = 0; i<iterNum; ++i) {
-                HelperCoder::uint32ToRaw(tempBytes.at(i), (quint8*)destLetterPtr);
-                ++destLetterPtr;
-            }
-            return ret + 1 + encodedLength;
-        }
-    case (BacnetCoder::UCS_2): {
-            encodedLength = 2 * _value.length();
-            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
-                                                  tagNumber, isContext, encodedLength + 1);
-            if (ret < 0) return ret;
-            *(ptrStart + ret) = _charSet;
-            const ushort *tempBytes = _value.utf16();
-            quint16 *destLetterPtr = (quint16*)(ptrStart + ret + 1);
-            const int iterNum = _value.length();
-            for (int i = 0; i<iterNum; ++i) {
-                HelperCoder::uin16ToRaw(*(tempBytes + i), (quint8*)destLetterPtr);
-                ++destLetterPtr;
-            }
-
-            return ret + 1 + encodedLength;
-            break;
-        }
-    case (BacnetCoder::ISO_8859_1): {
-            encodedLength = _value.length();
-            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
-                                                  tagNumber, isContext, encodedLength + 1);
-            if (ret < 0) return ret;
-            QByteArray tempBytes = _value.toLatin1();
-
-            *(ptrStart + ret) = _charSet;
-            memcpy(ptrStart + ret + 1, tempBytes.data(), encodedLength);
-
-            return ret + 1 + encodedLength;
-        }
-    default:
-        return -3;//encoding not supported
-    }
-}
+////Character STRING
+//qint32 CharacterString::toRaw_helper(quint8 *ptrStart, quint16 buffLength, bool isContext, quint8 tagNumber)
+//{
+//    Q_CHECK_PTR(ptrStart);
+//    quint8 encodedLength(0);
+//    qint32 ret;
+//
+//    switch (_charSet)
+//    {
+//    case (BacnetCoder::AnsiX3_4): {
+//            encodedLength = _value.length();
+//            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+//                                                  tagNumber, isContext, encodedLength + 1);
+//            if (ret < 0) return ret;
+//            QByteArray tempBytes = _value.toAscii();
+//            *(ptrStart + ret) = _charSet;
+//            memcpy(ptrStart + ret + 1, tempBytes.data(), encodedLength);
+//
+//            return ret + 1 + encodedLength;
+//        }
+//    case (BacnetCoder::IbmDbcs): //break;//fall through
+//    case (BacnetCoder::JisC6266): {
+//            qWarning("This encoding is not supported!");
+//            //                Q_ASSERT(false);
+//            return -3;//encoding not supported
+//        }
+//    case (BacnetCoder::UCS_4): {
+//            encodedLength = 4 * _value.length();
+//            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+//                                                  tagNumber, isContext, encodedLength + 1);            if (ret < 0) return ret;
+//            *(ptrStart + ret) = _charSet;
+//            QVector<uint> tempBytes = _value.toUcs4();
+//            quint32 *destLetterPtr = (quint32*)(ptrStart + ret + 1);
+//            const int iterNum = _value.length();
+//            for (int i = 0; i<iterNum; ++i) {
+//                HelperCoder::uint32ToRaw(tempBytes.at(i), (quint8*)destLetterPtr);
+//                ++destLetterPtr;
+//            }
+//            return ret + 1 + encodedLength;
+//        }
+//    case (BacnetCoder::UCS_2): {
+//            encodedLength = 2 * _value.length();
+//            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+//                                                  tagNumber, isContext, encodedLength + 1);
+//            if (ret < 0) return ret;
+//            *(ptrStart + ret) = _charSet;
+//            const ushort *tempBytes = _value.utf16();
+//            quint16 *destLetterPtr = (quint16*)(ptrStart + ret + 1);
+//            const int iterNum = _value.length();
+//            for (int i = 0; i<iterNum; ++i) {
+//                HelperCoder::uin16ToRaw(*(tempBytes + i), (quint8*)destLetterPtr);
+//                ++destLetterPtr;
+//            }
+//
+//            return ret + 1 + encodedLength;
+//            break;
+//        }
+//    case (BacnetCoder::ISO_8859_1): {
+//            encodedLength = _value.length();
+//            ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength,
+//                                                  tagNumber, isContext, encodedLength + 1);
+//            if (ret < 0) return ret;
+//            QByteArray tempBytes = _value.toLatin1();
+//
+//            *(ptrStart + ret) = _charSet;
+//            memcpy(ptrStart + ret + 1, tempBytes.data(), encodedLength);
+//
+//            return ret + 1 + encodedLength;
+//        }
+//    default:
+//        return -3;//encoding not supported
+//    }
+//}
 
 qint32 CharacterString::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
-    return toRaw_helper(ptrStart, buffLength, false, AppTags::CharacterString);
+    return BacnetCoder::stringToRaw(ptrStart, buffLength, _value, false, AppTags::CharacterString);
 }
 
 qint32 CharacterString::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 {
-    return toRaw_helper(ptrStart, buffLength, true, tagNumber);
+    return BacnetCoder::stringToRaw(ptrStart, buffLength,_value, true, tagNumber);
 }
 
 qint32 CharacterString::fromRaw(BacnetTagParser &parser)
