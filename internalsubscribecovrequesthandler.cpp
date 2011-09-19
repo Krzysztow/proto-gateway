@@ -1,4 +1,4 @@
-#include "internalwhoisrequesthandler.h"
+#include "internalsubscribecovrequesthandler.h"
 
 #include "bacnetcommon.h"
 #include "iamservicedata.h"
@@ -8,7 +8,7 @@
 
 using namespace Bacnet;
 
-InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+InternalSubscribeCOVRequestHandler::InternalSubscribeCOVRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                          InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
 InternalUnconfirmedRequestHandler(tsm, device, internalHandler, externalHandler),
 _tsm(tsm),
@@ -18,12 +18,12 @@ _externalHandler(externalHandler)
 {
 }
 
-InternalWhoIsRequestHandler::~InternalWhoIsRequestHandler()
+InternalSubscribeCOVRequestHandler::~InternalSubscribeCOVRequestHandler()
 {
 
 }
 
-bool InternalWhoIsRequestHandler::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
+bool InternalSubscribeCOVRequestHandler::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
 {
     Q_UNUSED(asynchId);
     Q_UNUSED(result);
@@ -33,18 +33,18 @@ bool InternalWhoIsRequestHandler::asynchActionFinished(int asynchId, int result,
     return true;//in case it is, tell it's done.
 }
 
-bool InternalWhoIsRequestHandler::isFinished()
+bool InternalSubscribeCOVRequestHandler::isFinished()
 {
     return true;
 }
 
-void InternalWhoIsRequestHandler::finalize(bool *deleteAfter)
+void InternalSubscribeCOVRequestHandler::finalize(bool *deleteAfter)
 {
     Q_CHECK_PTR(deleteAfter);
     if (deleteAfter)
         *deleteAfter = true;}
 
-QList<int> InternalWhoIsRequestHandler::execute()
+QList<int> InternalSubscribeCOVRequestHandler::execute()
 {
     //! \todo Hange the way it calculates limits - there should be function for that.
     quint32 lowLimit = _data._rangeLowLimit | (BacnetObjectType::Device << 22);
@@ -71,7 +71,7 @@ QList<int> InternalWhoIsRequestHandler::execute()
     return QList<int>();
 }
 
-qint32 InternalWhoIsRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)
+qint32 InternalSubscribeCOVRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)
 {
     return _data.fromRaw(servicePtr, length);
 }

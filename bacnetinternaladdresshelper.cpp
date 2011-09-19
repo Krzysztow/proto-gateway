@@ -17,7 +17,10 @@ quint8 BacnetInternalAddressHelper::macAddressFromRaw(quint8 *addrRawPtr, Bacnet
 
 InternalAddress BacnetInternalAddressHelper::internalAddress(const BacnetAddress &inAddress)
 {
-    Q_ASSERT(inAddress.macAddrLength() == (InternalAddressLength));
+    Q_ASSERT(inAddress.macAddrLength() == (InternalAddressLength) ||
+             inAddress.isGlobalBroadcast() ||
+             inAddress.isRemoteBroadcast() ||
+             inAddress.isLocalBraodacst());
     if (inAddress.macAddrLength() == InternalAddressLength) {
         return qFromBigEndian(*(quint32*)inAddress.macPtr());
     }

@@ -461,6 +461,7 @@ namespace Bacnet
     enum {
         ArrayIndexNotPresent = 0xffffffff,
         MaximumInstanceNumber = 0x3fffff,
+        ObjectInstanceMask  = 0x3fffff,
         InvalidInstanceNumber = 0xffffffff,
         SNGVendorIdentifier = 0x00ff00ff
                            };

@@ -64,6 +64,25 @@ qint8 BacnetCoder::encodeTagAndLength(quint8 *startPtr, quint16 buffLength, quin
     return lengthFieldShift;
 }
 
+qint32 BacnetCoder::boolToRaw(quint8 *ptrStart, quint16 buffLength, bool value, bool isContext, quint8 tagNumber)
+{
+    Q_CHECK_PTR(ptrStart);
+    if (isContext) {
+        qint16 ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength, tagNumber, isContextTag, 1);
+        if (ret <= 0)
+            return ret;
+        ++ptrStart;
+        *ptrStart |= (quint8)value;
+        return 2;
+    } else {
+        qint16 ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength, tagNumber, isContextTag, 0);//no overhead for additional data fields.
+        if (ret <= 0)
+            return ret;
+        *ptrStart |= (quint8)value;
+        return 1;
+    }
+}
+
 qint32 BacnetCoder::objectIdentifierToRaw(quint8 *ptrStart, quint16 buffLength, Bacnet::ObjectIdStruct &objIdentifier, bool isContextTag, quint8 tagNumber)
 {
     Q_CHECK_PTR(ptrStart);

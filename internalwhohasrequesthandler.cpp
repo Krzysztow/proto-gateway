@@ -2,6 +2,7 @@
 
 #include "bacnetcommon.h"
 #include "internalobjectshandler.h"
+#include "ihaveservicedata.h"
 #include "bacnetdeviceobject.h"
 #include "bacnettsm2.h"
 
@@ -78,6 +79,52 @@ QList<int> InternalWhoHasRequestHandler::execute()
 //    }
 
 //    return QList<int>();
+
+    QList<BacnetDeviceObject*> devs = _internalHandler->devices();
+    QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
+    QList<BacnetDeviceObject*>::iterator devListEnd = devs.end();
+
+    //! \todo If not all the responses fit in the buffer divide it in some chunks and get asynchIds
+    quint32 devInstanceNum;
+    IHaveServiceData iHaveData;
+    quint32 minDevId = _data._rangeLowLimit;
+    quint32 maxDevId = _data._rangeHighLimit;
+#warning "Change object Id struct to the quint32"
+    quint32 searchedObjInstance = InvalidInstanceNumber;
+    if (0 != _data._objidentifier)
+        searchedObjInstance = objIdToNum(*_data._objidentifier);
+    if (InvalidInstanceNumber == minDevId) {
+        minDevId = 0;
+        maxDevId = MaximumInstanceNumber;
+    }
+
+    QMap<quint32, BacnetObject*>::ConstIterator objIt;
+    QMap<quint32, BacnetObject*>::ConstIterator objMapEnd;
+
+    for (; devIt != devListEnd; ++devIt) {
+        devInstanceNum = (*devIt)->objectIdNum() & ObjectInstanceMask;
+        if ( (minDevId <= devInstanceNum) &&
+             (devInstanceNum <= maxDevId) ) {
+            //iterate over device's child objects
+            objIt = (*devIt)->childObjects().begin();
+            objMapEnd = (*devIt)->childObjects().end();
+            for (; objIt != objMapEnd; ++objIt) {
+                if ( ( (0 != _data._objidentifier) && ((*objIt)->objectIdNum() == searchedObjInstance) ) ||
+                     ( (0 != _data._objName) && ((*objIt)->objectName() == (*_data._objName)) ) ) {
+                    //manipulate object data.
+                    iHaveData._devId = numToObjId(devInstanceNum | BacnetObjectType::Device << 22);
+                    iHaveData._objId = (*objIt)->objectId();
+                    iHaveData._objName = (*objIt)->objectName();
+                    _tsm->sendUnconfirmed(_requester, _destination, iHaveData, BacnetServices::I_Have);
+                    //we can stop here, since no two objects internetowrk-wide may have the same instance numbers or names.
+                    return QList<int>();
+                }
+            }
+        }
+    }
+
+    //no asynchronous actions - return empty list.
+    return QList<int>();
 }
 
 qint32 InternalWhoHasRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)

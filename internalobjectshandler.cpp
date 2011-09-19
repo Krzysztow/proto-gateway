@@ -19,17 +19,16 @@
 
 void InternalObjectsHandler::getBytes(quint8 *data, quint16 length, BacnetAddress &srcAddress, BacnetAddress &destAddress)
 {
-    InternalAddress destination = BacnetInternalAddressHelper::internalAddress(destAddress);
-    if (BacnetInternalAddressHelper::InvalidInternalAddress == destination) {
-        qDebug("InternalObjectsHandler::getBytes() : invalid address gotten.");
-        return;
-    }
-
     //looking for a destination device.
     BacnetDeviceObject *device(0);
     if (destAddress.isGlobalBroadcast() || destAddress.isGlobalBroadcast()) {
         device = 0;
     } else {
+        InternalAddress destination = BacnetInternalAddressHelper::internalAddress(destAddress);
+        if (BacnetInternalAddressHelper::InvalidInternalAddress == destination) {
+            qDebug("InternalObjectsHandler::getBytes() : invalid address gotten.");
+            return;
+        }
         device = _devices[destination];
         //find device by address from network layer
         if (0 == device) {//device not found, drop it!

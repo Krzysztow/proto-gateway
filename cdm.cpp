@@ -237,12 +237,15 @@ int main(int argc, char *argv[])
     aio->setObjectName("HW_Setpoint");
     aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
-    BacnetDeviceObject *device1 = new BacnetDeviceObject(3);
+    BacnetDeviceObject *device1 = new BacnetDeviceObject(8);
     device1->setObjectName("BestDeviceEver");
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
     BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
     bHndlr->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
+
+    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
+    aio1->setObjectName("OATemp");
 
     ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
     bHndlr->_externalHandler = extHandler;
@@ -295,32 +298,31 @@ int main(int argc, char *argv[])
     };
     bHndlr->getBytes(wiService, sizeof(wiService), srcAddr, destAddr);
 
+    //WHO HAS - object name is known
+    quint8 whoHasService[] = {
+        0x10,
+        0x07,
+        0x3d,
+        0x07,
+        0x00,
+        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
+    };
+
+    BacnetAddress broadAddr;
+    broadAddr.setGlobalBroadcast();
+    bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
+
+    //WHO HAS - object id is known
+    quint8 whoHasService2[] = {
+        0x10,
+        0x07,
+        0x2c,
+        0x00, 0x00, 0x00, 0x03
+    };
+    bHndlr->getBytes(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
+
+
+
     return a.exec();
-
-//    KAddress *address = new KAddress(8);
-//    quint8 data[] = {0x00, 0x04, 0x59, 0x0F, 0x0C,
-//                    0x00, 0x80, 0x00, 0x01,
-//                    0x19, 0x55, 0x3E,
-//                    0x44,
-//                    0x43, 0x34, 0x00, 0x00,
-//                    0x3F};
-//    quint8 *dataPtr = data;
-//    quint16 length = sizeof(data);
-
-//    qint16 ret(0);
-//    BacnetPciData *pciData = BacnetPci::createPciData(dataPtr, length, &ret);
-//    if (ret <= 0) {
-//        Q_ASSERT(false);//some error
-//        //send reject/abort message
-//    }
-//    dataPtr += ret;
-//    length -= ret;
-
-
-//    BacnetService *service = ServiceFactory::createService(dataPtr, length, pciData->pduType(), &ret);
-//    if (ret <= 0) {
-//        Q_ASSERT(false);//some error
-//        //send reject/abort message
-//    }
 }
 #endif //PCDM_TEST

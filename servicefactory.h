@@ -18,8 +18,8 @@ namespace ServiceFactory
     BacnetService *createService(quint8 *servicePtr, quint16 length,
                          quint8 serviceCode, qint32 *retCode);
 
-    BacnetService *createBroadcastService(quint8 *servicePtr, quint16 length,
-                                          quint8 serviceCode, qint32 *retCode);
+//    BacnetService *createBroadcastService(quint8 *servicePtr, quint16 length,
+//                                          quint8 serviceCode, qint32 *retCode);
 
     ::InternalUnconfirmedRequestHandler *createUnconfirmedHandler(BacnetUnconfirmedRequestData *pciData,
                                                                        Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,

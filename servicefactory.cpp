@@ -3,6 +3,7 @@
 #include "bacnetwritepropertyservice.h"
 #include "bacnetreadpropertyservice.h"
 #include "internalwhoisrequesthandler.h"
+#include "internalwhohasrequesthandler.h"
 #include "bacnetpci.h"
 
 BacnetService *ServiceFactory::createService(quint8 *servicePtr, quint16 length,
@@ -42,21 +43,25 @@ BacnetService *ServiceFactory::createService(quint8 *servicePtr, quint16 length,
         {
             return new Bacnet::InternalWhoIsRequestHandler(tsm, device, internalHandler, externalHandler);
         }
+    case (BacnetServices::WhoHas):
+        {
+            return new Bacnet::InternalWhoHasRequestHandler(tsm, device, internalHandler, externalHandler);
+        }
     default:
         Q_ASSERT(false);
         return 0;
     }
 }
 
-BacnetService *ServiceFactory::createBroadcastService(quint8 *servicePtr, quint16 length,
-                                                      quint8 serviceCode, qint32 *retCode)
-{
-    Q_CHECK_PTR(retCode);
-    Q_CHECK_PTR(servicePtr);
+//BacnetService *ServiceFactory::createBroadcastService(quint8 *servicePtr, quint16 length,
+//                                                      quint8 serviceCode, qint32 *retCode)
+//{
+//    Q_CHECK_PTR(retCode);
+//    Q_CHECK_PTR(servicePtr);
 
-    switch (serviceCode)
-    {
-    case (BacnetServices::I_Am):
-        ;
-    }
-}
+//    switch (serviceCode)
+//    {
+//    case (BacnetServices::I_Am):
+//        ;
+//    }
+//}
