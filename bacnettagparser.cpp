@@ -281,8 +281,7 @@ void BacnetTagParser::copyData()
     if (0 != _copiedData)
         delete []_copiedData;
 
-#warning "Change limit to maximum APDU size"
-    Q_ASSERT(_leftLength <= 1024);
+    Q_ASSERT(_leftLength <= Bacnet::ApduMaxSize);
 
     _copiedData = new quint8[_leftLength];
     memcpy(_copiedData, _trackedData, _leftLength);

@@ -79,7 +79,9 @@ SOURCES += main.cpp \
     internalunconfirmedrequesthandler.cpp \
     internalwhoisrequesthandler.cpp \
     internalwhohasrequesthandler.cpp \
-    whohasservicedata.cpp
+    whohasservicedata.cpp \
+    whohasservicehandler.cpp \
+    ihaveservicedata.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -151,6 +153,8 @@ HEADERS += \
     internalunconfirmedrequesthandler.h \
     internalwhoisrequesthandler.h \
     internalwhohasrequesthandler.h \
-    whohasservicedata.h
+    whohasservicedata.h \
+    whohasservicehandler.h \
+    ihaveservicedata.h
 
 OTHER_FILES +=
