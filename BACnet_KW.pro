@@ -40,7 +40,7 @@ SOURCES += main.cpp \
     cdm.cpp \
     bacnetwritepropertyservicehandler.cpp \
     bacnetreadpropertyservicehandler.cpp \
-    asynchronousconfirmedhandler.cpp \
+    internalconfirmedrequesthandler.cpp \
     internalobjectshandler.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \
@@ -73,15 +73,15 @@ SOURCES += main.cpp \
     cos.cpp \
     readpropertyservicedata.cpp \
     bacnetinternaladdresshelper.cpp \
-    whoisservicehandler.cpp \
     whoisservicedata.cpp \
     iamservicedata.cpp \
     internalunconfirmedrequesthandler.cpp \
     internalwhoisrequesthandler.cpp \
     internalwhohasrequesthandler.cpp \
     whohasservicedata.cpp \
-    whohasservicehandler.cpp \
-    ihaveservicedata.cpp
+    ihaveservicedata.cpp \
+    subscribecovservicedata.cpp \
+    internalsubscribecovrequesthandler.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -109,7 +109,8 @@ HEADERS += \
     bacnetwritepropertyservicehandler.h \
     externalobjectshandler.h \
     bacnettsm2.h \
-    asynchronousconfirmedhandler.h \
+#    asynchronousconfirmedhandler.h \
+    internalobjectshandler.h \
     asynchsetter.h \
     bacnettsm.h \
     bacnetreadpropertyack.h \
@@ -120,7 +121,7 @@ HEADERS += \
     bacnetreadpropertyservice.h \
     bacnetconfirmedservicehandler.h \
     bacnetexternalobjects.h \
-    asynchronousactionhandler.h \
+    internalconfirmedrequesthandler.h \
     asynchowner.h \
     analoginputobject.h \
     bacnetobjectinternalsupport.h \
@@ -146,7 +147,6 @@ HEADERS += \
     cos.h \
     readpropertyservicedata.h \
     bacnetinternaladdresshelper.h \
-    whoisservicehandler.h \
     whoisservicedata.h \
     bacnetservicedata.h \
     iamservicedata.h \
@@ -154,7 +154,8 @@ HEADERS += \
     internalwhoisrequesthandler.h \
     internalwhohasrequesthandler.h \
     whohasservicedata.h \
-    whohasservicehandler.h \
-    ihaveservicedata.h
+    ihaveservicedata.h \
+    subscribecovservicedata.h \
+    internalsubscribecovrequesthandler.h
 
 OTHER_FILES +=

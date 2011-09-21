@@ -1,7 +1,7 @@
 #ifndef ASYNCHRONOUSRPHANDLER_H
 #define ASYNCHRONOUSRPHANDLER_H
 
-#include "asynchronousactionhandler.h"
+#include "internalrequesthandler.h"
 #include "bacnetaddress.h"
 
 namespace Bacnet {

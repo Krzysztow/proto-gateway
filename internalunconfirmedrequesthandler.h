@@ -1,7 +1,7 @@
 #ifndef INTERNALUNCONFIRMEDREQUESTHANDLER_H
 #define INTERNALUNCONFIRMEDREQUESTHANDLER_H
 
-#include "asynchronousactionhandler.h"
+#include "internalconfirmedrequesthandler.h"
 #include "bacnetaddress.h"
 
 /** We stick to this upper class
