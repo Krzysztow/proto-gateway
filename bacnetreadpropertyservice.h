@@ -12,7 +12,7 @@ class BacnetObject;
 class BacnetDeviceObject;
 class BacnetTagParser;
 class BacnetAck;
-class BacnetReadPropertyAck;
+namespace Bacnet {class BacnetReadPropertyAck;}
 class ReadPropertyServiceHandler:
         public BacnetService
 {
@@ -51,14 +51,14 @@ public:
     ~ReadPropertyServiceHandler();
 
 //private:
-    Bacnet::ReadPropertyServiceData _value;
+    Bacnet::ReadPropertyServiceData _rpData;
     Bacnet::Error _error;
 
     //! \todo Turn it into some asynch object.
     quint32 _asynchId;
 
     //! ReadPropertyServiceHandlerAck
-    BacnetReadPropertyAck *_response;
+    Bacnet::BacnetReadPropertyAck *_response;
 };
 
 #endif // BACNETREADPROPERTYSERVICE_H

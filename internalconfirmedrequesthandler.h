@@ -3,17 +3,15 @@
 
 #include "internalrequesthandler.h"
 #include "bacnetaddress.h"
+#include "error.h"
+#include "bacnetservicedata.h"
 
 namespace Bacnet {
     class BacnetTSM2;
     class ExternalObjectsHandler;
 }
-class BacnetConfirmedRequestData;
-class ReadPropertyServiceHandler;
-class BacnetService;
-class BacnetPciData;
 class InternalObjectsHandler;
-
+class BacnetConfirmedRequestData;
 
 class InternalConfirmedRequestHandler:
         public InternalRequestHandler
@@ -23,26 +21,25 @@ public:
                                     InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler);
     virtual ~InternalConfirmedRequestHandler();
 
-    void setRequester(BacnetAddress &address);
-    void setRequestData(BacnetConfirmedRequestData *reqData);
-    void setService(BacnetService *service);
-
-public://overwritten from InternalRequestHandler
-    virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
-    virtual bool isFinished();
-    virtual void finalize(bool *deleteAfter);
+    //! \todo move this function higher, to InternalRequestHandler!
+    virtual qint32 fromRaw(quint8 *servicePtr, quint16 length) = 0;
 
 public:
-    static void finalizeInstant(BacnetAddress &address, Bacnet::BacnetTSM2 *tsm, BacnetConfirmedRequestData *requestPci, BacnetService *requestService);
+    void setConfirmedData(BacnetConfirmedRequestData *reqData);
+    void setAddresses(BacnetAddress &requester, BacnetAddress &destination);
+
+public:
+    virtual bool hasError() = 0;
+    virtual Bacnet::Error &error() = 0;
+    virtual Bacnet::BacnetServiceData *takeResponseData() = 0;
+
+public:
+    void finalizeInstant(Bacnet::BacnetTSM2 *tsm);
 
 private:
-    Bacnet::BacnetTSM2 *_tsm;
-    BacnetAddress _requester;
     BacnetConfirmedRequestData *_reqData;
-    BacnetService *_service;
-    BacnetDeviceObject *_device;
-    InternalObjectsHandler *_internalHandler;
-    Bacnet::ExternalObjectsHandler *_externalHandler;
+    BacnetAddress _requester;
+    BacnetAddress _destination;
 };
 
 #endif // ASYNCHRONOUSRPHANDLER_H

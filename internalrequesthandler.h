@@ -15,7 +15,6 @@ public:
     virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device) = 0;
     virtual bool isFinished() = 0;
     virtual void finalize(bool *deleteAfter) = 0;
-
     virtual QList<int> execute() {return QList<int>();}
 };
 

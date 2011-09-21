@@ -1,7 +1,7 @@
 #ifndef INTERNALUNCONFIRMEDREQUESTHANDLER_H
 #define INTERNALUNCONFIRMEDREQUESTHANDLER_H
 
-#include "internalconfirmedrequesthandler.h"
+#include "internalrequesthandler.h"
 #include "bacnetaddress.h"
 
 /** We stick to this upper class
@@ -13,7 +13,6 @@ namespace Bacnet {
 };
 class InternalObjectsHandler;
 class BacnetUnconfirmedRequestData;
-class BacnetService;
 
 class InternalUnconfirmedRequestHandler:
         public InternalRequestHandler
@@ -34,13 +33,6 @@ protected:
     BacnetUnconfirmedRequestData *_reqData;
     BacnetAddress _requester;
     BacnetAddress _destination;
-
-//private:
-//    Bacnet::BacnetTSM2 *_tsm;
-//    BacnetService *_service;
-//    BacnetDeviceObject *_device;
-//    InternalObjectsHandler *_internalHandler;
-//    ExternalObjectsHandler *_externalHandler;
 };
 
 #endif // INTERNALUNCONFIRMEDREQUESTHANDLER_H

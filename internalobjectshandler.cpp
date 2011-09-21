@@ -13,7 +13,7 @@
 #include "helpercoder.h"
 #include "bacnetwritepropertyservice.h"
 #include "bacnetdeviceobject.h"
-#include "asynchronousconfirmedhandler.h"
+#include "bacnetservice.h"
 #include "bacnettsm2.h"
 #include "internalunconfirmedrequesthandler.h"
 
@@ -55,38 +55,39 @@ void InternalObjectsHandler::getBytes(quint8 *data, quint16 length, BacnetAddres
                 return;
             }
 
-            BacnetService *service = ServiceFactory::createService(data+ret, length-ret, crData->service(), &ret);
-            Q_CHECK_PTR(service);
-            if (0 == service) {
+            InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(crData, _tsm, device, this, _externalHandler);
+            Q_CHECK_PTR(handler);
+            if (0 == handler) {
                 _tsm->sendReject(srcAddress, destAddress, BacnetReject::ReasonUnrecognizedService, crData->invokedId());
                 delete crData;
                 return;
             }
 
+            ret = handler->fromRaw(data + ret, length - ret);
             Q_ASSERT(ret > 0);
             if (ret <= 0) {
                 //! \todo send reject - parsing should return the reject reason!
                 _tsm->sendReject(srcAddress, destAddress, BacnetReject::ReasonMissingRequiredParameter, crData->invokedId());
-                delete service;
-                delete crData;
+                delete handler;
+                return;
+            }
+            //! \todo Remove code duplication - with Unconfirmed request part.
+            handler->setAddresses(srcAddress, destAddress);
+
+            QList<int> returns = handler->execute();
+            if (returns.isEmpty()) {//some error occured or is done. Both ways, we are ready to send respond back.
+                Q_ASSERT(handler->isFinished());
+                bool deleteAfter(true);
+                handler->finalize(&deleteAfter);
+                if (deleteAfter)
+                    delete handler;
                 return;
             }
 
-            ret = service->execute(device);
-            if (ret <= 0) {//some error occured or is done. Both ways, we are ready to send respond back.
-                Q_ASSERT(service->isReady());
-                InternalConfirmedRequestHandler::finalizeInstant(srcAddress, _tsm, crData, service);
-                delete service;//reclaim allocated memory
-                delete crData;
-                return;
+            foreach (int asynchId, returns) {
+                Q_ASSERT(!_asynchRequests.contains(asynchId));
+                _asynchRequests.insert(asynchId, handler);
             }
-            //asynchronous action is to be executed.
-            InternalConfirmedRequestHandler *handler = new InternalConfirmedRequestHandler(_tsm, device, this, _externalHandler);
-            handler->setRequestData(crData);//takes ownership over crData - don't delete.
-            handler->setRequester(srcAddress);
-            handler->setService(service);   //takes ownership over service - don't delete it.
-            Q_ASSERT(!_asynchRequests.contains(ret));
-            _asynchRequests.insert(ret, handler);
 
             break;
         }
@@ -135,7 +136,7 @@ void InternalObjectsHandler::getBytes(quint8 *data, quint16 length, BacnetAddres
 
             foreach (int asynchId, returns) {
                 Q_ASSERT(!_asynchRequests.contains(asynchId));
-                _asynchRequests.insert(ret, handler);
+                _asynchRequests.insert(asynchId, handler);
             }
 
             break;

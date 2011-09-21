@@ -3,10 +3,12 @@
 
 #include "bacnetcommon.h"
 
-class BacnetService;
+class InternalConfirmedRequestHandler;
 class InternalUnconfirmedRequestHandler;
 class BacnetUnconfirmedRequestData;
+class BacnetConfirmedRequestData;
 namespace Bacnet {
+    class BacnetServiceData;
     class BacnetTSM2;
     class ExternalObjectsHandler;
 }
@@ -15,8 +17,9 @@ class BacnetDeviceObject;
 
 namespace ServiceFactory
 {
-    BacnetService *createService(quint8 *servicePtr, quint16 length,
-                         quint8 serviceCode, qint32 *retCode);
+    ::InternalConfirmedRequestHandler *createConfirmedHandler(BacnetConfirmedRequestData *pciData,
+                                                              Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                              InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler);
 
 //    BacnetService *createBroadcastService(quint8 *servicePtr, quint16 length,
 //                                          quint8 serviceCode, qint32 *retCode);

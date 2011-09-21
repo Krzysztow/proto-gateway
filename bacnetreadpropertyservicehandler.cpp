@@ -3,6 +3,7 @@
 #include "bacnetreadpropertyservice.h"
 #include "bacnetreadpropertyack.h"
 #include "externalobjectshandler.h"
+#include "bacnetdata.h"
 
 using namespace Bacnet;
 
@@ -50,10 +51,10 @@ void ReadPropertyServiceHandlerHandler::handleAck(quint8 *ackPtr, quint16 length
         *action = DeleteServiceHandler;//we are done - parent may delete us
     }
 
-    Q_ASSERT(_rpData->objId.instanceNum == ack._value.objId.instanceNum);
-    Q_ASSERT(_rpData->objId.objectType == ack._value.objId.objectType);
-    Q_ASSERT(_rpData->propertyId == ack._value.propertyId);
-    Q_ASSERT(_rpData->arrayIndex == ack._value.arrayIndex);
+    Q_ASSERT(_rpData->objId.instanceNum == ack._readData.objId.instanceNum);
+    Q_ASSERT(_rpData->objId.objectType == ack._readData.objId.objectType);
+    Q_ASSERT(_rpData->propertyId == ack._readData.propertyId);
+    Q_ASSERT(_rpData->arrayIndex == ack._readData.arrayIndex);
     delete _rpData; _rpData = 0;
 
     _responseHandler->handleResponse(this, ack);

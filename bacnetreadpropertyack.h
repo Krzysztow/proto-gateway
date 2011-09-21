@@ -3,39 +3,33 @@
 
 #include "bacnetservice.h"
 #include "bacnetcommon.h"
+#include "bacnetservicedata.h"
 #include "readpropertyservicedata.h"
 
 namespace Bacnet {
     class BacnetDataInterface;
 }
 
-class BacnetReadPropertyAck:
-        public BacnetService
-{
-public:
-    BacnetReadPropertyAck();
-    ~BacnetReadPropertyAck();
-    virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
-    virtual qint32 fromRaw(quint8 *startPtr, quint16 buffLength);
+namespace Bacnet {
 
-    //remove these stupid functions
-    virtual BacnetService *takeResponse() {return 0;}
-    virtual bool asynchActionFinished(int asynchId, int result, BacnetDeviceObject *device, BacnetObject *object) {return true;}
-
-    virtual bool isReady() {return true;}
-    virtual bool hasError() {return false;}
-    virtual Bacnet::Error &error() {}
-    virtual qint32 execute(BacnetDeviceObject *device) {return -1;}
-
-public:
-    void setData(Bacnet::BacnetDataInterface *data, Bacnet::ReadPropertyServiceData &ackReadPrptyData);
-    Bacnet::BacnetDataInterface *data();
-    Bacnet::ReadPropertyServiceData &value();
+    class BacnetReadPropertyAck:
+            public BacnetServiceData
+    {
+    public:
+        BacnetReadPropertyAck();
+        BacnetReadPropertyAck(ReadPropertyServiceData &ackReadPrptyData, BacnetDataInterface *data);
+        ~BacnetReadPropertyAck();
 
 
-    //data that has been encoded in the ack
-    Bacnet::ReadPropertyServiceData _value;
-    Bacnet::BacnetDataInterface *_data;
-};
+    public://overridden BacnetServiceData methods.
+        virtual qint32 fromRaw(quint8 *serviceData, quint16 bufferLength);
+        virtual qint32 toRaw(quint8 *startPtr, quint16 bufferLength);
+
+    public:
+        ReadPropertyServiceData _readData;
+        BacnetDataInterface *_data;
+    };
+
+}
 
 #endif // BACNETREADPROPERTYACK_H

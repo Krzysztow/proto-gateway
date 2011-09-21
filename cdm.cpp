@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
     proto2->addProperty(subject2);
 
     PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
-    AnalogInputObject *aio = new AnalogInputObject(1, device);
+    AnalogInputObject *aio = new AnalogInputObject(5, device);
     aio->setObjectName("HW_Setpoint");
     aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
@@ -271,55 +271,55 @@ int main(int argc, char *argv[])
     };
     bHndlr->getBytes(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
 
-    //WRITE PROEPRTY ENCODED
-    quint8 wpService[] = {
-        0x00,
-        0x04,
-        0x59,
-        0x0F,
+//    //WRITE PROEPRTY ENCODED
+//    quint8 wpService[] = {
+//        0x00,
+//        0x04,
+//        0x59,
+//        0x0F,
 
-        0x0c,
-        0x00, 0x00/*0x80*/, 0x00, 0x01,
-        0x19,
-        0x55,
-        0x3e,
-        0x44,
-        0x43, 0x34, 0x00, 0x00,
-        0x3f
-    };
-    bHndlr->getBytes(wpService, sizeof(wpService), srcAddr, destAddr);
+//        0x0c,
+//        0x00, 0x00/*0x80*/, 0x00, 0x01,
+//        0x19,
+//        0x55,
+//        0x3e,
+//        0x44,
+//        0x43, 0x34, 0x00, 0x00,
+//        0x3f
+//    };
+//    bHndlr->getBytes(wpService, sizeof(wpService), srcAddr, destAddr);
 
-    //WHO IS
-    quint8 wiService[] = {
-        0x10,
-        0x08,
-        0x09, 0x03,
-        0x19, 0x03
-    };
-    bHndlr->getBytes(wiService, sizeof(wiService), srcAddr, destAddr);
+//    //WHO IS
+//    quint8 wiService[] = {
+//        0x10,
+//        0x08,
+//        0x09, 0x03,
+//        0x19, 0x03
+//    };
+//    bHndlr->getBytes(wiService, sizeof(wiService), srcAddr, destAddr);
 
-    //WHO HAS - object name is known
-    quint8 whoHasService[] = {
-        0x10,
-        0x07,
-        0x3d,
-        0x07,
-        0x00,
-        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
-    };
+//    //WHO HAS - object name is known
+//    quint8 whoHasService[] = {
+//        0x10,
+//        0x07,
+//        0x3d,
+//        0x07,
+//        0x00,
+//        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
+//    };
 
-    BacnetAddress broadAddr;
-    broadAddr.setGlobalBroadcast();
-    bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
+//    BacnetAddress broadAddr;
+//    broadAddr.setGlobalBroadcast();
+//    bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
 
-    //WHO HAS - object id is known
-    quint8 whoHasService2[] = {
-        0x10,
-        0x07,
-        0x2c,
-        0x00, 0x00, 0x00, 0x03
-    };
-    bHndlr->getBytes(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
+//    //WHO HAS - object id is known
+//    quint8 whoHasService2[] = {
+//        0x10,
+//        0x07,
+//        0x2c,
+//        0x00, 0x00, 0x00, 0x03
+//    };
+//    bHndlr->getBytes(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
 
 
 

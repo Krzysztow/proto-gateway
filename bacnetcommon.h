@@ -536,6 +536,7 @@ namespace BacnetServices
     };
 
     typedef BacnetConfirmedServiceRequest BacnetConfirmedServiceChoice;
+    typedef BacnetConfirmedServiceRequest BacnetErrorChoice;
 
     enum BacnetUnconfirmedServiceRequest {
         I_Am            = 0,

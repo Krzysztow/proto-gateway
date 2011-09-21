@@ -4,6 +4,7 @@
 #include "asynchronousbacnettsmaction.h"
 #include "bacnetconfirmedservicehandler.h"
 #include "bacnetpci.h"
+#include "error.h"
 
 using namespace Bacnet;
 
@@ -90,6 +91,51 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
     qint32 ret = rejectData.toRaw(rData, 64);
     Q_ASSERT(ret > 0);
     HelperCoder::printArray(rData, ret, "Sending reject message with:");
+}
+
+void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice)
+{
+    quint8 ackData[64];
+    quint8 *actualPtr(ackData);
+    quint16 buffLength(sizeof(ackData));
+    qint32 ret;
+    if (0 == data) {//simple ACK
+        BacnetSimpleAckData simpleAck(invokeId, serviceChoice);
+        ret = simpleAck.toRaw(ackData, sizeof(ackData));
+        HelperCoder::printArray(ackData, ret, "Sending simple ack message with:");
+        return;
+    }
+
+    BacnetComplexAckData complexAck(invokeId, serviceChoice, 0, 0, false, false);
+    ret = complexAck.toRaw(actualPtr, buffLength);
+    Q_ASSERT(ret> 0);
+    if (ret < 0)
+        return;
+    actualPtr += ret;
+    buffLength -= ret;
+    ret = data->toRaw(actualPtr, buffLength);
+    Q_ASSERT(ret > 0);
+    if (ret < 0) {
+        qDebug("BacnetTSM2::sendAck() - can't encode %d", ret);
+        return;
+    }
+    actualPtr += ret;
+    HelperCoder::printArray(ackData, actualPtr - ackData, "Sending complex ack message with:");
+}
+
+void BacnetTSM2::sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId,
+                           BacnetServices::BacnetErrorChoice errorChoice, Error &error)
+{
+    BacnetErrorData errorData(invokeId, errorChoice);
+    quint8 rData[64];
+    qint32 ret = errorData.toRaw(rData, 64);
+    quint8 *ptr(rData + ret);
+    *ptr = error.errorClass;
+    ++ptr;
+    *ptr = error.errorCode;
+    ++ptr;
+    Q_ASSERT(ret > 0);
+    HelperCoder::printArray(rData, ptr - rData, "Sending error message with:");
 }
 
 void BacnetTSM2::sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)

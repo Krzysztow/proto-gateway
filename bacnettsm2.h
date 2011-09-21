@@ -11,6 +11,7 @@ namespace Bacnet {
 
     class BacnetConfirmedServiceHandler;
     class AsynchronousBacnetTsmAction;
+    class Error;
 
     class BacnetTSM2:
             public QObject
@@ -23,7 +24,9 @@ namespace Bacnet {
 
         bool send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 
+        void sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice);
         void sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetReject::RejectReason reason, quint8 invokeId);
+        void sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId, BacnetServices::BacnetErrorChoice errorChoice, Error &error);
         void sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
     public:

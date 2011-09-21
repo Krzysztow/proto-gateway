@@ -8,10 +8,10 @@
 #include "bacnetexternalobjects.h"
 #include "bacnetcommon.h"
 
-class BacnetReadPropertyAck;
 
 namespace Bacnet {
 
+    class BacnetReadPropertyAck;
     class BacnetTSM2;
     class BacnetConfirmedServiceHandler;
     class Error;

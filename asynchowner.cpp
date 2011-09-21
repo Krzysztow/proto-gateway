@@ -20,7 +20,7 @@ AsynchOwner::~AsynchOwner()
 #include "cdm.h"
 int AsynchOwner::getPropertyRequest(PropertySubject *toBeGotten)
 {
-    qint8 asynchId = DataModel::instance()->generateAsynchId();//yeah, I know that it may not be unique, but don't care right now
+    qint8 asynchId = DataModel::instance()->generateAsynchId();
     AsynchData reqData = {toBeGotten, asynchId, PropertyOwner::RequestGet, QVariant()};
     _asynchReqs.append(reqData);
 

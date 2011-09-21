@@ -6,7 +6,8 @@
 #include "bacnetdataabstract.h"
 #include "bacnetreadpropertyack.h"
 #include "bacnetreadpropertyservice.h"
-#include "bacnetwritepropertyservice.h"
+//#include "bacnetwritepropertyservice.h"
+#include "writepropertyservicedata.h"
 #include "bacnetreadpropertyservicehandler.h"
 #include "bacnetwritepropertyservicehandler.h"
 #include "bacnetdefaultobject.h"
@@ -183,7 +184,7 @@ void ExternalObjectsHandler::handleResponse(BacnetConfirmedServiceHandler *act,
         return;
     }
 
-    BacnetDataInterface *value = rp.data();
+    BacnetDataInterface *value = rp._data;
     QVariant internalValue = value->toInternal();
     ri.concernedProperty->setValueSilent(internalValue);
     ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
@@ -269,18 +270,18 @@ int ExternalObjectsHandler::setPropertyRequest(::PropertySubject *toBeSet, QVari
         return Property::UnknownError;
     }
 
-    BacnetWritePropertyService *service =
-            new BacnetWritePropertyService(numToObjId(rEntry._objectIdentifier),
-                                           rEntry._propertyId, writeData);
-    Q_CHECK_PTR(service);
+    WritePropertyServiceData *serviceData =
+            new WritePropertyServiceData(numToObjId(rEntry._objectIdentifier),
+                                           rEntry._propertyId, writeData, rEntry._propertyArrayIdx);
+    Q_CHECK_PTR(serviceData);
     BacnetWritePropertyServiceHandler *serviceHandler =
-            new BacnetWritePropertyServiceHandler(service, this);
+            new BacnetWritePropertyServiceHandler(serviceData, this);
     Q_CHECK_PTR(serviceHandler);
 
     int asynchId = DataModel::instance()->generateAsynchId();
     Q_ASSERT(asynchId >= 0);
     if (asynchId < 0) {
-        delete service;
+        delete serviceData;
         delete serviceHandler;
         delete writeData;
         qWarning("Can't generate asynchronous id.");

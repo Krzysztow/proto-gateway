@@ -1,11 +1,12 @@
 #include "bacnetwritepropertyservicehandler.h"
 
-#include "bacnetwritepropertyservice.h"
+#include "writepropertyservicedata.h"
 #include "externalobjectshandler.h"
+#include "error.h"
 
 using namespace Bacnet;
 
-BacnetWritePropertyServiceHandler::BacnetWritePropertyServiceHandler(BacnetWritePropertyService *wData, ExternalObjectsHandler *respHandler):
+BacnetWritePropertyServiceHandler::BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, ExternalObjectsHandler *respHandler):
         _wData(wData),
         sendTryOuts(3),
         _responseHandler(respHandler)

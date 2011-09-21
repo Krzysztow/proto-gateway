@@ -17,9 +17,9 @@ ReadPropertyServiceData::ReadPropertyServiceData()
 {
 }
 
-qint32 ReadPropertyServiceData::fromRaw(quint8 *serviceData, quint8 buffLength)
+qint32 ReadPropertyServiceData::fromRaw(quint8 *serviceData, quint16 bufferLength)
 {
-    BacnetTagParser bParser(serviceData, buffLength);
+    BacnetTagParser bParser(serviceData, bufferLength);
 
     qint16 ret;
     qint16 consumedBytes(0);
@@ -50,19 +50,19 @@ qint32 ReadPropertyServiceData::fromRaw(quint8 *serviceData, quint8 buffLength)
         arrayIndex = Bacnet::ArrayIndexNotPresent;
     }
 
-    Q_ASSERT(consumedBytes == buffLength);
-    if (consumedBytes != buffLength) {
+    Q_ASSERT(consumedBytes == bufferLength);
+    if (consumedBytes != bufferLength) {
         return BacnetReject::ReasonTooManyArguments;
     }
 
     return consumedBytes;
 }
 
-qint32 ReadPropertyServiceData::toRaw(quint8 *startPtr, quint8 buffLength)
+qint32 ReadPropertyServiceData::toRaw(quint8 *startPtr, quint16 bufferLength)
 {
     Q_CHECK_PTR(startPtr);
     quint8 *actualPtr(startPtr);
-    quint16 leftLength(buffLength);
+    quint16 leftLength(bufferLength);
     qint32 ret;
 
     //! \todo There is some duplication between Request and Ack toRaw() functions. Unify it.

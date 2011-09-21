@@ -3,6 +3,7 @@
 
 #include <QtCore>
 
+#include "internalconfirmedrequesthandler.h"
 #include "bacnetservice.h"
 #include "bacnetcommon.h"
 #include "error.h"

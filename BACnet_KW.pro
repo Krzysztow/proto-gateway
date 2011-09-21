@@ -81,7 +81,10 @@ SOURCES += main.cpp \
     whohasservicedata.cpp \
     ihaveservicedata.cpp \
     subscribecovservicedata.cpp \
-    internalsubscribecovrequesthandler.cpp
+    internalsubscribecovrequesthandler.cpp \
+    internalwprequesthandler.cpp \
+    writepropertyservicedata.cpp \
+    internalrprequesthandler.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -156,6 +159,9 @@ HEADERS += \
     whohasservicedata.h \
     ihaveservicedata.h \
     subscribecovservicedata.h \
-    internalsubscribecovrequesthandler.h
+    internalsubscribecovrequesthandler.h \
+    internalwprequesthandler.h \
+    writepropertyservicedata.h \
+    internalrprequesthandler.h
 
 OTHER_FILES +=

@@ -9,9 +9,9 @@ ReadPropertyServiceHandler::ReadPropertyServiceHandler(Bacnet::ObjectIdStruct ob
                           quint32 arrayIndex):
 _response(0)
 {
-    _value.objId = objId;
-    _value.propertyId = propertyId;
-    _value.arrayIndex = arrayIndex;
+    _rpData.objId = objId;
+    _rpData.propertyId = propertyId;
+    _rpData.arrayIndex = arrayIndex;
 }
 
 ReadPropertyServiceHandler::ReadPropertyServiceHandler():
@@ -26,7 +26,7 @@ ReadPropertyServiceHandler::~ReadPropertyServiceHandler()
 
 qint32 ReadPropertyServiceHandler::fromRaw(quint8 *serviceData, quint8 buffLength)
 {
-    return _value.fromRaw(serviceData, buffLength);
+    return _rpData.fromRaw(serviceData, buffLength);
 }
 
 //BacnetReject::RejectReason ReadPropertyServiceHandler::checkForError_helper(BacnetTagParser &bParser, qint16 parseRet, quint8 expectedTag, bool convertedOk)
@@ -45,7 +45,7 @@ qint32 ReadPropertyServiceHandler::execute(BacnetDeviceObject *device)
 {
     Q_CHECK_PTR(device);
     Q_ASSERT(BacnetError::ClassNoError == _error.errorClass);
-    int readyness = device->ensurePropertyReadyRead(_value.propertyId);
+    int readyness = device->ensurePropertyReadyRead(_rpData.propertyId);
     if (readyness < 0) {
         if (!_error.hasError()) //! \todo translate error more correctly
         _error.setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
@@ -96,16 +96,15 @@ bool ReadPropertyServiceHandler::finishReading_helper(BacnetObject *device, int 
         _response = 0;
         _error.setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
     } else {
-        Bacnet::BacnetDataInterface *data = device->propertyReadInstantly(&_value, &_error);
-        if (0 == data) {
+        Bacnet::BacnetDataInterface *value = device->propertyReadInstantly(&_rpData, &_error);
+        if (0 == value) {
             if (BacnetError::ClassNoError == _error.errorClass) {//if was not set by the object itself, this is probably due to memory reasons
                 _error.errorClass = BacnetError::ClassDevice;
                 _error.errorCode = BacnetError::CodeOperationalProblem;
                 qDebug("Error while instant device reading");
             }
         } else {
-            _response = new BacnetReadPropertyAck();
-            _response->setData(data, _value);
+            _response = new BacnetReadPropertyAck(_rpData, value);
         }
     }
     return true;
@@ -123,10 +122,12 @@ Bacnet::Error &ReadPropertyServiceHandler::error()
 
 BacnetService *ReadPropertyServiceHandler::takeResponse()
 {
+    Q_ASSERT_X(false, "bacnetreadpropertyservice.cpp", "This handler is obsolete, use InternalRPRequestHandler");
     if (0 != _response) {
         BacnetReadPropertyAck *tmp = _response;
         _response = 0;//we returned ownership as well
-        return tmp;
+//        return tmp;//commented out, since the datatype doesn't match anymore after factorization.
+        return 0;
     } else if (BacnetError::CodeNoError != _error.errorCode) {
         return new BacnetErrorAck(_error);
     } else {
@@ -138,7 +139,7 @@ BacnetService *ReadPropertyServiceHandler::takeResponse()
 
 qint32 ReadPropertyServiceHandler::toRaw(quint8 *startPtr, quint8 buffLength)
 {
-    return _value.toRaw(startPtr, buffLength);
+    return _rpData.toRaw(startPtr, buffLength);
 }
 
 //#define READ_PRPTY_TEST

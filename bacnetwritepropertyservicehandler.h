@@ -3,18 +3,18 @@
 
 #include "bacnetconfirmedservicehandler.h"
 
-class BacnetWritePropertyService;
 class PropertySubject;
 
 namespace Bacnet {
 
     class ExternalObjectsHandler;
+    class WritePropertyServiceData;
 
     class BacnetWritePropertyServiceHandler:
             public BacnetConfirmedServiceHandler
     {
     public:
-        BacnetWritePropertyServiceHandler(BacnetWritePropertyService *wData, ExternalObjectsHandler *respHandler);
+        BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, ExternalObjectsHandler *respHandler);
         virtual ~BacnetWritePropertyServiceHandler();
 
     public://functions overridden from BacnetConfirmedServiceHandler
@@ -26,7 +26,7 @@ namespace Bacnet {
 
     private:
         //BACnet specific
-        BacnetWritePropertyService *_wData;
+        WritePropertyServiceData *_wData;
         quint8 sendTryOuts;
         //CDM handling
         ExternalObjectsHandler *_responseHandler;

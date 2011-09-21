@@ -1,29 +1,32 @@
 #include "servicefactory.h"
 
-#include "bacnetwritepropertyservice.h"
-#include "bacnetreadpropertyservice.h"
+#include "internalwprequesthandler.h"
+#include "internalrprequesthandler.h"
 #include "internalwhoisrequesthandler.h"
 #include "internalwhohasrequesthandler.h"
 #include "bacnetpci.h"
 
-BacnetService *ServiceFactory::createService(quint8 *servicePtr, quint16 length,
-                                             quint8 serviceCode, qint32 *retCode)
+::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(::BacnetConfirmedRequestData *pciData,
+                                                      Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                      InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler)
 {
-    Q_CHECK_PTR(retCode);
-    Q_CHECK_PTR(servicePtr);
+    Q_CHECK_PTR(pciData);
+    Q_CHECK_PTR(tsm);
+    Q_CHECK_PTR(internalHandler);
+    Q_CHECK_PTR(externalHandler);
 
-    switch (serviceCode)
+    switch (pciData->service())
     {
     case (BacnetServices::WriteProperty) :
         {
-            BacnetWritePropertyService *wpService = new BacnetWritePropertyService();
-            *retCode = wpService->fromRaw(servicePtr, length);
+            Bacnet::InternalWPRequestHandler *wpService = new Bacnet::InternalWPRequestHandler(tsm, device, internalHandler, externalHandler);
+            wpService->setConfirmedData(pciData);
             return wpService;
         }
     case (BacnetServices::ReadProperty) :
         {
-            ReadPropertyServiceHandler *rpService = new ReadPropertyServiceHandler();
-            *retCode = rpService->fromRaw(servicePtr, length);
+            Bacnet::InternalRPRequestHandler *rpService = new Bacnet::InternalRPRequestHandler(tsm, device, internalHandler, externalHandler);
+            rpService->setConfirmedData(pciData);
             return rpService;
         }
     default:
