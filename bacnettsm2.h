@@ -6,6 +6,11 @@
 #include "bacnetaddress.h"
 #include "bacnetcommon.h"
 #include "bacnetservicedata.h"
+#include "bacnetinternaladdresshelper.h"
+
+class BacnetSimpleAckData;
+class BacnetComplexAckData;
+class BacnetSegmentedAckData;
 
 namespace Bacnet {
 
@@ -24,13 +29,21 @@ namespace Bacnet {
 
         bool send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 
+        void receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data);
+        void receive(BacnetAddress &source, BacnetAddress &destination, BacnetComplexAckData *data, quint8 *bodyPtr, quint16 bodyLength);
+        void receive(BacnetAddress &source, BacnetAddress &destination, BacnetSegmentedAckData *data, quint8 *bodyPtr, quint16 bodyLength);
+
         void sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice);
         void sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetReject::RejectReason reason, quint8 invokeId);
         void sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId, BacnetServices::BacnetErrorChoice errorChoice, Error &error);
         void sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
+        void setAddress(InternalAddress &address);
+        InternalAddress &myAddress();
+
     private:
         QHash<int, BacnetConfirmedServiceHandler*> _pendingConfirmedRequests;
+        InternalAddress _myRequestAddress;
 
     signals:
 

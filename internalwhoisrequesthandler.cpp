@@ -10,7 +10,7 @@ using namespace Bacnet;
 
 InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                          InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalUnconfirmedRequestHandler(tsm, device, internalHandler, externalHandler),
+InternalUnconfirmedRequestHandler(),
 _tsm(tsm),
 _device(device),
 _internalHandler(internalHandler),
@@ -44,7 +44,7 @@ void InternalWhoIsRequestHandler::finalize(bool *deleteAfter)
     if (deleteAfter)
         *deleteAfter = true;}
 
-QList<int> InternalWhoIsRequestHandler::execute()
+bool InternalWhoIsRequestHandler::execute()
 {
     //! \todo Hange the way it calculates limits - there should be function for that.
     quint32 lowLimit = _data._rangeLowLimit | (BacnetObjectType::Device << 22);
@@ -68,7 +68,8 @@ QList<int> InternalWhoIsRequestHandler::execute()
         }
     }
 
-    return QList<int>();
+    //all is sent - am ready to be deleted!
+    return true;
 }
 
 qint32 InternalWhoIsRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)

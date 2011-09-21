@@ -11,8 +11,8 @@
 #include "asynchronousbacnettsmaction.h"
 #include "bacnettsm2.h"
 
-InternalConfirmedRequestHandler::InternalConfirmedRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                                 InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler):
+InternalConfirmedRequestHandler::InternalConfirmedRequestHandler(/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                                 InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/):
 _reqData(0)
 {
 }

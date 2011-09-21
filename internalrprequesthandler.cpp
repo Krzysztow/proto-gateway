@@ -3,10 +3,11 @@
 #include "bacnettagparser.h"
 #include "bacnetdeviceobject.h"
 #include "bacnetreadpropertyack.h"
+#include "internalobjectshandler.h"
 
 InternalRPRequestHandler::InternalRPRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                    InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalConfirmedRequestHandler(tsm, device, internalHandler, externalHandler),
+InternalConfirmedRequestHandler(/*tsm, device, internalHandler, externalHandler*/),
 _tsm(tsm),
 _device(device),
 _internalHandler(internalHandler),
@@ -73,7 +74,7 @@ void InternalRPRequestHandler::finalize(bool *deleteAfter)
         *deleteAfter = true;
 }
 
-QList<int> InternalRPRequestHandler::execute()
+bool InternalRPRequestHandler::execute()
 {
     Q_CHECK_PTR(_device);
     Q_ASSERT(!_error.hasError());
@@ -82,20 +83,25 @@ QList<int> InternalRPRequestHandler::execute()
     Q_CHECK_PTR(object);
     if (0 == object) {
         _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
-        return QList<int>();
+        finalizeInstant(_tsm);
+        return true;//am done, delete me
     }
 
     int readyness = object->ensurePropertyReadyRead(_data.propertyId);
     if (readyness < 0) {
         if (!_error.hasError())
             _error.setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
+        finalizeInstant(_tsm);
+        return true;//am done, delete me
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
         finishReading_helper(object, readyness);
-        return QList<int>();
+        finalizeInstant(_tsm);
+        return true;
     }
     _asynchId = readyness;
-    return QList<int>()<<_asynchId;
+    _internalHandler->addAsynchronousHandler(QList<int>()<<_asynchId, this);
+    return false;//not done, yet - don't delete me
 }
 
 bool InternalRPRequestHandler::hasError()

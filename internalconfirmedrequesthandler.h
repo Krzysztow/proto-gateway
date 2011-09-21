@@ -17,8 +17,8 @@ class InternalConfirmedRequestHandler:
         public InternalRequestHandler
 {
 public:
-    InternalConfirmedRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                    InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler);
+    InternalConfirmedRequestHandler(/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                    InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/);
     virtual ~InternalConfirmedRequestHandler();
 
     //! \todo move this function higher, to InternalRequestHandler!

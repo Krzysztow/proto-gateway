@@ -18,8 +18,8 @@ class InternalUnconfirmedRequestHandler:
         public InternalRequestHandler
 {
 public:
-    InternalUnconfirmedRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                      InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler);
+    InternalUnconfirmedRequestHandler(/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                      InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/);
     virtual ~InternalUnconfirmedRequestHandler();
 
     //! \todo move this function higher, to InternalRequestHandler!

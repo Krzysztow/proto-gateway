@@ -10,7 +10,7 @@ using namespace Bacnet;
 
 InternalWPRequestHandler::InternalWPRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                    InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalConfirmedRequestHandler(tsm, device, internalHandler, externalHandler),
+InternalConfirmedRequestHandler(/*tsm, device, internalHandler, externalHandler*/),
 _tsm(tsm),
 _device(device),
 _internalHandler(internalHandler),
@@ -62,7 +62,7 @@ void InternalWPRequestHandler::finalize(bool *deleteAfter)
         *deleteAfter = true;
 }
 
-QList<int> InternalWPRequestHandler::execute()
+bool InternalWPRequestHandler::execute()
 {
     Q_CHECK_PTR(_device);
     Q_ASSERT(!_error.hasError());
@@ -71,7 +71,8 @@ QList<int> InternalWPRequestHandler::execute()
     Q_CHECK_PTR(object);
     if (0 == object) {
         _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
-        return QList<int>();
+        finalizeInstant(_tsm);
+        return true;
     }
 
     int readyness = object->ensurePropertyReadySet(_data._propValue, &_error);
@@ -81,10 +82,12 @@ QList<int> InternalWPRequestHandler::execute()
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
         finishWriting_helper(_device, readyness);
-        return QList<int>();
+        finalizeInstant(_tsm);
+        return true;
     }
     _asynchId = readyness;
-    return QList<int>()<<_asynchId;
+    _internalHandler->addAsynchronousHandler(QList<int>()<<_asynchId, this);
+    return false;
 }
 
 bool InternalWPRequestHandler::hasError()

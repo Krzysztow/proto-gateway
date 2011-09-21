@@ -3,8 +3,15 @@
 #include "bacnetpci.h"
 #include "bacnetcoder.h"
 
+#include "internalobjectshandler.h"
+#include "externalobjectshandler.h"
+#include "bacnettsm2.h"
+#include "internalunconfirmedrequesthandler.h"
+#include "internalconfirmedrequesthandler.h"
+#include "servicefactory.h"
+
 BacnetApplicationLayerHandler::BacnetApplicationLayerHandler(BacnetNetworkLayerHandler *networkHndlr):
-        _networkHndlr(networkHndlr)
+    _networkHndlr(networkHndlr)
 {
 }
 
@@ -30,23 +37,23 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
     //configure it dynamically
     switch (serviceData.service()) {
     case (BacnetServices::ConfirmedCOVNotification): {
-            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-            break;
-        }
+        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+        break;
+    }
     case (BacnetServices::SubscribeCOV): {
-            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-            break;
-        }
+        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+        break;
+    }
     case (BacnetServices::ReadProperty): {
-//            BacnetReadProperty readPrpty;
-//            readPrpty.setFromRaw()
-            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-            break;
-        }
+        //            BacnetReadProperty readPrpty;
+        //            readPrpty.setFromRaw()
+        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+        break;
+    }
     case (BacnetServices::WriteProperty): {
-            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-            break;
-        }
+        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+        break;
+    }
     default:
         qDebug("processConfirmedRequest() : Unrecognized service. Implement handler!");
         Q_ASSERT(false);
@@ -58,65 +65,385 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
 
 }
 
-void BacnetApplicationLayerHandler::indication(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr)
+void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr)
 {
-    Q_ASSERT(length >= 1);//we need at least first byte for PDU type recognition
-    if (length < 1) {
-        //send error
-        return;
+    //looking for a destination device.
+    BacnetDeviceObject *device(0);
+    if (destAddr.isGlobalBroadcast() || destAddr.isGlobalBroadcast()) {
+        device = 0;
+    } else {
+        InternalAddress destination = BacnetInternalAddressHelper::internalAddress(destAddr);
+        if (BacnetInternalAddressHelper::InvalidInternalAddress == destination) {
+            qDebug("InternalObjectsHandler::getBytes() : invalid address gotten.");
+            return;
+        }
+
+        //find device by address from network layer
+        device = _internalHandler->virtualDevices()[destination];
+        if (0 == device) {//device not found, drop it!
+            qDebug("Device %d is not found!", destination);
+            return;
+        }
     }
 
-    qint16 ret(0);
-    //dispatch to the device!!!
-
-
-    switch (BacnetPci::pduType(actualBytePtr))
+    //handle accordingly to the request type.
+    switch (BacnetPci::pduType(data))
     {
     case (BacnetPci::TypeConfirmedRequest):
-        {
-            /*upon reception:
-              - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
-              - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
-             */
-            processConfirmedRequest(actualBytePtr, length);
-            break;
+    {
+        /*upon reception:
+                  - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+                  - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+                 */
+        BacnetConfirmedRequestData *crData = new BacnetConfirmedRequestData();
+        qint32 ret = crData->fromRaw(data, length);
+        Q_ASSERT(ret > 0);
+        //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
+        if (ret <= 0) {
+            delete crData;
+            return;
         }
-    case (BacnetPci::TypeUnconfirmedRequest):
+
+        InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(crData, _tsm, device, _internalHandler, _externalHandler);
+        Q_CHECK_PTR(handler);
+        if (0 == handler) {
+            _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonUnrecognizedService, crData->invokedId());
+            delete crData;
+            return;
+        }
+
+        ret = handler->fromRaw(data + ret, length - ret);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            //! \todo send reject - parsing should return the reject reason!
+            _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonMissingRequiredParameter, crData->invokedId());
+            delete handler;
+            return;
+        }
+        //! \todo Remove code duplication - with Unconfirmed request part.
+        handler->setAddresses(srcAddr, destAddr);
+
+        bool readyToBeDeleted = handler->execute();
+        if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
+            Q_ASSERT(handler->isFinished());
+            delete handler;
+        }
+
+        break;
+    }
+    case (BacnetPci::TypeUnconfirmedRequest): {
         /*upon reception: do what's needed and that's all
-         */
+             */
+        BacnetUnconfirmedRequestData *ucrData = new BacnetUnconfirmedRequestData();
+        qint32 ret = ucrData->fromRaw(data, length);
+        Q_ASSERT(ret > 0);
+        //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
+        if (ret <= 0) {
+            qDebug("Couldn't parse pci data, stops.");
+            delete ucrData;
+            return;
+        }
+
+        //create appropriate handler. \note It takes ownership over ucrData!
+        InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(ucrData, _tsm, device, _internalHandler, _externalHandler);
+        Q_CHECK_PTR(handler);
+        if (0 == handler) {
+            qDebug("InternalUnconfirmedRequestHandler not created, drop silently.");
+            delete ucrData;
+            return;
+        }
+
+        //set handler data
+        ret = handler->fromRaw(data + ret, length - ret);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("InternalUnconfirmedRequestHandler parsed data incorrectnly (%d), drop silently!", ret);
+            delete handler;
+            //                delete ucrData;//this is deleted with handler - it took ownership.
+            return;
+        }
+        handler->setAddresses(srcAddr, destAddr);
+
+        bool readyToBeDeleted = handler->execute();
+        if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
+            Q_ASSERT(handler->isFinished());
+            delete handler;
+        }
+
         break;
+    }
     case (BacnetPci::TypeSimpleAck):
-        /*upon reception update state machine
-         */
+    {
+        BacnetSimpleAckData *saData = new BacnetSimpleAckData();
+        qint32 ret = saData->fromRaw(data, length);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("BacnetApplicationLayerHandler::indication() : wrong simple ack data (%d)", ret);
+            return;
+        }
+        //take ownership over the data!
+        _tsm->receive(srcAddr, destAddr, saData);
         break;
+    }
     case (BacnetPci::TypeComplexAck):
-        /*upon reception update state machine
-         */
+    {
+        BacnetComplexAckData *cplxData = new BacnetComplexAckData();
+        qint32 ret = cplxData->fromRaw(data, length);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("BacnetApplicationLayerHandler::indication() : wrong complex ack data (%d)", ret);
+            return;
+        }
+        //take ownership over the data!
+        _tsm->receive(srcAddr, destAddr, cplxData, data + ret, length - ret);
         break;
+    }
     case (BacnetPci::TypeSemgmendAck):
+    {
         /*upon reception update state machine and send back another segment
-         */
+             */
+        BacnetSegmentedAckData *segData = new BacnetSegmentedAckData();
+        qint32 ret = segData ->fromRaw(data, length);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("BacnetApplicationLayerHandler::indication() : wrong complex ack data (%d)", ret);
+            return;
+        }
+        //take ownership over the data!
+        _tsm->receive(srcAddr, destAddr, segData , data + ret, length - ret);
         break;
+    }
     case (BacnetPci::TypeError):
         /*BacnetConfirmedRequest seervice failed
-         */
+             */
         break;
     case (BacnetPci::TypeReject):
         /*Protocol error occured
-         */
+             */
         break;
     case (BacnetPci::TypeAbort):
         break;
     default: {
-            Q_ASSERT(false);
-        }
+        Q_ASSERT(false);
+    }
     }
 
 
 
+    //    Q_ASSERT(length >= 1);//we need at least first byte for PDU type recognition
+    //    if (length < 1) {
+    //        //send error
+    //        return;
+    //    }
+
+    //    qint16 ret(0);
+    //    //dispatch to the device!!!
 
 
-
-
-
+    //    switch (BacnetPci::pduType(actualBytePtr))
+    //    {
+    //    case (BacnetPci::TypeConfirmedRequest):
+    //        {
+    //            /*upon reception:
+    //              - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+    //              - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+    //             */
+    //            processConfirmedRequest(actualBytePtr, length);
+    //            break;
+    //        }
+    //    case (BacnetPci::TypeUnconfirmedRequest):
+    //        /*upon reception: do what's needed and that's all
+    //         */
+    //        break;
+    //    case (BacnetPci::TypeSimpleAck):
+    //        /*upon reception update state machine
+    //         */
+    //        break;
+    //    case (BacnetPci::TypeComplexAck):
+    //        /*upon reception update state machine
+    //         */
+    //        break;
+    //    case (BacnetPci::TypeSemgmendAck):
+    //        /*upon reception update state machine and send back another segment
+    //         */
+    //        break;
+    //    case (BacnetPci::TypeError):
+    //        /*BacnetConfirmedRequest seervice failed
+    //         */
+    //        break;
+    //    case (BacnetPci::TypeReject):
+    //        /*Protocol error occured
+    //         */
+    //        break;
+    //    case (BacnetPci::TypeAbort):
+    //        break;
+    //    default: {
+    //            Q_ASSERT(false);
+    //        }
+    //    }
 }
+
+#define BAC_APP_TEST
+#ifndef BAC_APP_TEST
+//int main()
+//{
+//    return 0;
+//}
+#else
+#include <QDebug>
+#include <QtCore>
+
+#include "propertyowner.h"
+#include "asynchowner.h"
+#include <QCoreApplication>
+#include <QObject>
+
+#include <sys/time.h>
+
+#include "bacnetcommon.h"
+
+#include "helpercoder.h"
+#include "bacnettagparser.h"
+
+#include "helpercoder.h"
+#include "bacnetprimitivedata.h"
+#include "bacnetpci.h"
+#include "bacnetreadpropertyservice.h"
+#include "analoginputobject.h"
+#include "bacnetdeviceobject.h"
+#include "bacnettsm2.h"
+#include "bacnetinternaladdresshelper.h"
+#include "cdm.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    DataModel *cdm = DataModel::instance();
+
+    BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(0);
+
+    Bacnet::BacnetTSM2 *tsm = new BacnetTSM2();
+    InternalObjectsHandler *intHandler = new InternalObjectsHandler(tsm);
+    ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
+    appHandler->_externalHandler = extHandler;
+    appHandler->_internalHandler = intHandler;
+    appHandler->_tsm = tsm;
+
+    QVariant test;
+    test.setValue((double)72.3);
+
+    BacnetAddress srcAddr;
+
+    BacnetAddress destAddr;
+    quint32 destAddrRaw(0x00000001);
+    BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&destAddrRaw, &destAddr);
+
+    AsynchOwner *proto2 = new AsynchOwner();
+    PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Double);
+    subject->setValue(test);
+    proto2->addProperty(subject);
+
+    BacnetDeviceObject *device = new BacnetDeviceObject(1);
+    device->setObjectName("BacnetTestDevice");
+    PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
+    device->addInternalProperty(BacnetProperty::PresentValue, obs);
+    intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(destAddr), device);
+
+    PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);
+    subject2->setValue(test);
+    proto2->addProperty(subject2);
+
+    PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
+    AnalogInputObject *aio = new AnalogInputObject(5, device);
+    aio->setObjectName("HW_Setpoint");
+    aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
+
+    BacnetDeviceObject *device1 = new BacnetDeviceObject(8);
+    device1->setObjectName("BestDeviceEver");
+    quint32 addr(0x00000003);
+    BacnetAddress bAddr;
+    BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
+    intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
+
+    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
+    aio1->setObjectName("OATemp");
+
+    PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
+    extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
+                                  BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
+                                  0x00000001,
+                                  BacnetExternalObjects::Access_ReadRequest);
+
+    PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
+    proto2->addProperty(extObserver);
+
+    //READ PROPERTY ENCODED
+    quint8 readPropertyService[] = {
+        0x00,
+        0x00,
+        0x01,
+        0x0C,
+        0x0C,
+        0x00, 0x00, 0x00, 0x05,
+        0x19,
+        0x55
+    };
+    appHandler->indication(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
+
+    //    //WRITE PROEPRTY ENCODED
+    //    quint8 wpService[] = {
+    //        0x00,
+    //        0x04,
+    //        0x59,
+    //        0x0F,
+
+    //        0x0c,
+    //        0x00, 0x00/*0x80*/, 0x00, 0x01,
+    //        0x19,
+    //        0x55,
+    //        0x3e,
+    //        0x44,
+    //        0x43, 0x34, 0x00, 0x00,
+    //        0x3f
+    //    };
+    //    bHndlr->getBytes(wpService, sizeof(wpService), srcAddr, destAddr);
+
+    //    //WHO IS
+    //    quint8 wiService[] = {
+    //        0x10,
+    //        0x08,
+    //        0x09, 0x03,
+    //        0x19, 0x03
+    //    };
+    //    bHndlr->getBytes(wiService, sizeof(wiService), srcAddr, destAddr);
+
+    //    //WHO HAS - object name is known
+    //    quint8 whoHasService[] = {
+    //        0x10,
+    //        0x07,
+    //        0x3d,
+    //        0x07,
+    //        0x00,
+    //        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
+    //    };
+
+    //    BacnetAddress broadAddr;
+    //    broadAddr.setGlobalBroadcast();
+    //    bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
+
+    //    //WHO HAS - object id is known
+    //    quint8 whoHasService2[] = {
+    //        0x10,
+    //        0x07,
+    //        0x2c,
+    //        0x00, 0x00, 0x00, 0x03
+    //    };
+    //    bHndlr->getBytes(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
+
+
+
+    return a.exec();
+}
+
+#endif

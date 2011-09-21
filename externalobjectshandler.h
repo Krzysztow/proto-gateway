@@ -8,6 +8,7 @@
 #include "bacnetexternalobjects.h"
 #include "bacnetcommon.h"
 
+class BacnetDeviceObject;
 
 namespace Bacnet {
 
@@ -33,7 +34,6 @@ namespace Bacnet {
         void handleResponse(BacnetConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
         void handleError(BacnetConfirmedServiceHandler *act, Error &error);
         void handleAbort(BacnetConfirmedServiceHandler *act,  quint8 abortReason);
-
 
     public://overridden from PropertyOwner
         int getPropertyRequest(PropertySubject *toBeGotten);

@@ -22,7 +22,7 @@ namespace Bacnet {
         virtual bool isFinished();
         virtual void finalize(bool *deleteAfter);
 
-        virtual QList<int> execute();
+        bool execute();
 
     private:
         Bacnet::BacnetTSM2 *_tsm;

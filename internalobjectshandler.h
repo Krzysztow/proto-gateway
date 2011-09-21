@@ -23,9 +23,12 @@ public:
 
 public://interface for BacnetObject-Internal interaction
     void propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
+    void addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler);
 
 public:
     bool addDevice(InternalAddress address, BacnetDeviceObject *device);
+    QMap<quint32, BacnetDeviceObject*> &virtualDevices();
+
     //! \todo If performance here is bad, just return reference to QMap, as is stored.
     QList<BacnetDeviceObject*> devices();
 
@@ -36,8 +39,8 @@ public:
     Bacnet::ExternalObjectsHandler *_externalHandler;
 
 public:
-    QMap<quint32, BacnetDeviceObject*> _devices;
-    QHash<InternalAddress, InternalRequestHandler*> _asynchRequests;
+    QMap<InternalAddress, BacnetDeviceObject*> _devices;
+    QHash<int, InternalRequestHandler*> _asynchRequests;
 
     Bacnet::BacnetTSM2 *_tsm;
 };

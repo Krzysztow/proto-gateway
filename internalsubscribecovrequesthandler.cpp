@@ -10,7 +10,7 @@ using namespace Bacnet;
 
 InternalSubscribeCOVRequestHandler::InternalSubscribeCOVRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                          InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalUnconfirmedRequestHandler(tsm, device, internalHandler, externalHandler),
+InternalUnconfirmedRequestHandler(/*tsm, device, internalHandler, externalHandler*/),
 _tsm(tsm),
 _device(device),
 _internalHandler(internalHandler),
@@ -44,7 +44,7 @@ void InternalSubscribeCOVRequestHandler::finalize(bool *deleteAfter)
     if (deleteAfter)
         *deleteAfter = true;}
 
-QList<int> InternalSubscribeCOVRequestHandler::execute()
+bool InternalSubscribeCOVRequestHandler::execute()
 {
 
 }

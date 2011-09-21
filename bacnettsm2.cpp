@@ -49,6 +49,16 @@ BacnetTSM2::BacnetTSM2(QObject *parent) :
 {
 }
 
+void BacnetTSM2::setAddress(InternalAddress &address)
+{
+    _myRequestAddress = address;
+}
+
+InternalAddress &BacnetTSM2::myAddress()
+{
+    return _myRequestAddress;
+}
+
 bool BacnetTSM2::sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend)
 {
     const quint8 dataSize(64);
@@ -67,7 +77,11 @@ bool BacnetTSM2::sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction
 bool BacnetTSM2::send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //find bacnetadderss to send.
-
+    int invokeId = _generator.generateId();
+    if (invokeId < 0) {//can't generate
+        qDebug("BacnetTSM2::send() : can't generate invoke id. Think about introducing another requesting object.");
+        return false;
+    }
 
     _pendingConfirmedRequests.insert(0, serviceToSend);
 
@@ -129,6 +143,32 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
     Q_ASSERT(ret > 0);
     HelperCoder::printArray(rData, ret, "Sending reject message with:");
 }
+
+void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data)
+{
+    Q_UNUSED(source);
+    Q_UNUSED(destination);
+    Q_UNUSED(data);
+}
+
+void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetComplexAckData *data, quint8 *bodyPtr, quint16 bodyLength)
+{
+    Q_UNUSED(source);
+    Q_UNUSED(destination);
+    Q_UNUSED(data);
+    Q_UNUSED(bodyPtr);
+    Q_UNUSED(bodyLength);
+}
+
+void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetSegmentedAckData *data, quint8 *bodyPtr, quint16 bodyLength)
+{
+    Q_UNUSED(source);
+    Q_UNUSED(destination);
+    Q_UNUSED(data);
+    Q_UNUSED(bodyPtr);
+    Q_UNUSED(bodyLength);
+}
+
 
 void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice)
 {

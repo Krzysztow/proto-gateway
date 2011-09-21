@@ -10,7 +10,7 @@ using namespace Bacnet;
 
 InternalWhoHasRequestHandler::InternalWhoHasRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                          InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalUnconfirmedRequestHandler(tsm, device, internalHandler, externalHandler),
+InternalUnconfirmedRequestHandler(),
 _tsm(tsm),
 _device(device),
 _internalHandler(internalHandler),
@@ -44,7 +44,7 @@ void InternalWhoHasRequestHandler::finalize(bool *deleteAfter)
     if (deleteAfter)
         *deleteAfter = true;}
 
-QList<int> InternalWhoHasRequestHandler::execute()
+bool InternalWhoHasRequestHandler::execute()
 {
 //    QList<BacnetDeviceObject*> devs = _internalHandler->devices();
 //    QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
@@ -117,14 +117,14 @@ QList<int> InternalWhoHasRequestHandler::execute()
                     iHaveData._objName = (*objIt)->objectName();
                     _tsm->sendUnconfirmed(_requester, _destination, iHaveData, BacnetServices::I_Have);
                     //we can stop here, since no two objects internetowrk-wide may have the same instance numbers or names.
-                    return QList<int>();
+                    return true;
                 }
             }
         }
     }
 
     //no asynchronous actions - return empty list.
-    return QList<int>();
+    return true;
 }
 
 qint32 InternalWhoHasRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)

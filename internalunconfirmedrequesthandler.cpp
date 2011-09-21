@@ -1,7 +1,7 @@
 #include "internalunconfirmedrequesthandler.h"
 
-InternalUnconfirmedRequestHandler::InternalUnconfirmedRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                                     InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler)
+InternalUnconfirmedRequestHandler::InternalUnconfirmedRequestHandler(/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                                     InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/)
 {
 }
 

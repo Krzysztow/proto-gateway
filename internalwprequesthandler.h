@@ -21,7 +21,7 @@ namespace Bacnet {
         virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
         virtual bool isFinished();
         virtual void finalize(bool *deleteAfter);
-        virtual QList<int> execute();
+        virtual bool execute();
 
     public://overriden InternalConfirmedRequestHandler methods.
         virtual bool hasError();
