@@ -29,13 +29,30 @@ namespace Bacnet {
         void sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId, BacnetServices::BacnetErrorChoice errorChoice, Error &error);
         void sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
-    public:
-        QList<BacnetConfirmedServiceHandler*> _asynchHandlers;
+    private:
+        QHash<int, BacnetConfirmedServiceHandler*> _pendingConfirmedRequests;
 
     signals:
 
     public slots:
         void generateResponse();
+
+    private:
+        class InvokeIdGenerator
+        {
+        public:
+            InvokeIdGenerator();
+
+            int generateId();
+            void returnId(quint8 id);
+
+        public:
+            static const int MaxIdsNumber = 255;
+
+        private:
+            static const int NumberOfOctetsTaken = MaxIdsNumber/8 + ( (MaxIdsNumber%8 == 0) ? 0 : 1);
+            quint8 idsBits[NumberOfOctetsTaken];
+        } _generator;
 
     };
 

@@ -8,6 +8,42 @@
 
 using namespace Bacnet;
 
+BacnetTSM2::InvokeIdGenerator::InvokeIdGenerator()
+{
+    memset(idsBits, 0, NumberOfOctetsTaken);
+}
+
+
+int BacnetTSM2::InvokeIdGenerator::generateId()
+{
+    quint8 *bytePtr = idsBits;
+    quint8 mask = 0x01;
+    quint8 bitNumber;
+
+    for (int i=0; i<NumberOfOctetsTaken; ++i) {
+        if (*bytePtr != 0xff) { //there is a free entry
+            for (bitNumber = 0; bitNumber < 8; ++bitNumber) {
+                if ( (mask & *bytePtr) == 0) { //bit pointing by mask is free
+                    *bytePtr |= mask;//reserve field
+                    return (8*i + bitNumber);
+                }
+                mask <<= 1;
+            }
+        }
+        ++bytePtr;
+    }
+    return -1;
+}
+
+void BacnetTSM2::InvokeIdGenerator::returnId(quint8 id)
+{
+    quint8 byteNumber = id/8;
+    quint8 mask = (0x01 << id%8);
+
+    Q_ASSERT( (idsBits[byteNumber] & mask) != 0 );//assert it is used.
+    idsBits[byteNumber] &= (~mask);//free bit
+}
+
 BacnetTSM2::BacnetTSM2(QObject *parent) :
     QObject(parent)
 {
@@ -32,7 +68,8 @@ bool BacnetTSM2::send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHand
 {
     //find bacnetadderss to send.
 
-    _asynchHandlers.append(serviceToSend);
+
+    _pendingConfirmedRequests.insert(0, serviceToSend);
 
     //generate ivoke id.
 
@@ -56,7 +93,7 @@ void BacnetTSM2::generateResponse()
 {
     BacnetConfirmedServiceHandler::ActionToExecute action;
 
-    BacnetConfirmedServiceHandler *sH = _asynchHandlers.takeFirst();
+    BacnetConfirmedServiceHandler *sH = _pendingConfirmedRequests[0];
 
     for (int i = 0; i < 10; ++i) {
         quint32 t = sH->handleTimeout(&action);
