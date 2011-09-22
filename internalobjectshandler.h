@@ -34,14 +34,9 @@ public:
 
     void getBytes(quint8 *data, quint16 length, BacnetAddress &srcAddress, BacnetAddress &destAddress);
 
-#warning "Remove this section!"
-public:
-    Bacnet::ExternalObjectsHandler *_externalHandler;
-
 public:
     QMap<InternalAddress, BacnetDeviceObject*> _devices;
     QHash<int, InternalRequestHandler*> _asynchRequests;
-
     Bacnet::BacnetTSM2 *_tsm;
 };
 

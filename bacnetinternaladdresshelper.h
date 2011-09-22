@@ -8,7 +8,7 @@ typedef quint32 InternalAddress;
 namespace BacnetInternalAddressHelper
 {
     enum {
-        InternalAddressLength   = 4,
+        InternalAddressLength   = sizeof(InternalAddress),
         InternalMaskLength      = InternalAddressLength,
     };
 
@@ -19,6 +19,8 @@ namespace BacnetInternalAddressHelper
     InternalAddress internalAddress(const BacnetAddress &inAddress);
 
     quint16 internalAddrToRaw(InternalAddress address, quint8 *outData);
+
+    BacnetAddress toBacnetAddress(InternalAddress address);
 };
 
 #endif // BACNETINTERNALADDRESSHELPER_H

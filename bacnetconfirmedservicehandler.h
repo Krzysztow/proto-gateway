@@ -2,6 +2,7 @@
 #define BACNETCONFIRMEDSERVICEHANDLER_H
 
 #include <QtCore>
+#include "bacnetcommon.h"
 
 namespace Bacnet {
 

@@ -12,3 +12,13 @@ Bacnet::ObjectIdStruct Bacnet::numToObjId(unsigned int numObjId) {
 
     return objIdStr;
 }
+
+uint Bacnet::qHash(ObjectIdStruct objId)
+{
+    return objIdToNum(objId);
+}
+
+bool Bacnet::operator==(ObjectIdStruct one, ObjectIdStruct other)
+{
+    return objIdToNum(one) == objIdToNum(other);
+}

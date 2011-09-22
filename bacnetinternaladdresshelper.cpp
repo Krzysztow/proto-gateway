@@ -31,3 +31,12 @@ quint16 BacnetInternalAddressHelper::internalAddrToRaw(InternalAddress address, 
 {
     return HelperCoder::uint32ToRaw(address, outData);
 }
+
+BacnetAddress BacnetInternalAddressHelper::toBacnetAddress(InternalAddress address)
+{
+    quint8 tmp[InternalAddressLength];
+    internalAddrToRaw(address, tmp);
+    BacnetAddress retAddr;
+    retAddr.macAddressFromRaw(tmp, InternalAddressLength);
+    return retAddr;
+}

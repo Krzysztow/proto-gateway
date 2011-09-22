@@ -43,7 +43,32 @@ class BacnetConfirmedRequestData:
         public BacnetPciData
 {
 public:
+    enum MaxSegmentsAccepted {
+        Segments_Unspecified     = 0x000,
+        Segments_TwoSegments     = 0x001,
+        Segments_FourSemgnets    = 0x010,
+        Segments_EightSegments   = 0x011,
+        Segments_SixteenSegs     = 0x100,
+        Segments_ThirtyTwoSegs   = 0x101,
+        Segments_SixtyFourSegs   = 0x110,
+        Segments_More64Segs      = 0x111
+    };
+
+    enum MaxLengthAccepted {
+        Length_UptToMinimumMessageSize  = 0x0000,
+        Length_128Octets                = 0x0001,
+        Length_206Octets                = 0x0010,
+        Length_480Octets                = 0x0011,
+        Length_1024Octets               = 0x0100,
+        Length_1476Octets               = 0x0101,
+        Length_MaxBacnetReserver        = 0x1111
+    };
+
+public:
     BacnetConfirmedRequestData();
+    BacnetConfirmedRequestData(bool segmented, bool moreFollows, bool segmentedAccepted, MaxSegmentsAccepted maxSegments, MaxLengthAccepted maxLengthAccepted,
+                               quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service, quint8 sequenceNumber = 0, quint8 windowSize = 0);
+    BacnetConfirmedRequestData(MaxLengthAccepted maxLengthAccepted, quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
 
     inline BacnetServices::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
@@ -57,8 +82,8 @@ private:
     bool _segmented;
     bool _moreFollows;
     bool _segmentedRespAccepted;
-    quint8 _maxSegments;
-    quint8 _maxResponses;
+    MaxSegmentsAccepted _maxSegments;
+    MaxLengthAccepted _maxResponses;
     quint8 _invokeId;
     quint8 _sequenceNum;
     quint8 _propWindowSize;
@@ -130,6 +155,10 @@ public:
     BacnetSegmentedAckData() {}
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
 
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
+
     enum Acknowledgment {
         SegmentOk = 0x00,
         SegmentOutOfOrder = BitFields::Bit1
@@ -183,6 +212,10 @@ class BacnetAbortData:
 public:
     BacnetAbortData() {}
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+
+public://overridden from BacnetPciData
+    virtual quint8 pduType();
+    virtual qint16 toRaw(quint8 *buffer, quint16 length);
 
 private:
     bool _sentByServer;

@@ -42,11 +42,11 @@ void InternalSubscribeCOVRequestHandler::finalize(bool *deleteAfter)
 {
     Q_CHECK_PTR(deleteAfter);
     if (deleteAfter)
-        *deleteAfter = true;}
+        *deleteAfter = true;
+}
 
 bool InternalSubscribeCOVRequestHandler::execute()
 {
-
 }
 
 qint32 InternalSubscribeCOVRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)

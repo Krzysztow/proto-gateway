@@ -11,7 +11,7 @@
 #include "servicefactory.h"
 
 BacnetApplicationLayerHandler::BacnetApplicationLayerHandler(BacnetNetworkLayerHandler *networkHndlr):
-    _networkHndlr(networkHndlr)
+        _networkHndlr(networkHndlr)
 {
 }
 
@@ -37,23 +37,23 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
     //configure it dynamically
     switch (serviceData.service()) {
     case (BacnetServices::ConfirmedCOVNotification): {
-        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-        break;
-    }
+            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+            break;
+        }
     case (BacnetServices::SubscribeCOV): {
-        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-        break;
-    }
+            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+            break;
+        }
     case (BacnetServices::ReadProperty): {
-        //            BacnetReadProperty readPrpty;
-        //            readPrpty.setFromRaw()
-        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-        break;
-    }
+            //            BacnetReadProperty readPrpty;
+            //            readPrpty.setFromRaw()
+            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+            break;
+        }
     case (BacnetServices::WriteProperty): {
-        Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
-        break;
-    }
+            Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
+            break;
+        }
     default:
         qDebug("processConfirmedRequest() : Unrecognized service. Implement handler!");
         Q_ASSERT(false);
@@ -69,7 +69,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
 {
     //looking for a destination device.
     BacnetDeviceObject *device(0);
-    if (destAddr.isGlobalBroadcast() || destAddr.isGlobalBroadcast()) {
+    if (destAddr.isGlobalBroadcast() || destAddr.isGlobalBroadcast()){
         device = 0;
     } else {
         InternalAddress destination = BacnetInternalAddressHelper::internalAddress(destAddr);
@@ -77,12 +77,15 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
             qDebug("InternalObjectsHandler::getBytes() : invalid address gotten.");
             return;
         }
-
         //find device by address from network layer
-        device = _internalHandler->virtualDevices()[destination];
-        if (0 == device) {//device not found, drop it!
-            qDebug("Device %d is not found!", destination);
-            return;
+        if (_externalHandler->isRegisteredAddress(destination)) {
+            device = 0;
+        } else {
+            device = _internalHandler->virtualDevices()[destination];
+            if (0 == device) {//device not found, drop it!
+                qDebug("Device %d is not found!", destination);
+                return;
+            }
         }
     }
 
@@ -90,142 +93,181 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
     switch (BacnetPci::pduType(data))
     {
     case (BacnetPci::TypeConfirmedRequest):
-    {
-        /*upon reception:
+        {
+            /*upon reception:
                   - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
                   - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
                  */
-        BacnetConfirmedRequestData *crData = new BacnetConfirmedRequestData();
-        qint32 ret = crData->fromRaw(data, length);
-        Q_ASSERT(ret > 0);
-        //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
-        if (ret <= 0) {
-            delete crData;
-            return;
-        }
+            BacnetConfirmedRequestData *crData = new BacnetConfirmedRequestData();
+            qint32 ret = crData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
+            if (ret <= 0) {
+                delete crData;
+                return;
+            }
 
-        InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(crData, _tsm, device, _internalHandler, _externalHandler);
-        Q_CHECK_PTR(handler);
-        if (0 == handler) {
-            _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonUnrecognizedService, crData->invokedId());
-            delete crData;
-            return;
-        }
+            InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(crData, _tsm, device, _internalHandler, _externalHandler);
+            Q_CHECK_PTR(handler);
+            if (0 == handler) {
+                _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonUnrecognizedService, crData->invokedId());
+                delete crData;
+                return;
+            }
 
-        ret = handler->fromRaw(data + ret, length - ret);
-        Q_ASSERT(ret > 0);
-        if (ret <= 0) {
-            //! \todo send reject - parsing should return the reject reason!
-            _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonMissingRequiredParameter, crData->invokedId());
-            delete handler;
-            return;
-        }
-        //! \todo Remove code duplication - with Unconfirmed request part.
-        handler->setAddresses(srcAddr, destAddr);
+            ret = handler->fromRaw(data + ret, length - ret);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                //! \todo send reject - parsing should return the reject reason!
+                _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonMissingRequiredParameter, crData->invokedId());
+                delete handler;
+                return;
+            }
+            //! \todo Remove code duplication - with Unconfirmed request part.
+            handler->setAddresses(srcAddr, destAddr);
 
-        bool readyToBeDeleted = handler->execute();
-        if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
-            Q_ASSERT(handler->isFinished());
-            delete handler;
-        }
+            bool readyToBeDeleted = handler->execute();
+            if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
+                Q_ASSERT(handler->isFinished());
+                delete handler;
+            }
 
-        break;
-    }
+            break;
+        }
     case (BacnetPci::TypeUnconfirmedRequest): {
-        /*upon reception: do what's needed and that's all
+            /*upon reception: do what's needed and that's all
              */
-        BacnetUnconfirmedRequestData *ucrData = new BacnetUnconfirmedRequestData();
-        qint32 ret = ucrData->fromRaw(data, length);
-        Q_ASSERT(ret > 0);
-        //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
-        if (ret <= 0) {
-            qDebug("Couldn't parse pci data, stops.");
-            delete ucrData;
-            return;
-        }
+            BacnetUnconfirmedRequestData *ucrData = new BacnetUnconfirmedRequestData();
+            qint32 ret = ucrData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
+            if (ret <= 0) {
+                qDebug("Couldn't parse pci data, stops.");
+                delete ucrData;
+                return;
+            }
 
-        //create appropriate handler. \note It takes ownership over ucrData!
-        InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(ucrData, _tsm, device, _internalHandler, _externalHandler);
-        Q_CHECK_PTR(handler);
-        if (0 == handler) {
-            qDebug("InternalUnconfirmedRequestHandler not created, drop silently.");
-            delete ucrData;
-            return;
-        }
+            //create appropriate handler. \note It takes ownership over ucrData!
+            InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(ucrData, _tsm, device, _internalHandler, _externalHandler);
+            Q_CHECK_PTR(handler);
+            if (0 == handler) {
+                qDebug("InternalUnconfirmedRequestHandler not created, drop silently.");
+                delete ucrData;
+                return;
+            }
 
-        //set handler data
-        ret = handler->fromRaw(data + ret, length - ret);
-        Q_ASSERT(ret > 0);
-        if (ret <= 0) {
-            qDebug("InternalUnconfirmedRequestHandler parsed data incorrectnly (%d), drop silently!", ret);
-            delete handler;
-            //                delete ucrData;//this is deleted with handler - it took ownership.
-            return;
-        }
-        handler->setAddresses(srcAddr, destAddr);
+            //set handler data
+            ret = handler->fromRaw(data + ret, length - ret);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("InternalUnconfirmedRequestHandler parsed data incorrectnly (%d), drop silently!", ret);
+                delete handler;
+                //                delete ucrData;//this is deleted with handler - it took ownership.
+                return;
+            }
+            handler->setAddresses(srcAddr, destAddr);
 
-        bool readyToBeDeleted = handler->execute();
-        if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
-            Q_ASSERT(handler->isFinished());
-            delete handler;
-        }
+            bool readyToBeDeleted = handler->execute();
+            if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
+                Q_ASSERT(handler->isFinished());
+                delete handler;
+            }
 
-        break;
-    }
+            break;
+        }
     case (BacnetPci::TypeSimpleAck):
-    {
-        BacnetSimpleAckData *saData = new BacnetSimpleAckData();
-        qint32 ret = saData->fromRaw(data, length);
-        Q_ASSERT(ret > 0);
-        if (ret <= 0) {
-            qDebug("BacnetApplicationLayerHandler::indication() : wrong simple ack data (%d)", ret);
-            return;
+        {
+            BacnetSimpleAckData *saData = new BacnetSimpleAckData();
+            qint32 ret = saData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("BacnetApplicationLayerHandler::indication() : wrong simple ack data (%d)", ret);
+                delete saData;
+                return;
+            }
+            //take ownership over the data!
+            _tsm->receive(srcAddr, destAddr, saData);
+            break;
         }
-        //take ownership over the data!
-        _tsm->receive(srcAddr, destAddr, saData);
-        break;
-    }
     case (BacnetPci::TypeComplexAck):
-    {
-        BacnetComplexAckData *cplxData = new BacnetComplexAckData();
-        qint32 ret = cplxData->fromRaw(data, length);
-        Q_ASSERT(ret > 0);
-        if (ret <= 0) {
-            qDebug("BacnetApplicationLayerHandler::indication() : wrong complex ack data (%d)", ret);
-            return;
+        {
+            BacnetComplexAckData *cplxData = new BacnetComplexAckData();
+            qint32 ret = cplxData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("BacnetApplicationLayerHandler::indication() : wrong complex ack data (%d)", ret);
+                delete cplxData;
+                return;
+            }
+            //take ownership over the data!
+            _tsm->receive(srcAddr, destAddr, cplxData, data + ret, length - ret);
+            break;
         }
-        //take ownership over the data!
-        _tsm->receive(srcAddr, destAddr, cplxData, data + ret, length - ret);
-        break;
-    }
     case (BacnetPci::TypeSemgmendAck):
-    {
-        /*upon reception update state machine and send back another segment
+        {
+            /*upon reception update state machine and send back another segment
              */
-        BacnetSegmentedAckData *segData = new BacnetSegmentedAckData();
-        qint32 ret = segData ->fromRaw(data, length);
-        Q_ASSERT(ret > 0);
-        if (ret <= 0) {
-            qDebug("BacnetApplicationLayerHandler::indication() : wrong complex ack data (%d)", ret);
-            return;
+            BacnetSegmentedAckData *segData = new BacnetSegmentedAckData();
+            qint32 ret = segData ->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("BacnetApplicationLayerHandler::indication() : wrong complex ack data (%d)", ret);
+                delete segData;
+                return;
+            }
+            //take ownership over the data!
+            _tsm->receive(srcAddr, destAddr, segData , data + ret, length - ret);
+            break;
         }
-        //take ownership over the data!
-        _tsm->receive(srcAddr, destAddr, segData , data + ret, length - ret);
-        break;
-    }
     case (BacnetPci::TypeError):
-        /*BacnetConfirmedRequest seervice failed
+        {
+            /*BacnetConfirmedRequest seervice failed
              */
+            BacnetErrorData *errData = new BacnetErrorData();
+            qint32 ret = errData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("BacnetApplicationLayerHandler::indication() : wrong error data (%d)", ret);
+                delete errData;
+                return;
+            }
+            //take ownership over the data!
+            _tsm->receive(srcAddr, destAddr, errData , data + ret, length - ret);
+        }
         break;
     case (BacnetPci::TypeReject):
-        /*Protocol error occured
+        {
+            /*Protocol error occured
              */
+            BacnetRejectData *rjctData = new BacnetRejectData();
+            qint32 ret = rjctData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("BacnetApplicationLayerHandler::indication() : wrong reject data (%d)", ret);
+                delete rjctData;
+                return;
+            }
+            //take ownership over the data!
+            _tsm->receive(srcAddr, destAddr, rjctData , data + ret, length - ret);
+        }
         break;
     case (BacnetPci::TypeAbort):
+        {
+            BacnetAbortData *abrtData = new BacnetAbortData();
+            qint32 ret = abrtData->fromRaw(data, length);
+            Q_ASSERT(ret > 0);
+            if (ret <= 0) {
+                qDebug("BacnetApplicationLayerHandler::indication() : wrong abort data (%d)", ret);
+                delete abrtData;
+                return;
+            }
+            //take ownership over the data!
+            _tsm->receive(srcAddr, destAddr, abrtData , data + ret, length - ret);
+        }
         break;
     default: {
-        Q_ASSERT(false);
-    }
+            Q_ASSERT(false);
+        }
     }
 
 
@@ -313,17 +355,20 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
 #include "bacnetdeviceobject.h"
 #include "bacnettsm2.h"
 #include "bacnetinternaladdresshelper.h"
+#include "bacnetnetworklayer.h"
 #include "cdm.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    DataModel *cdm = DataModel::instance();
+    DataModel::instance();
 
-    BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(0);
+    BacnetNetworkLayerHandler *netHandler = new BacnetNetworkLayerHandler();
+    BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(netHandler);
 
     Bacnet::BacnetTSM2 *tsm = new BacnetTSM2();
+
     InternalObjectsHandler *intHandler = new InternalObjectsHandler(tsm);
     ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
     appHandler->_externalHandler = extHandler;

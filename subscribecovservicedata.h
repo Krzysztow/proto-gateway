@@ -19,9 +19,9 @@ namespace Bacnet {
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);
 
     public:
-        inline bool isConfirmedNotificationPresent() {return flags & IssueConfNotPresent;}
-        inline void setConfirmedNotificationPresent() {flags |= IssueConfNotPresent;}
-        inline void clearConfirmedNotificationPresent() {flags &= (~IssueConfNotPresent);}
+        inline bool isConfirmedNotificationPresent() {return flags & IssueConfNotifPresent;}
+        inline void setConfirmedNotificationPresent() {flags |= IssueConfNotifPresent;}
+        inline void clearConfirmedNotificationPresent() {flags &= (~IssueConfNotifPresent);}
 
         inline bool isLifetimePresent() {return flags & LifetimePresent;}
         inline void setLifetimePresent() {flags |= LifetimePresent;}
@@ -35,10 +35,10 @@ namespace Bacnet {
 
     private:
         enum {
-            IssueConfNotPresent = 0x01,
+            IssueConfNotifPresent = 0x01,
             LifetimePresent     = 0x02,
 
-            AllFlags = IssueConfNotPresent | LifetimePresent
+            AllFlags = IssueConfNotifPresent | LifetimePresent
         };
         quint8 flags;
     };

@@ -6,6 +6,36 @@ BacnetConfirmedRequestData::BacnetConfirmedRequestData()
 {
 }
 
+BacnetConfirmedRequestData::BacnetConfirmedRequestData(bool segmented, bool moreFollows, bool segmentedAccepted, MaxSegmentsAccepted maxSegments, MaxLengthAccepted maxLengthAccepted,
+                                                       quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service, quint8 sequenceNumber, quint8 windowSize):
+_segmented(segmented),
+_moreFollows(moreFollows),
+_segmentedRespAccepted(segmentedAccepted),
+_maxSegments(maxSegments),
+_maxResponses(maxLengthAccepted),
+_invokeId(invokeId),
+_sequenceNum(sequenceNumber),
+_propWindowSize(windowSize),
+_serviceChoice(service)
+{
+
+}
+
+BacnetConfirmedRequestData::BacnetConfirmedRequestData(MaxLengthAccepted maxLengthAccepted, quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service):
+        _segmented(false),
+        _moreFollows(false),
+        _segmentedRespAccepted(false),
+        _maxSegments(Segments_Unspecified),
+        _maxResponses(maxLengthAccepted),
+        _invokeId(invokeId),
+        _sequenceNum(0),
+        _propWindowSize(0),
+        _serviceChoice(service)
+{
+
+}
+
+
 qint16 BacnetConfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
 {
     quint8 *ptr = dataPtr;
@@ -20,8 +50,8 @@ qint16 BacnetConfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
         return BacnetPci::BufferTooSmall;
     //parse further
     ++ptr;
-    _maxSegments = (((*ptr)>>4) & 0x0f);
-    _maxResponses = (*ptr) & 0x0f;
+    _maxSegments = (MaxSegmentsAccepted)(((*ptr)>>4) & 0x0f);
+    _maxResponses = (MaxLengthAccepted)((*ptr) & 0x0f);
 
     ++ptr;
     _invokeId = *ptr;
@@ -260,6 +290,29 @@ qint16 BacnetSegmentedAckData::fromRaw(quint8 *dataPtr, quint16 length)
     return (ptr - dataPtr);
 }
 
+quint8 BacnetSegmentedAckData::pduType()
+{
+    return BacnetPci::TypeSemgmendAck;
+}
+
+qint16 BacnetSegmentedAckData::toRaw(quint8 *buffer, quint16 length)
+{
+    Q_ASSERT(length == 4);
+    if (length != 4)
+        return BacnetPci::InappropriateBufferSize;
+
+    _negativeAck = (Acknowledgment)(*buffer & BitFields::Bit1);
+    _sentByServer = *buffer & BitFields::Bit0;
+    ++buffer;
+    _origInvokeId = *buffer;
+    ++buffer;
+    _seqNum = *buffer;
+    ++buffer;
+    _actualWindSize = *buffer;
+
+    return 4;
+}
+
 qint16 BacnetErrorData::fromRaw(quint8 *dataPtr, quint16 length)
 {
     Q_ASSERT(length >= 3);
@@ -329,6 +382,26 @@ qint16 BacnetAbortData::fromRaw(quint8 *dataPtr, quint16 length)
     _abortReason = *ptr;
 
     return (ptr - dataPtr);
+}
+
+quint8 BacnetAbortData::pduType()
+{
+    return BacnetPci::TypeAbort;
+}
+
+qint16 BacnetAbortData::toRaw(quint8 *buffer, quint16 length)
+{
+    Q_ASSERT(length >= 3);
+    if (length < 3)
+        return BacnetPci::BufferTooSmall;
+
+    _sentByServer = *buffer & BitFields::Bit0;
+    ++buffer;
+    _origInvokeId = *buffer;
+    ++buffer;
+    _abortReason = *buffer;
+
+    return 3;
 }
 
 qint16 BacnetPciData::toRaw(quint8 *buffer, quint16 length)

@@ -114,6 +114,12 @@ int ExternalObjectsHandler::getPropertyRequest(::PropertySubject *toBeGotten)
 
 int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingElement &readElement, ::PropertySubject *property)
 {
+    Q_ASSERT(!_registeredAddresses.isEmpty());
+    if (_registeredAddresses.isEmpty()) {
+        qDebug("ExternalObjectsHandler::readProperty() : can't send request, since we have no address.");
+        return Property::UnknownError;
+    }
+
     //get new asynchronous id from data model
     int asynchId = DataModel::instance()->generateAsynchId();
     Q_ASSERT(asynchId >= 0);
@@ -135,7 +141,7 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
     _bacnetPendingRequests.insert(serviceHandler, ri);
     ObjectIdStruct objId = numToObjId(readElement._deviceIdentifier);
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _tsm->send(objId, serviceHandler, 1000);
+    _tsm->send(objId, _registeredAddresses.first(), BacnetServices::ReadProperty, serviceHandler, 1000);
 
     return asynchId;
 }
@@ -215,6 +221,23 @@ void ExternalObjectsHandler::handleError(BacnetConfirmedServiceHandler *act, Err
            error.errorClass, error.errorCode, rElem._deviceIdentifier, rElem._objectIdentifier);
 }
 
+bool ExternalObjectsHandler::isRegisteredAddress(InternalAddress &address)
+{
+    return _registeredAddresses.contains(address);
+}
+
+void ExternalObjectsHandler::addRegisteredAddress(InternalAddress &address)
+{
+    if (!_registeredAddresses.contains(address))
+        _registeredAddresses.append(address);
+}
+
+void ExternalObjectsHandler::removeRegisteredAddress(InternalAddress &address)
+{
+    _registeredAddresses.removeOne(address);
+    Q_ASSERT(!_registeredAddresses.contains(address));
+}
+
 void ExternalObjectsHandler::handleAbort(BacnetConfirmedServiceHandler *act,  quint8 abortReason)
 {
     RequestInfo ri = _bacnetPendingRequests.take(act);
@@ -244,7 +267,12 @@ void ExternalObjectsHandler::handleAbort(BacnetConfirmedServiceHandler *act,  qu
 
 int ExternalObjectsHandler::setPropertyRequest(::PropertySubject *toBeSet, QVariant &value)
 {
-    Q_CHECK_PTR(toBeSet);
+    Q_ASSERT(!_registeredAddresses.isEmpty());
+    if (_registeredAddresses.isEmpty()) {
+        qDebug("ExternalObjectsHandler::setPropertyRequest() : can't send request, since we have no address.");
+        return Property::UnknownError;
+    }
+        Q_CHECK_PTR(toBeSet);
     if (0 == toBeSet)
         return Property::UnknownError;
 
@@ -292,7 +320,7 @@ int ExternalObjectsHandler::setPropertyRequest(::PropertySubject *toBeSet, QVari
     _bacnetPendingRequests.insert(serviceHandler, ri);
     ObjectIdStruct objId = numToObjId(rEntry._deviceIdentifier);
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _tsm->send(objId, serviceHandler, 1000);
+    _tsm->send(objId, _registeredAddresses.first(), BacnetServices::WriteProperty, serviceHandler, 1000);
 
     return asynchId;
 }

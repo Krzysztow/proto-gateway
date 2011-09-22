@@ -7,6 +7,7 @@
 #include "property.h"
 #include "bacnetexternalobjects.h"
 #include "bacnetcommon.h"
+#include "bacnetinternaladdresshelper.h"
 
 class BacnetDeviceObject;
 
@@ -34,6 +35,10 @@ namespace Bacnet {
         void handleResponse(BacnetConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
         void handleError(BacnetConfirmedServiceHandler *act, Error &error);
         void handleAbort(BacnetConfirmedServiceHandler *act,  quint8 abortReason);
+
+        bool isRegisteredAddress(InternalAddress &address);
+        void addRegisteredAddress(InternalAddress &address);
+        void removeRegisteredAddress(InternalAddress &address);
 
     public://overridden from PropertyOwner
         int getPropertyRequest(PropertySubject *toBeGotten);
@@ -66,6 +71,7 @@ namespace Bacnet {
         QMap<BacnetConfirmedServiceHandler*, RequestInfo> _bacnetPendingRequests;
 
         BacnetTSM2 *_tsm;
+        QList<InternalAddress> _registeredAddresses;
     };
 
 }

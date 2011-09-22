@@ -11,6 +11,18 @@ WhoIsServiceData::WhoIsServiceData():
 {
 }
 
+WhoIsServiceData::WhoIsServiceData(quint32 deviceInstanceNumber):
+        _rangeLowLimit(0x3fffff & deviceInstanceNumber),
+        _rangeHighLimit(0x3fffff & deviceInstanceNumber)
+{
+}
+
+WhoIsServiceData::WhoIsServiceData(quint32 rangeLowLimit, quint32 rangeHightLimit):
+        _rangeLowLimit(0x3fffff & rangeLowLimit),
+        _rangeHighLimit(0x3fffff & rangeHightLimit)
+{
+}
+
 qint32 WhoIsServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
 {
     if ( (0 == _rangeLowLimit) ||

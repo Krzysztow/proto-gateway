@@ -12,6 +12,8 @@ namespace Bacnet {
     {
     public:
         WhoIsServiceData();
+        WhoIsServiceData(quint32 deviceInstanceNumber);
+        WhoIsServiceData(quint32 rangeLowLimit, quint32 rangeHightLimit);
 
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
