@@ -371,6 +371,9 @@ int main(int argc, char *argv[])
 
     InternalObjectsHandler *intHandler = new InternalObjectsHandler(tsm);
     ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
+    InternalAddress extObjHandlerAddress = 32;
+    extHandler->addRegisteredAddress(extObjHandlerAddress);
+
     appHandler->_externalHandler = extHandler;
     appHandler->_internalHandler = intHandler;
     appHandler->_tsm = tsm;

@@ -55,13 +55,13 @@ public:
     };
 
     enum MaxLengthAccepted {
-        Length_UptToMinimumMessageSize  = 0x0000,
-        Length_128Octets                = 0x0001,
-        Length_206Octets                = 0x0010,
-        Length_480Octets                = 0x0011,
-        Length_1024Octets               = 0x0100,
-        Length_1476Octets               = 0x0101,
-        Length_MaxBacnetReserver        = 0x1111
+        Length_UptToMinimumMessageSize  = 0x00,
+        Length_128Octets                = 0x01,
+        Length_206Octets                = 0x02,
+        Length_480Octets                = 0x03,
+        Length_1024Octets               = 0x04,
+        Length_1476Octets               = 0x05,
+        Length_MaxBacnetReserver        = 0x08
     };
 
 public:

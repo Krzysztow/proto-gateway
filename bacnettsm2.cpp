@@ -95,6 +95,7 @@ void BacnetTSM2::discoverDevice(ObjectIdStruct &deviceId)
 
     BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(_myRequestAddress);
 
+    HelperCoder::printArray(buffStart, buffer.bodyLength(), "Discovery request to be sent: ");
     _netHandler->sendApdu(&buffer, false, &globalAddr, &srcAddr);
 }
 
@@ -123,6 +124,7 @@ bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAdd
         else
             _awaitingDiscoveryRequests[destinedObject].append(discEntry);
         discoverDevice(destinedObject);
+        return true;
     }
     BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
 
@@ -158,7 +160,7 @@ bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAdd
     buffStart += ret;
     buffer.setBodyLength(buffStart - buffer.bodyPtr());
 
-    HelperCoder::printArray(buffStart, buffer.buffLength(), "Request to be sent: ");
+    HelperCoder::printArray(buffStart, buffer.bodyLength(), "Request to be sent: ");
     qDebug("Length sent %d", ret);
 
     _netHandler->sendApdu(&buffer, true, &destAddr, &srcAddr);
