@@ -121,7 +121,7 @@ QVariant::Type AnalogInputObject::variantTypeForProperty_helper(BacnetProperty::
     {
     case (BacnetProperty::PresentValue)://go through
     case (BacnetProperty::HighLimit):   //go through
-    case (BacnetProperty::LowLimit):
+    case (BacnetProperty::LowLimit):    //go through
     case (BacnetProperty::Deadband):
         return QVariant::Double;
     case (BacnetProperty::StatusFlags): //go through
@@ -159,17 +159,10 @@ void AnalogInputObject::asynchActionFinished(int asynchId, Property *property, P
     _parentDevice->propertyChanged(asynchId, actionResult, this);
 }
 
-int AnalogInputObject::getPropertyRequest(PropertySubject *toBeGotten)
+void AnalogInputObject::propertyValueChanged(PropertyObserver *property)
 {
-    Q_CHECK_PTR(toBeGotten);
-    Q_UNUSED(toBeGotten);
-    return Property::UnknownError;
-}
-
-int AnalogInputObject::setPropertyRequest(PropertySubject *toBeSet, QVariant &value)
-{
-    Q_CHECK_PTR(toBeSet);
-    Q_UNUSED(toBeSet);
-    Q_UNUSED(value);
-    return Property::UnknownError;
+    Q_CHECK_PTR(property);
+    Q_UNUSED(property);
+    Q_ASSERT(false);
+#warning "Not implemented!";
 }

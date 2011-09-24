@@ -23,6 +23,7 @@ public://overriden from PropertyOwner
     void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
     int getPropertyRequest(PropertySubject *toBeGotten);
     int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
+    void propertyValueChanged(PropertyObserver *property);
 
     void addProperty(Property *property);
 

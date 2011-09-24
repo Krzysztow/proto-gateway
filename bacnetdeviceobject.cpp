@@ -54,7 +54,7 @@ Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::R
             }
             return retArray;
         } else {
-            if (!(rpStruct->arrayIndex <= _childObjects.size())) {
+            if (!(rpStruct->arrayIndex <= (uint)_childObjects.size())) {
                 error->errorClass = BacnetError::ClassProperty;
                 error->errorCode = BacnetError::CodeInvalidArrayIndex;
                 return 0;
@@ -201,18 +201,12 @@ void BacnetDeviceObject::propertyChanged(int asynchId, int result, BacnetObject 
     _handler->propertyIoFinished(asynchId, result, object, this);
 }
 
-int BacnetDeviceObject::getPropertyRequest(PropertySubject *toBeGotten)
+void BacnetDeviceObject::propertyValueChanged(PropertyObserver *property)
 {
-    Q_CHECK_PTR(toBeGotten);
+    Q_CHECK_PTR(property);
+    Q_UNUSED(property);
     Q_ASSERT(false);
-    return Property::UnknownError;
-}
-
-int BacnetDeviceObject::setPropertyRequest(PropertySubject *toBeSet, QVariant &value)
-{
-    Q_CHECK_PTR(toBeSet);
-    Q_ASSERT(false);
-    return Property::UnknownError;
+#warning "Not implemented!";
 }
 
 void BacnetDeviceObject::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)

@@ -14,7 +14,10 @@ class Property;
 class InternalRequestHandler;
 
 
-namespace Bacnet {class BacnetTSM2;}
+namespace Bacnet {
+    class BacnetTSM2;
+    class SubscribeCOVServiceData;
+}
 
 class InternalObjectsHandler
 {
@@ -25,6 +28,7 @@ public://interface for BacnetObject-Internal interaction
     void propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
     void addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler);
 
+
 public:
     bool addDevice(InternalAddress address, BacnetDeviceObject *device);
     QMap<quint32, BacnetDeviceObject*> &virtualDevices();
@@ -32,12 +36,24 @@ public:
     //! \todo If performance here is bad, just return reference to QMap, as is stored.
     QList<BacnetDeviceObject*> devices();
 
-    void getBytes(quint8 *data, quint16 length, BacnetAddress &srcAddress, BacnetAddress &destAddress);
-
 public:
     QMap<InternalAddress, BacnetDeviceObject*> _devices;
     QHash<int, InternalRequestHandler*> _asynchRequests;
     Bacnet::BacnetTSM2 *_tsm;
+
+    /****************************
+          COV handling part
+    ****************************/
+public:
+    static const int MaxTotaCOVSubscriptions = 64;
+    void subscribeCOV(BacnetDeviceObject *device, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
+
+private:
+    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
+    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
+    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
+    TCovDevicesSubscriptions _covSubscriptions;
+    int _totalCOVsubscriptionsNum;
 };
 
 

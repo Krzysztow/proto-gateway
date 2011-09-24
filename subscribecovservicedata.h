@@ -14,6 +14,8 @@ namespace Bacnet {
     public:
         SubscribeCOVServiceData();
 
+        bool compareSubscriptions(SubscribeCOVServiceData &other);
+
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);

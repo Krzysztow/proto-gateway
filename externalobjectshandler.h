@@ -49,6 +49,11 @@ namespace Bacnet {
           */
         virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
 
+        /** This function is not used, since all the objects here are PropertySubjects and will not be changed
+          from within CDM.
+         */
+        virtual void propertyValueChanged(PropertyObserver *property);
+
     private:
         int readProperty(BacnetExternalObjects::ExternalRoutingElement &readElement, PropertySubject *property);
 

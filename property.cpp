@@ -250,7 +250,7 @@ int PropertyObserver::setValue(QVariant &inValue)
 
 void PropertyObserver::propertyValueChanged()
 {
-    qWarning("PropertyObserver::propertyValueChanged() not handled!");
+    _owner->propertyValueChanged(this);
 }
 
 int PropertyObserver::getValueInstant(QVariant *outValue)

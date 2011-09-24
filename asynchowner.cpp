@@ -32,6 +32,11 @@ void AsynchOwner::asynchActionFinished(int asynchId, Property *property, Propert
     qDebug("This was invoked and action was %d!", asynchId);
 }
 
+void AsynchOwner::propertyValueChanged(PropertyObserver *property)
+{
+    Q_UNUSED(property);
+}
+
 int AsynchOwner::setPropertyRequest(PropertySubject *toBeSet, QVariant &value)
 {
     //here we can check, if the value is propert - for instance in allowable range

@@ -76,8 +76,16 @@ void ExternalObjectsHandler::asynchActionFinished(int asynchId, Property *proper
     Q_UNUSED(property);
     Q_UNUSED(actionResult);
     Q_ASSERT_X(false, "ExternalObjectsHandler::asynchActionFinished()",
-               "This function should never be called.");
+               "This function should never be called, since it owns only PropertySubjects instances.");
 }
+
+void ExternalObjectsHandler::propertyValueChanged(PropertyObserver *property)
+{
+    Q_UNUSED(property);
+    Q_ASSERT_X(false, "ExternalObjectsHandler::propertyValueChanged();",
+               "This function should never be called, since it owns only PropertySubjects instances.");
+}
+
 
 int ExternalObjectsHandler::getPropertyRequest(::PropertySubject *toBeGotten)
 {

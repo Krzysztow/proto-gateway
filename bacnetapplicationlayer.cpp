@@ -82,7 +82,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
             device = 0;
         } else {
             device = _internalHandler->virtualDevices()[destination];
-            if (0 == device) {//device not found, drop it!
+            if (0 == device) {//device not found, drop request!
                 qDebug("Device %d is not found!", destination);
                 return;
             }
@@ -98,6 +98,9 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
                   - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
                   - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
                  */
+            if (0 == device) //confirmed request means we should have a device!
+                return;
+
             BacnetConfirmedRequestData *crData = new BacnetConfirmedRequestData();
             qint32 ret = crData->fromRaw(data, length);
             Q_ASSERT(ret > 0);

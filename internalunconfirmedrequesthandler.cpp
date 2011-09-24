@@ -1,5 +1,7 @@
 #include "internalunconfirmedrequesthandler.h"
 
+#include "bacnetpci.h"
+
 InternalUnconfirmedRequestHandler::InternalUnconfirmedRequestHandler(/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                                      InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/)
 {

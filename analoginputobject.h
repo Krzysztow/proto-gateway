@@ -32,10 +32,8 @@ public://functions overridden from PropertyOwner
       */
     virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
 
-    //not used
-    virtual int getPropertyRequest(PropertySubject *toBeGotten);
-    virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
-
+    //! Hook fuction that is called when the property being observed changed
+    virtual void propertyValueChanged(PropertyObserver *property);
 
 public:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);

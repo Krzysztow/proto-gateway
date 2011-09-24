@@ -9,6 +9,7 @@
 #include "bacnetobjectinternalsupport.h"
 
 class InternalObjectsHandler;
+
 class BacnetDeviceObject:
         public BacnetObject,
         public BacnetObjectInternalSupport
@@ -32,23 +33,12 @@ public://functions specific to BACnet device
     Bacnet::BacnetDataInterface *constProperty(BacnetProperty::Identifier propertyId);
 
 public://functions overridden from PropertyOwner
-    /** This function is a hook. Is invoked whenever some foreign protocol asks the property for a value. We have
-      to decide if it's going to be read at once or some asynchronous action called (of our Bacnet property). The
-      decision is based directed to the device and from there to protocol, which really makes the decision.
-        \sa PropertyOwner::getPropertyRequest()
-      */
-    virtual int getPropertyRequest(PropertySubject *toBeGotten);
-
-    /** Similiar to \sa getPropertyRequest() but a foreign protocol tries to write to the linked BACnet property
-        instead.
-      */
-    virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
-
     /** Hook function that is called after having requested reading/writting a property (which obviously doesn't
         belong to Bacnet). Here we find, which property it is, add some BACnet specific parameters and propagate
         them upwards to device, which calls Protocol handler.
       */
     virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
+    virtual void propertyValueChanged(PropertyObserver *property);
 
 private:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);

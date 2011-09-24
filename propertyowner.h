@@ -28,9 +28,9 @@ public:
     virtual ~PropertyOwner();
     /**
       This is a hook function, being used by the property, which is to be read. Property owner decides whether
-      the value of the property is ready to be straight read or not. In case of yes,
+      the value of the property is ready to be read straigh away or not. In case of yes,
       this function should return Ready. In case of not, if the container can arrange something asynchronously to obtain the value
-      of the property - then do so and return unique id. Otherwise return NotSetYet.
+      of the property, do so and return unique id gotten from CDM. Otherwise return NotSetYet.
       \param toBeGotten is a poitner to the property that is to be read;
       \param requester - pointer to the requester. This pointer should be remembered and passed back, when asynch response is
              generated with Property::asynchGetResponse(). Having this pointer avoids sending too many information about property value
@@ -44,14 +44,13 @@ public:
       */
     virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value) = 0;
 
-    /** Hook method, invoked when the asynchronous set action on property is finished. This should be invoked.
-      */
-//    virtual void setRequestResult(int asynchId, bool success) = 0;
-
     /** Hook method, invoked when the asynchronous get action on property is finished. This should be invoked.
       */
-//    virtual void getRequestResult(int asynchId, bool success) = 0;
-    virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
+    virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult) = 0;
+
+    /** Hoo method - invoked whenever PropertySubject being observed by owned PropertyObserver instance is changed.
+      */
+    virtual void propertyValueChanged(PropertyObserver *property) = 0;
 };
 
 #endif // PROPERTYOWNER_H
