@@ -353,7 +353,6 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
 #include "helpercoder.h"
 #include "bacnetprimitivedata.h"
 #include "bacnetpci.h"
-#include "bacnetreadpropertyservice.h"
 #include "analoginputobject.h"
 #include "bacnetdeviceobject.h"
 #include "bacnettsm2.h"

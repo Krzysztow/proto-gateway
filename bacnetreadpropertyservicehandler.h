@@ -11,12 +11,12 @@ namespace Bacnet {
     class ExternalObjectsHandler;
     class ReadPropertyServiceData;
 
-    class ReadPropertyServiceHandlerHandler:
+    class ReadPropertyServiceHandler:
             public BacnetConfirmedServiceHandler
     {
     public:
-        ReadPropertyServiceHandlerHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler);
-        virtual ~ReadPropertyServiceHandlerHandler();
+        ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler);
+        virtual ~ReadPropertyServiceHandler();
 
     public://functions overridden from BacnetConfirmedServiceHandler
         virtual qint32 toRaw(quint8 *buffer, quint16 length);

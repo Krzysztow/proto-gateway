@@ -44,7 +44,7 @@ SOURCES += main.cpp \
     internalobjectshandler.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \
-    bacnetreadpropertyservice.cpp \
+    #bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
     bacnetobjectinternalsupport.cpp \
     bacnetexternalobjects.cpp \
@@ -52,7 +52,7 @@ SOURCES += main.cpp \
     bacnetdeviceobject.cpp \
     bacnetobject.cpp \
     bacnetprimitivedata.cpp \
-    bacneterrorack.cpp \
+    #bacneterrorack.cpp \
     servicefactory.cpp \
     asynchronousbacnettsmaction.cpp \
     bacnetservice.cpp \
@@ -120,8 +120,8 @@ HEADERS += \
     bacnetreadpropertyservicehandler.h \
     cdm.h \
     bacnetservice.h \
-    bacneterrorack.h \
-    bacnetreadpropertyservice.h \
+    #bacneterrorack.h \
+    #bacnetreadpropertyservice.h \
     bacnetconfirmedservicehandler.h \
     bacnetexternalobjects.h \
     internalconfirmedrequesthandler.h \

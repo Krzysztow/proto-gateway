@@ -1,13 +1,13 @@
 #include "bacnetreadpropertyservicehandler.h"
 
-#include "bacnetreadpropertyservice.h"
 #include "bacnetreadpropertyack.h"
 #include "externalobjectshandler.h"
 #include "bacnetdata.h"
+#include "error.h"
 
 using namespace Bacnet;
 
-ReadPropertyServiceHandlerHandler::ReadPropertyServiceHandlerHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler):
+ReadPropertyServiceHandler::ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler):
         _rpData(rpData),
         sendTryOuts(3),
         _responseHandler(respHandler)
@@ -16,19 +16,19 @@ ReadPropertyServiceHandlerHandler::ReadPropertyServiceHandlerHandler(ReadPropert
     Q_CHECK_PTR(_responseHandler);
 }
 
-ReadPropertyServiceHandlerHandler::~ReadPropertyServiceHandlerHandler()
+ReadPropertyServiceHandler::~ReadPropertyServiceHandler()
 {
     delete _rpData;
 }
 
-qint32 ReadPropertyServiceHandlerHandler::toRaw(quint8 *buffer, quint16 length)
+qint32 ReadPropertyServiceHandler::toRaw(quint8 *buffer, quint16 length)
 {
     if (0 == _rpData)
         return -1;
     return _rpData->toRaw(buffer, length);
 }
 
-quint32 ReadPropertyServiceHandlerHandler::handleTimeout(ActionToExecute *action)
+quint32 ReadPropertyServiceHandler::handleTimeout(ActionToExecute *action)
 {
     Q_CHECK_PTR(action);
     --sendTryOuts;
@@ -41,13 +41,13 @@ quint32 ReadPropertyServiceHandlerHandler::handleTimeout(ActionToExecute *action
     return 1000;
 }
 
-void ReadPropertyServiceHandlerHandler::handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action)
+void ReadPropertyServiceHandler::handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action)
 {
     Q_CHECK_PTR(action);
     BacnetReadPropertyAck ack;
     qint32 ret = ack.fromRaw(ackPtr, length);
     if (ret < 0) {
-        qWarning("ReadPropertyServiceHandlerHandler::handleAck() - ack received, but problem on parsing %d", ret);
+        qWarning("ReadPropertyServiceHandler::handleAck() - ack received, but problem on parsing %d", ret);
         *action = DeleteServiceHandler;//we are done - parent may delete us
     }
 
@@ -62,7 +62,7 @@ void ReadPropertyServiceHandlerHandler::handleAck(quint8 *ackPtr, quint16 length
     *action = DeleteServiceHandler;//we are done - parent may delete us
 }
 
-void ReadPropertyServiceHandlerHandler::handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action)
+void ReadPropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action)
 {
     //! \todo parse Error message.
     Error error;
@@ -71,7 +71,7 @@ void ReadPropertyServiceHandlerHandler::handleError(quint8 *errorPtr, quint16 le
     *action = DeleteServiceHandler;
 }
 
-void ReadPropertyServiceHandlerHandler::handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action)
+void ReadPropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action)
 {
     //! \todo parse Abort message.
     _responseHandler->handleAbort(this, 0);

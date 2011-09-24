@@ -5,9 +5,7 @@
 #include "bacnetdeviceobject.h"
 #include "bacnetservicedata.h"
 #include "bacnetpci.h"
-#include "bacnetreadpropertyservice.h"
 #include "error.h"
-#include "bacneterrorack.h"
 #include "asynchronousbacnettsmaction.h"
 #include "bacnettsm2.h"
 

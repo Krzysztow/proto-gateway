@@ -5,8 +5,7 @@
 #include "bacnetcommon.h"
 #include "bacnetdataabstract.h"
 #include "bacnetreadpropertyack.h"
-#include "bacnetreadpropertyservice.h"
-//#include "bacnetwritepropertyservice.h"
+#include "error.h"
 #include "writepropertyservicedata.h"
 #include "bacnetreadpropertyservicehandler.h"
 #include "bacnetwritepropertyservicehandler.h"
@@ -141,8 +140,8 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
             new ReadPropertyServiceData(numToObjId(readElement._objectIdentifier),
                                           readElement._propertyId, readElement._propertyArrayIdx);
     Q_CHECK_PTR(service);
-    ReadPropertyServiceHandlerHandler *serviceHandler =
-            new ReadPropertyServiceHandlerHandler(service, this);
+    ReadPropertyServiceHandler *serviceHandler =
+            new ReadPropertyServiceHandler(service, this);
     Q_CHECK_PTR(serviceHandler);
 
     RequestInfo ri = {asynchId, RequestRead, property};

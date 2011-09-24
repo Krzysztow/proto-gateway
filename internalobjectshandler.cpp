@@ -8,7 +8,6 @@
 
 #include <QDebug>
 
-#include "bacnetreadpropertyservice.h"
 #include "bacnetreadpropertyack.h"
 #include "helpercoder.h"
 #include "bacnetwritepropertyservice.h"
