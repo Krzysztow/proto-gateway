@@ -32,7 +32,7 @@ void AsynchOwner::asynchActionFinished(int asynchId, Property *property, Propert
     qDebug("This was invoked and action was %d!", asynchId);
 }
 
-void AsynchOwner::propertyValueChanged(PropertyObserver *property)
+void AsynchOwner::propertyValueChanged(Property *property)
 {
     Q_UNUSED(property);
 }

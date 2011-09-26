@@ -29,6 +29,7 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::getProperty(BacnetObjectType::
 
 const QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> &BacnetDefaultObject::defaultProperties(BacnetObjectType::ObjectType objType)
 {
+#warning "Add array index sensitiviness!"
     return _properties[objType];
 }
 

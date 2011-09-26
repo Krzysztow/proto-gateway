@@ -6,23 +6,6 @@
 #include "bacnettagparser.h"
 
 namespace Bacnet {
-
-    template <class E>
-    class TheClass
-    {
-    public:
-        TheClass();
-        ~TheClass();
-        int value;
-    };
-
-    template <class E>
-            TheClass<E>::TheClass(){}
-    template <class E>
-            TheClass<E>::~TheClass() {qDebug("This is the end");}
-
-
-
     template <class T>
             class SequenceOf
     {

@@ -23,14 +23,14 @@ public://property owner methods.
       */
     virtual int getPropertyRequest(PropertySubject *toBeGotten);
     virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
-//    virtual void propertyValueChanged(PropertyObserver *property) = 0;
+//    virtual void propertyValueChanged(Property *property) = 0;
 //    virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)  =  0;
 
 protected://helper functions
-    BacnetProperty::Identifier findPropertyIdentifier(PropertySubject *toBeGotten);
+    BacnetProperty::Identifier findPropertyIdentifier(Property *toBeGotten);
 
 protected:
-    QMap<BacnetProperty::Identifier, Property*> _cdmProperties;
+    QMap<BacnetProperty::Identifier, Property *> _cdmProperties;
 };
 
 #endif // BACNETOBJECTINTERNALSUPPORT_H

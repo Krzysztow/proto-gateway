@@ -52,7 +52,7 @@ namespace Bacnet {
         /** This function is not used, since all the objects here are PropertySubjects and will not be changed
           from within CDM.
          */
-        virtual void propertyValueChanged(PropertyObserver *property);
+        virtual void propertyValueChanged(Property *property);
 
     private:
         int readProperty(BacnetExternalObjects::ExternalRoutingElement &readElement, PropertySubject *property);

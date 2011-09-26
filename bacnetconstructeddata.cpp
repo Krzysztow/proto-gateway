@@ -255,6 +255,7 @@ qint32 TimeStamp::fromRaw(BacnetTagParser &parser)
     if (ret < 0 || ret >= choices.size())
         return -1;
 
+    Q_ASSERT(0 == _choiceValue);//if this is not zero (for instance TimeStamp is reused), we have a memory leak.
     _choiceValue = BacnetDefaultObject::createDataType(choices.at(ret));
     Q_CHECK_PTR(_choiceValue);
     return _choiceValue->fromRaw(parser);
@@ -272,6 +273,7 @@ qint32 TimeStamp::fromRaw(BacnetTagParser &parser, quint8 tagNum)
     if (ret < 0 || ret >= choices.size())
         return -1;
 
+    Q_ASSERT(0 == _choiceValue);//if this is not zero (for instance TimeStamp is reused), we have a memory leak.
     _choiceValue = BacnetDefaultObject::createDataType(choices.at(ret));
     Q_CHECK_PTR(_choiceValue);
     return _choiceValue->fromRaw(parser, tagNum);

@@ -6,6 +6,7 @@
 #include "bacnetdata.h"
 #include "bacnetobject.h"
 #include "bacnetobjectinternalsupport.h"
+#include "covsupport.h"
 
 class BacnetDeviceObject;
 class Property;
@@ -23,6 +24,7 @@ public://functions overridden from
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
     //! Returns the data associated with the propertyId.
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
+    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
 
 public://functions overridden from PropertyOwner
@@ -33,13 +35,18 @@ public://functions overridden from PropertyOwner
     virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
 
     //! Hook fuction that is called when the property being observed changed
-    virtual void propertyValueChanged(PropertyObserver *property);
+    virtual void propertyValueChanged(Property *property);
+
+    //! Adds support of COV for present value with it's COV increment. If previous one existed - gets deleted!
+    void addCOVSupport(Bacnet::RealCovSupport *support);
+    virtual Bacnet::BacnetList *readCovValuesList();
 
 public:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);
     Bacnet::BacnetDataInterface *createBacnetTypeForProperty_helper(BacnetProperty::Identifier propertyId, quint32 arrayIdx);
 
     BacnetDeviceObject *_parentDevice;
+    Bacnet::RealCovSupport *_presValueCovSupport;
     Bacnet::ObjectIdStruct _id;
     QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> _specializedProperties;
 };

@@ -50,7 +50,7 @@ public:
 
     /** Hoo method - invoked whenever PropertySubject being observed by owned PropertyObserver instance is changed.
       */
-    virtual void propertyValueChanged(PropertyObserver *property) = 0;
+    virtual void propertyValueChanged(Property *property) = 0;
 };
 
 #endif // PROPERTYOWNER_H

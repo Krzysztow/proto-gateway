@@ -11,7 +11,8 @@ using namespace Bacnet;
 
 AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdStruct identifier, BacnetDeviceObject *parent):
         BacnetObject(identifier),
-        _parentDevice(parent)
+        _parentDevice(parent),
+        _presValueCovSupport(0)
 {
     Q_ASSERT( (identifier.objectType) == BacnetObjectType::Device);
     Q_CHECK_PTR(parent);
@@ -46,15 +47,14 @@ int AnalogInputObject::ensurePropertyReadyRead(BacnetProperty::Identifier proper
         return Property::UnknownError;
 }
 
-//! Returns the data associated with the propertyId.
-Bacnet::BacnetDataInterface *AnalogInputObject::propertyReadInstantly(ReadPropertyServiceData *rpStruct, Bacnet::Error *error)
+Bacnet::BacnetDataInterface *AnalogInputObject::propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error)
 {
-    Q_CHECK_PTR(rpStruct);
+    Q_CHECK_PTR(error);
 
     //handle cdm property
-    Property *propRequested = _cdmProperties[rpStruct->propertyId];
+    Property *propRequested = _cdmProperties[propId];
     if (0 != propRequested) {
-        QVariant::Type type = variantTypeForProperty_helper(rpStruct->propertyId);
+        QVariant::Type type = variantTypeForProperty_helper(propId);
         if (QVariant::Invalid == type) {
             qDebug("The property type %d is not translatable to internal type", type);
             error->setError(BacnetError::ClassProperty, BacnetError::CodeOther);
@@ -63,29 +63,37 @@ Bacnet::BacnetDataInterface *AnalogInputObject::propertyReadInstantly(ReadProper
         QVariant value(type);
         qint32 ret = propRequested->getValueInstant(&value);
         if ( (ret != Property::ResultOk) || (!value.isValid()) ) {
-            qDebug("Invalid value when reading property (propId %d, object: %s, exp. type %d", rpStruct->propertyId, qPrintable(objectName()), type);
+            qDebug("Invalid value when reading property (propId %d, object: %s, exp. type %d", propId, qPrintable(objectName()), type);
             error->setError(BacnetError::ClassProperty, BacnetError::CodeOther);
             return 0;
         }
-        Bacnet::BacnetDataInterface *retProp = createBacnetTypeForProperty_helper(rpStruct->propertyId, Bacnet::ArrayIndexNotPresent);
+        Bacnet::BacnetDataInterface *retProp = createBacnetTypeForProperty_helper(propId, Bacnet::ArrayIndexNotPresent);
         if ((0 == retProp) || !retProp->setInternal(value)) {
             delete retProp;
             error->setError(BacnetError::ClassProperty, BacnetError::CodeOther);
-            qDebug("Cannot allocate/find BacnetData or set property (%d) with value %s", rpStruct->propertyId, qPrintable(value.toString()));
+            qDebug("Cannot allocate/find BacnetData or set property (%d) with value %s", propId, qPrintable(value.toString()));
         }
         return retProp;
     }
 
     //handle overwritten and defaults
     Bacnet::BacnetDataInterface *existProp;
-    existProp = _specializedProperties[rpStruct->propertyId];
+    existProp = _specializedProperties[propId];
     if (0 == existProp)
-        existProp = BacnetDefaultObject::instance()->defaultProperties(BacnetObjectType::Device)[rpStruct->propertyId];
+        existProp = BacnetDefaultObject::instance()->defaultProperties(BacnetObjectType::Device)[propId];
     if (0 != existProp)
         return new Bacnet::BacnetDataBaseDeletable(existProp);//make a proxy, so that proxy may be deleted as others and doesn't affect existProp.
 
     error->setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
     return existProp;
+}
+
+
+//! Returns the data associated with the propertyId.
+Bacnet::BacnetDataInterface *AnalogInputObject::propertyReadInstantly(ReadPropertyServiceData *rpStruct, Bacnet::Error *error)
+{
+    Q_CHECK_PTR(rpStruct);
+    return propertyReadInstantly(rpStruct->propertyId, rpStruct->arrayIndex, error);
 }
 
 int AnalogInputObject::ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error)
@@ -156,13 +164,46 @@ void AnalogInputObject::asynchActionFinished(int asynchId, Property *property, P
     Q_CHECK_PTR(property);
     Q_CHECK_PTR(_parentDevice);
 //    getDataAndInformDevice(this, _parentDevice, asynchId, actionResult, property);
-    _parentDevice->propertyChanged(asynchId, actionResult, this);
+    _parentDevice->propertyIoFinished(asynchId, actionResult, this);
+    propertyValueChanged(property);
 }
 
-void AnalogInputObject::propertyValueChanged(PropertyObserver *property)
+void AnalogInputObject::addCOVSupport(Bacnet::RealCovSupport *support)
+{
+    const BacnetProperty::Identifier propertyId(BacnetProperty::ClientCovIncrement);
+    if (0 != _presValueCovSupport && _specializedProperties.contains(propertyId)) {
+        _specializedProperties.remove(propertyId);//pointer to BacnetDataInterface is not lost, since it's being deleted with _presValueCovSupport, as is it's integral part.
+        delete _presValueCovSupport;
+    }
+    _presValueCovSupport = support;
+    if (0 == _presValueCovSupport)
+        return;
+    _specializedProperties.insert(propertyId, _presValueCovSupport->covIncrement());
+}
+
+Bacnet::BacnetList *AnalogInputObject::readCovValuesList()
+{
+    //properties being loaded PRESENT VALUE and STATUS FLAGS
+    Bacnet::BacnetList *list = new Bacnet::BacnetList();
+}
+
+void AnalogInputObject::propertyValueChanged(Property *property)
 {
     Q_CHECK_PTR(property);
-    Q_UNUSED(property);
-    Q_ASSERT(false);
-#warning "Not implemented!";
+    /** \note Some simplifications are introduced. We compare agains COV increment only a present value. Otherwise all the other
+      property changes are forwarded.
+      */
+
+    BacnetProperty::Identifier propId = findPropertyIdentifier(property);
+    if (BacnetProperty::PresentValue) {
+        if (0 == _presValueCovSupport)
+            return;
+        QVariant value;
+        int ret = property->getValueInstant(&value);
+        Q_ASSERT(Property::ResultOk == ret);
+        if (_presValueCovSupport->hasChangeOccured(value))
+            _parentDevice->propertyValueChanged(this, propId);//inform devicep parent
+    } else {
+        _parentDevice->propertyValueChanged(this, propId);
+    }
 }

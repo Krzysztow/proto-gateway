@@ -23,7 +23,7 @@ public://overriden from PropertyOwner
     void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
     int getPropertyRequest(PropertySubject *toBeGotten);
     int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
-    void propertyValueChanged(PropertyObserver *property);
+    void propertyValueChanged(Property *property);
 
     void addProperty(Property *property);
 
@@ -33,7 +33,7 @@ private slots:
 
 private:
     QTimer *_timer;
-    QList<Property*> _properties;
+    QList<Property *> _properties;
     QList<AsynchData> _asynchReqs;
     PropertyObserver *tempProp;
 };

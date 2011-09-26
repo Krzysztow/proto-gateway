@@ -21,16 +21,18 @@ public:
 
 public://overridden from BacnetObject
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
+    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
 
 public://functions specific to BACnet device
     BacnetObject *bacnetObject(quint32 instanceNumber);
     bool addBacnetObject(BacnetObject *object);
-    void propertyChanged(int asynchId, int result, BacnetObject *object);
+    void propertyIoFinished(int asynchId, int result, BacnetObject *object);
     void setHandler(InternalObjectsHandler *bHandler);
     const QMap<quint32, BacnetObject*> &childObjects();
     Bacnet::BacnetDataInterface *constProperty(BacnetProperty::Identifier propertyId);
+    void propertyValueChanged(BacnetObject *object, BacnetProperty::Identifier propId);
 
 public://functions overridden from PropertyOwner
     /** Hook function that is called after having requested reading/writting a property (which obviously doesn't
@@ -38,7 +40,7 @@ public://functions overridden from PropertyOwner
         them upwards to device, which calls Protocol handler.
       */
     virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
-    virtual void propertyValueChanged(PropertyObserver *property);
+    virtual void propertyValueChanged(Property *property);
 
 private:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);
@@ -48,8 +50,9 @@ private:
 private:*/
 public:
     Bacnet::ObjectIdStruct _id;
-    QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> _specializedProperties;
-//    QMap<BacnetProperty::Identifier, Property*> _cdmProperties;
+    typedef QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> TPropertiesMap;
+    TPropertiesMap _specializedProperties;
+//    QMap<BacnetProperty::Identifier, Property *> _cdmProperties;
 
     QMap<quint32, BacnetObject*> _childObjects;
     InternalObjectsHandler *_handler;

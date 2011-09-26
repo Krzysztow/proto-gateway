@@ -29,9 +29,13 @@ public:
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId) = 0;
 
     //! Returns the data associated with the propertyId.
+    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error) = 0;
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error) = 0;
 
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error) = 0;
+
+    //so far this is not compulsory. Function returns 0 on default, if not supported.
+    virtual Bacnet::BacnetList *readCovValuesList();
 
     Bacnet::ObjectIdStruct &objectId();
     quint32 objectIdNum();

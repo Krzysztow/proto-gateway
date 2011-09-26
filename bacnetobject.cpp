@@ -41,3 +41,8 @@ QString BacnetObject::objectName()
         return QString("SNGBacnet:%1").arg(objectIdNum());
     return _name;
 }
+
+Bacnet::BacnetList *BacnetObject::readCovValuesList()
+{
+    return 0;
+}

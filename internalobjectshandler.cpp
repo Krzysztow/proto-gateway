@@ -40,6 +40,38 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
     }
 }
 
+void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId)
+{
+    Q_CHECK_PTR(device);
+    Q_CHECK_PTR(object);
+//    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
+//    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
+//    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
+
+    TCovDevicesSubscriptions::Iterator devIt = _covSubscriptions.find(device);
+    if (devIt == _covSubscriptions.end())
+        return;//nothing subscribed
+
+    TCovSubscriptionsHash::Iterator subObjIt = (*devIt).find(object);
+    if (subObjIt == (*devIt).end())
+        return;//no object subscription
+
+    TCovObjectSubscriptionList::Iterator subscriptionsIt = (*subObjIt).begin();
+    //inform each subscriber that value have changed!
+    for (; subscriptionsIt != (*subObjIt).end(); ++subscriptionsIt) {
+        //! \todo We could have optimization here - get the value only once, not everytime sending is needed. Then SharedData should be used as well.
+        Bacnet::BacnetDataInterface *data = object->propertyReadInstantly(propId, Bacnet::ArrayIndexNotPresent, 0);
+        if (0 == data) {
+            qDebug("InternalObjectsHandler::propertyValueChanged() : data changed but we got zero pointer dev (0x%x), obj (0x%x), propId (0x%x)",
+                   device->objectIdNum(), object->objectIdNum(), propId);
+            Q_ASSERT(false);
+            return;
+        }
+
+
+    }
+}
+
 void InternalObjectsHandler::addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler)
 {
     foreach (int asynchId, asynchIds) {
@@ -144,7 +176,7 @@ void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, Bacnet::Su
             break;
     }
     if (objSubscriptionListIt != (*objSubscriptionHashIt).end()) {//was not found, we have to add it.
-        if (MaxTotaCOVSubscriptions == _totalCOVsubscriptionsNum) {//haven't we exceeded a maximum number of subscriptions possible?
+        if (MAX_TOTAL_COV_SUBSCRIPTIONS == _totalCOVsubscriptionsNum) {//haven't we exceeded a maximum number of subscriptions possible?
             error->setError(BacnetError::ClassServices, BacnetError::CodeCovSubscriptionFailed);
             return;
         }

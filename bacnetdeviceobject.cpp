@@ -41,12 +41,12 @@ int BacnetDeviceObject::ensurePropertyReadyRead(BacnetProperty::Identifier prope
         return Property::UnknownError;
 }
 
-Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error)
+Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error)
 {
-    Q_CHECK_PTR(rpStruct);
+    Q_CHECK_PTR(error);
     //handle array case
-    if (BacnetProperty::ObjectList == rpStruct->propertyId) {
-        if (rpStruct->arrayIndex != Bacnet::ArrayIndexNotPresent) {
+    if (BacnetProperty::ObjectList == propId) {
+        if (arrayIdx != Bacnet::ArrayIndexNotPresent) {
             Bacnet::BacnetArray *retArray = new Bacnet::BacnetArray();
             QMap<quint32, BacnetObject*>::iterator idIterator = _childObjects.begin();
             for (; idIterator != _childObjects.end(); ++idIterator) {
@@ -54,60 +54,66 @@ Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::R
             }
             return retArray;
         } else {
-            if (!(rpStruct->arrayIndex <= (uint)_childObjects.size())) {
-                error->errorClass = BacnetError::ClassProperty;
-                error->errorCode = BacnetError::CodeInvalidArrayIndex;
+            if (!(arrayIdx <= (uint)_childObjects.size())) {
+                if (0 != error)
+                    error->setError(BacnetError::ClassProperty, BacnetError::CodeInvalidArrayIndex);
                 return 0;
             }
-            return new Bacnet::ObjectIdentifier((_childObjects.begin() + (int)rpStruct->arrayIndex).value()->objectId());
+            return new Bacnet::ObjectIdentifier((_childObjects.begin() + (int)arrayIdx).value()->objectId());
         }
     }
-
+#warning "NOT IMPLEMENTED - SENDING COV DEVICES"
 
     //handle cdm property
-    Property *propRequested = _cdmProperties[rpStruct->propertyId];
+    Property *propRequested = _cdmProperties[propId];
     if (0 != propRequested) {
-        QVariant::Type type = variantTypeForProperty_helper(rpStruct->propertyId);
+        QVariant::Type type = variantTypeForProperty_helper(propId);
         if (QVariant::Invalid == type) {
             qDebug("The property type %d is not translatable to internal type", type);
-            error->errorClass = BacnetError::ClassProperty;
-            error->errorCode = BacnetError::CodeOther;
+            if (0 != error)
+                error->setError(BacnetError::ClassProperty, BacnetError::CodeOther);
             return 0;
         }
         QVariant value(type);
         qint32 ret = propRequested->getValueInstant(&value);
         if ( (ret != Property::ResultOk) || (!value.isValid()) ) {
-            qDebug("Invalid value when reading property (propId %d, object: %s, exp. type %d", rpStruct->propertyId, qPrintable(objectName()), type);
-            error->errorClass = BacnetError::ClassProperty;
-            error->errorCode = BacnetError::CodeOther;
+            qDebug("Invalid value when reading property (propId %d, object: %s, exp. type %d", propId, qPrintable(objectName()), type);
+            if (0 != error)
+                error->setError(BacnetError::ClassProperty, BacnetError::CodeOther);
             return 0;
         }
-        Bacnet::BacnetDataInterface *retProp = createBacnetTypeForProperty_helper(rpStruct->propertyId, Bacnet::ArrayIndexNotPresent);
+        Bacnet::BacnetDataInterface *retProp = createBacnetTypeForProperty_helper(propId, Bacnet::ArrayIndexNotPresent);
         if ((0 == retProp) || !retProp->setInternal(value)) {
             delete retProp;
-            error->errorClass = BacnetError::ClassProperty;
-            error->errorCode = BacnetError::CodeOther;
-            qDebug("Cannot allocate/find BacnetData or set property (%d) with value %s", rpStruct->propertyId, qPrintable(value.toString()));
+            if (0 != error)
+                error->setError(BacnetError::ClassProperty, BacnetError::CodeOther);
+            qDebug("Cannot allocate/find BacnetData or set property (%d) with value %s", propId, qPrintable(value.toString()));
         }
         return retProp;
     }
 
     //handle overwritten and defaults
     Bacnet::BacnetDataInterface *existProp;
-    existProp = _specializedProperties[rpStruct->propertyId];
+    existProp = _specializedProperties[propId];
     if (0 == existProp)
-        existProp = BacnetDefaultObject::instance()->defaultProperties(BacnetObjectType::Device)[rpStruct->propertyId];
+        existProp = BacnetDefaultObject::instance()->defaultProperties(BacnetObjectType::Device)[propId];
     if (0 != existProp)
         return new Bacnet::BacnetDataBaseDeletable(existProp);//make a proxy, so that proxy may be deleted as others and doesn't affect existProp.
 
-    error->errorClass = BacnetError::ClassProperty;
-    error->errorCode = BacnetError::CodeUnknownProperty;
+    if (0 != error)
+        error->setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
     return existProp;
+}
+
+Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error)
+{
+    Q_CHECK_PTR(rpStruct);
+    return propertyReadInstantly(rpStruct->propertyId, rpStruct->arrayIndex, error);
 }
 
 int BacnetDeviceObject::ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error)
 {
-    //assume one can set only cdm properties
+    //assume one can set only cdm properties and those that are specialized.
     Q_CHECK_PTR(error);
     if (BacnetProperty::ObjectList == writeData.propertyId) {
         error->errorClass = BacnetError::ClassProperty;
@@ -115,6 +121,8 @@ int BacnetDeviceObject::ensurePropertyReadySet(Bacnet::PropertyValueStruct &writ
         qDebug("ensurePropertyReadySet() : no reason to write to the childlist.");
         return Property::UnknownError;
     }
+
+//! \todo This is not so safe, since the asynchronous actions may reference this property - and we delete it.
 
 //    //handle cdm property
 //    Property *propToSet = _cdmProperties[writeData->propertyId];
@@ -153,9 +161,6 @@ QVariant::Type BacnetDeviceObject::variantTypeForProperty_helper(BacnetProperty:
     {
     case (BacnetProperty::SystemStatus):
         return QVariant::UInt;
-#warning "Remove this case - was here only for test purposes!"
-    case (BacnetProperty::PresentValue):
-        return QVariant::Double;
     default:
         return QVariant::Invalid;
     }
@@ -163,12 +168,11 @@ QVariant::Type BacnetDeviceObject::variantTypeForProperty_helper(BacnetProperty:
 
 Bacnet::BacnetDataInterface *BacnetDeviceObject::createBacnetTypeForProperty_helper(BacnetProperty::Identifier propertyId, quint32 arrayIdx)
 {
+    Q_UNUSED(arrayIdx);//the device object has no array-like properties.
     switch (propertyId)
     {
     case (BacnetProperty::SystemStatus):
         return new Bacnet::UnsignedInteger();
-    case (BacnetProperty::PresentValue):
-        return new Bacnet::Real();
     default:
         return 0;
     }
@@ -194,26 +198,40 @@ bool BacnetDeviceObject::addBacnetObject(BacnetObject *object)
     return false;
 }
 
-void BacnetDeviceObject::propertyChanged(int asynchId, int result, BacnetObject *object)
+void BacnetDeviceObject::propertyIoFinished(int asynchId, int result, BacnetObject *object)
 {
     //call the parent (Bacnet protocol handler) that we are done!
     Q_CHECK_PTR(_handler);
     _handler->propertyIoFinished(asynchId, result, object, this);
 }
 
-void BacnetDeviceObject::propertyValueChanged(PropertyObserver *property)
+void BacnetDeviceObject::propertyValueChanged(BacnetObject *object, BacnetProperty::Identifier propId)
+{
+    Q_CHECK_PTR(object);
+    Q_ASSERT(BacnetProperty::UndefinedProperty != propId);
+    Q_CHECK_PTR(_handler);
+    _handler->propertyValueChanged(object, this, propId);
+}
+
+void BacnetDeviceObject::propertyValueChanged(Property *property)
 {
     Q_CHECK_PTR(property);
-    Q_UNUSED(property);
-    Q_ASSERT(false);
-#warning "Not implemented!";
+    /** According to Table 13-1a, clause 13, we should check if the value is REAL (then, change should be reported when greater
+      than the service increment (if provided) or determined by device. We don't assume any determination of increment, so will
+      inform handler anytime internal property has changed.
+      */
+    BacnetProperty::Identifier propId = findPropertyIdentifier(property);
+    Q_CHECK_PTR(_handler);
+    _handler->propertyValueChanged(this, this, propId);
 }
 
 void BacnetDeviceObject::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
 {
     Q_CHECK_PTR(property);
     Q_UNUSED(property);
-    this->propertyChanged(asynchId, actionResult, this);
+    this->propertyIoFinished(asynchId, actionResult, this);
+    //inform others that the property has changed!
+    propertyValueChanged(property);
 }
 
 void BacnetDeviceObject::setHandler(InternalObjectsHandler *bHandler)

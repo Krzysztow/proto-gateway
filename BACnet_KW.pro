@@ -84,7 +84,9 @@ SOURCES += main.cpp \
     internalsubscribecovrequesthandler.cpp \
     internalwprequesthandler.cpp \
     writepropertyservicedata.cpp \
-    internalrprequesthandler.cpp
+    internalrprequesthandler.cpp \
+    covsupport.cpp \
+    covnotificationrequestdata.cpp
 
 HEADERS += \
     bacnetvirtuallinklayer.h \
@@ -162,6 +164,8 @@ HEADERS += \
     internalsubscribecovrequesthandler.h \
     internalwprequesthandler.h \
     writepropertyservicedata.h \
-    internalrprequesthandler.h
+    internalrprequesthandler.h \
+    covsupport.h \
+    covnotificationrequestdata.h
 
 OTHER_FILES +=

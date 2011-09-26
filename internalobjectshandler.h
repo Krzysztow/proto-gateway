@@ -26,8 +26,8 @@ public:
 
 public://interface for BacnetObject-Internal interaction
     void propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
+    void propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId);
     void addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler);
-
 
 public:
     bool addDevice(InternalAddress address, BacnetDeviceObject *device);
@@ -45,7 +45,7 @@ public:
           COV handling part
     ****************************/
 public:
-    static const int MaxTotaCOVSubscriptions = 64;
+    static const int MAX_TOTAL_COV_SUBSCRIPTIONS = 64;
     void subscribeCOV(BacnetDeviceObject *device, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
 
 private:

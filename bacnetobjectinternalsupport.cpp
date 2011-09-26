@@ -17,10 +17,10 @@ bool BacnetObjectInternalSupport::addInternalProperty(BacnetProperty::Identifier
     return true;
 }
 
-BacnetProperty::Identifier BacnetObjectInternalSupport::findPropertyIdentifier(PropertySubject *toBeGotten)
+BacnetProperty::Identifier BacnetObjectInternalSupport::findPropertyIdentifier(Property *toBeGotten)
 {
     Q_CHECK_PTR(toBeGotten);
-    QMap<BacnetProperty::Identifier, Property*>::Iterator propertyIt = _cdmProperties.begin();
+    QMap<BacnetProperty::Identifier, Property *>::Iterator propertyIt = _cdmProperties.begin();
     for (; propertyIt != _cdmProperties.end(); ++propertyIt) {
         if (propertyIt.value() == toBeGotten)
             return propertyIt.key();
