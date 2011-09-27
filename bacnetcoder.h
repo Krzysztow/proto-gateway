@@ -46,7 +46,7 @@ namespace BacnetCoder
         return encodeTagAndLength(startPtr, buffLength, tagToEncode, false, lengthToEncode);
     }
 
-    qint32 objectIdentifierToRaw(quint8 *ptrStart, quint16 buffLength, Bacnet::ObjectIdStruct &objIdentifier, bool isContextTag, quint8 tagNumber);
+    qint32 objectIdentifierToRaw(quint8 *ptrStart, quint16 buffLength, Bacnet::ObjectIdStruct &objIdentifier, bool isContextTag, quint8 tagNumber = Bacnet::AppTags::BacnetObjectIdentifier);
     qint32 uintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 value, bool isContextTag, quint8 tagNumber);
     qint32 sintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 value, bool isContextTag, quint8 tagNumber);
     qint32 closingTagToRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);

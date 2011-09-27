@@ -5,7 +5,6 @@
 
 #include "bacnetservicedata.h"
 #include "bacnetcommon.h"
-#include "bacnetcommon.h"
 #include "sequenceof.h"
 #include "propertyvalue.h"
 
@@ -13,13 +12,14 @@ namespace Bacnet {
     class CovNotificationRequestData:
             public BacnetServiceData
     {
+    public:
         CovNotificationRequestData();
 
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);
 
-    private:
+    public:
         quint8 _subscribProcess;
 
         Bacnet::ObjectIdStruct _initiatingObjectId;
@@ -27,6 +27,6 @@ namespace Bacnet {
         quint32 _timeLeft;
         SequenceOf<PropertyValue> _listOfValues;
     };
-
+}
 
 #endif // CovNotificationRequestData_H

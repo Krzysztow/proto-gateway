@@ -23,23 +23,26 @@ namespace Bacnet {
 
         DataType::DataType typeId();
 
-    private:
+    public:
+        void append(T *t);
+
+    public:
         QList<T*> _sequence;
     };
 
 
-////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////Template definition///////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////Template definition///////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
 
     template <class T>
-    SequenceOf<T>::~SequenceOf()
+            SequenceOf<T>::~SequenceOf()
     {
         qDeleteAll(_sequence);
     }
 
     template <class T>
-    qint32 SequenceOf<T>::toRaw(quint8 *ptrStart, quint16 buffLength)
+            qint32 SequenceOf<T>::toRaw(quint8 *ptrStart, quint16 buffLength)
     {
         quint8 *actualPtr(ptrStart);
         qint16 ret(0);
@@ -54,7 +57,7 @@ namespace Bacnet {
     }
 
     template <class T>
-    qint32 SequenceOf<T>::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
+            qint32 SequenceOf<T>::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
     {
         qint32 ret(0);
         quint8 *actualPtr(ptrStart);
@@ -62,7 +65,7 @@ namespace Bacnet {
         if (ret <  0 ) return ret;
         actualPtr += ret;
         buffLength -= ret;
-        ret = toRaw(ptrStart, buffLength);
+        ret = toRaw(actualPtr, buffLength);
         if (ret < 0) return ret;
         actualPtr += ret;
         buffLength -= ret;
@@ -73,14 +76,14 @@ namespace Bacnet {
     }
 
     template <class T>
-    qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objectType)
+            qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objectType)
     {
         Q_ASSERT_X(false, "", "Not implemented yet!");
         return -1;
     }
 
     template <class T>
-    qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objectType)
+            qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objectType)
     {
         bool okOrContext;
         quint32 total(0);
@@ -112,21 +115,28 @@ namespace Bacnet {
     }
 
     template <class T>
-    bool SequenceOf<T>::setInternal(QVariant &value)
+            bool SequenceOf<T>::setInternal(QVariant &value)
     {
         return false;
     }
 
     template <class T>
-    QVariant SequenceOf<T>::toInternal()
+            QVariant SequenceOf<T>::toInternal()
     {
         return QVariant();
     }
 
     template <class T>
-    DataType::DataType SequenceOf<T>::typeId()
+            DataType::DataType SequenceOf<T>::typeId()
     {
         return DataType::BACnetSequence;
+    }
+
+    template <class T>
+            void SequenceOf<T>::append(T *t)
+    {
+        Q_CHECK_PTR(t);
+        _sequence.append(t);
     }
 
 }

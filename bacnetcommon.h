@@ -465,7 +465,8 @@ namespace Bacnet
         MaximumInstanceNumber = 0x3fffff,
         ObjectInstanceMask  = 0x3fffff,
         InvalidInstanceNumber = 0xffffffff,
-        SNGVendorIdentifier = 0x00ff00ff
+        SNGVendorIdentifier = 0x00ff00ff,
+        PriorityValueNotPresent = 0xff
                            };
 
     struct WriteAccessSpecificationStruct {
@@ -476,7 +477,6 @@ namespace Bacnet
     struct PropertyValueStruct {
         BacnetProperty::Identifier propertyId;
         quint32 arrayIndex;
-
         BacnetDataInterface *value;
         quint8 priority;
     };

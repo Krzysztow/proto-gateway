@@ -97,7 +97,7 @@ qint32 BacnetCoder::objectIdentifierToRaw(quint8 *ptrStart, quint16 buffLength, 
     buffLength -= ret;
     if (buffLength < 4)
         return BacnetCoder::BufferOverrun;
-    quint32 identifier = (objIdentifier.objectType << 22) | objIdentifier.instanceNum;
+    quint32 identifier = objIdToNum(objIdentifier);
     HelperCoder::uint32ToRaw(identifier, ptrStart + ret);
 
     return (ret + 4);
@@ -116,7 +116,7 @@ qint32 BacnetCoder::uintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 valu
     if (ret + bytesUsed > buffLength)
         return BacnetCoder::BufferOverrun;
 
-    memcpy(ptrStart + bytesUsed, &tempData[0], bytesUsed);
+    memcpy(ptrStart + ret, &tempData[0], bytesUsed);
     return (ret + bytesUsed);
 }
 
@@ -133,7 +133,7 @@ qint32 BacnetCoder::sintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 valu
     if (bytesUsed + ret > buffLength)
         return BacnetCoder::BufferOverrun;
 
-    memcpy(ptrStart + bytesUsed, &tempData[0], bytesUsed);
+    memcpy(ptrStart + ret, &tempData[0], bytesUsed);
     return (ret + bytesUsed);
 }
 

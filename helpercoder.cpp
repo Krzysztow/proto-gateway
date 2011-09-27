@@ -41,6 +41,7 @@ quint8 HelperCoder::uint32ToVarLengthRaw(quint8 *dstPtr, quint32 value)
     for (uint i = 0; i<sizeof(quint32); ++i) {
         if ((actualPtr != dstPtr) || (mask & value)) {
             *actualPtr = (quint8)((mask & value) >> (8*(sizeof(quint32)-1-i)));
+            quint8 v = *actualPtr;
             ++actualPtr;
         }
         mask >>= 8;

@@ -273,6 +273,11 @@ qint32 Real::toRaw(quint8 *ptrStart, quint16 buffLength)
     return (ret + HelperCoder::floatToRaw(_value, ptrStart + ret));
 }
 
+Real::Real(float value):
+        _value(value)
+{
+}
+
 qint32 Real::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 {
     Q_CHECK_PTR(ptrStart);
@@ -638,12 +643,13 @@ qint32 BitString::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
     Q_CHECK_PTR(ptrStart);
 
-    quint8 bytesNeeded = _value.size();
+    quint8 bytesNeeded = _value.size();//in this line, we set bits needed. Later bytes number is computed.
     if (0 != bytesNeeded) {
-        bytesNeeded = bytesNeeded%8 + 1;
+        bytesNeeded = bytesNeeded/8 + 1;
     }
+    ++bytesNeeded;//apart from data bytes there is unused-bits-number field
     qint8 ret = BacnetCoder::encodeAppTagAndLength(ptrStart, buffLength, AppTags::BitString,
-                                                    bytesNeeded + 1);//apart from bytes there is unused-bits-number field
+                                                    bytesNeeded);
     if (ret < 0)
         return ret;
     //encode number of bits unused

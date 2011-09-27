@@ -328,7 +328,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
     //    }
 }
 
-#define BAC_APP_TEST
+//#define BAC_APP_TEST
 #ifndef BAC_APP_TEST
 //int main()
 //{

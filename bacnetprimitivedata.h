@@ -84,6 +84,8 @@ namespace Bacnet
     class Real: public BacnetDataInterface
     {
     public:
+        Real(float value = 0);
+
         virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
         virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
 
@@ -170,6 +172,7 @@ namespace Bacnet
 
     public:
         QBitArray &value();
+
     private:
         void toRaw_helper(quint8 *dataStart);
 

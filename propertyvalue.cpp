@@ -10,6 +10,16 @@ PropertyValue::PropertyValue()
     _value.value = 0;
 }
 
+PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterface *value,
+              quint32 arrayIndex, quint8 priority)
+{
+    _value.propertyId = propertyId;
+    _value.value = value;
+    Q_CHECK_PTR(value);
+    _value.arrayIndex = arrayIndex;
+    _value.priority = priority;
+}
+
 PropertyValue::~PropertyValue()
 {
     delete _value.value;
@@ -17,9 +27,60 @@ PropertyValue::~PropertyValue()
 
 qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
-    Q_UNUSED(ptrStart); Q_UNUSED(buffLength);
-    Q_ASSERT(false);
-    return -1;
+    quint8 *actualPtr(ptrStart);
+    qint32 ret;
+
+    //set property identifier
+    ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _value.propertyId, true, 0);
+    if (ret <= 0) {//something wrong?
+        Q_ASSERT_X(false, "PropertyValue::toRaw()", "Cannot encode property id.");
+        qDebug("PropertyValue::toRaw() : Cannot encode property id: %d", ret);
+        return ret;
+    }
+    actualPtr += ret;
+    buffLength -= ret;
+
+    //set array index, if exists
+    if (Bacnet::ArrayIndexNotPresent != _value.arrayIndex) {//is present
+        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _value.arrayIndex, true, 1);
+        if (ret <= 0) {//something wrong?
+            Q_ASSERT_X(false, "PropertyValue::toRaw()", "Cannot encode array idx.");
+            qDebug("PropertyValue::toRaw() : Cannot encode array idx: %d", ret);
+            return ret;
+        }
+        actualPtr += ret;
+        buffLength -= ret;
+    }
+
+    //write sequence of
+    ret = BacnetCoder::openingTagToRaw(actualPtr,  buffLength, 2);
+    if (ret < 0) return ret;
+    actualPtr += ret;
+    buffLength -= ret;
+
+    ret = _value.value->toRaw(actualPtr, buffLength);
+    if (ret < 0) return ret;
+    actualPtr += ret;
+    buffLength -= ret;
+
+    ret = BacnetCoder::closingTagToRaw(actualPtr, buffLength, 2);
+    if (ret < 0) return ret;
+    actualPtr += ret;
+    buffLength -= ret;
+
+    //set priority if necessary
+    if (PriorityValueNotPresent != _value.priority) {
+        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _value.priority, true, 3);
+        if (ret <= 0) {//something wrong?
+            Q_ASSERT_X(false, "PropertyValue::toRaw()", "Cannot encode priority.");
+            qDebug("PropertyValue::toRaw() : Cannot encode priority: %d", ret);
+            return ret;
+        }
+        actualPtr += ret;
+        buffLength -= ret;
+    }
+
+    return (actualPtr - ptrStart);
 }
 
 qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
@@ -79,7 +140,7 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
             total += ret;
         }
     } else {
-        _value.priority = 0xff;
+        _value.priority = PriorityValueNotPresent;
     }
 
     return total;

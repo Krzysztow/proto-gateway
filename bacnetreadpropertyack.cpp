@@ -131,7 +131,7 @@ qint32 BacnetReadPropertyAck::fromRaw(quint8 *startPtr, quint16 buffLength)
     if (2 == ret && convOkOrCtxt) {//there is an array index
         ret = bParser.parseNext();
         _readData.arrayIndex = bParser.toUInt(&convOkOrCtxt);
-        if (ret <0 | !convOkOrCtxt)
+        if ( (ret < 0) || !convOkOrCtxt)
             return -3;
         consumedBytes += ret;
     } else {
