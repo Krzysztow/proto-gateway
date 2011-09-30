@@ -113,21 +113,8 @@ bool BacnetTSM2::deviceAddress(ObjectIdStruct &deviceId, BacnetAddress *address)
     return false;
 }
 
-bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
-    //find bacnetadderss to send.
-    BacnetAddress destAddr;
-    if (!deviceAddress(destinedObject, &destAddr)) {
-        ConfirmedAwaitingDiscoveryEntry discEntry = {serviceToSend, service, sourceAddress, timeout_ms};
-        if (!_awaitingDiscoveryRequests.contains(destinedObject))
-            _awaitingDiscoveryRequests.insert(destinedObject, QList<ConfirmedAwaitingDiscoveryEntry>()<<discEntry);
-        else
-            _awaitingDiscoveryRequests[destinedObject].append(discEntry);
-        discoverDevice(destinedObject);
-        return true;
-    }
-    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
-
     //generate invoke id.
     int invokeId = _generator.generateId();
     if (invokeId < 0) {//can't generate
@@ -163,13 +150,31 @@ bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAdd
     HelperCoder::printArray(buffStart, buffer.bodyLength(), "Request to be sent: ");
     qDebug("Length sent %d", ret);
 
-    _netHandler->sendApdu(&buffer, true, &destAddr, &srcAddr);
+    _netHandler->sendApdu(&buffer, true, &destination, &sourceAddress);
 
     Q_ASSERT(!_pendingConfirmedRequests.contains(invokeId));
     ConfirmedRequestEntry reqEntry = {serviceToSend, timeout_ms};
     _pendingConfirmedRequests.insert(invokeId, reqEntry);
     //QTimer::singleShot(0, this, SLOT(generateResponse()));
     return true;
+}
+
+bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+{
+    //find bacnetadderss to send.
+    BacnetAddress destAddr;
+    if (!deviceAddress(destinedObject, &destAddr)) {
+        ConfirmedAwaitingDiscoveryEntry discEntry = {serviceToSend, service, sourceAddress, timeout_ms};
+        if (!_awaitingDiscoveryRequests.contains(destinedObject))
+            _awaitingDiscoveryRequests.insert(destinedObject, QList<ConfirmedAwaitingDiscoveryEntry>()<<discEntry);
+        else
+            _awaitingDiscoveryRequests[destinedObject].append(discEntry);
+        discoverDevice(destinedObject);
+        return true;
+    }
+    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
+
+    send(destAddr, srcAddr, service, serviceToSend, timeout_ms);
 }
 
 

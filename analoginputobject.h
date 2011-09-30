@@ -10,6 +10,7 @@
 
 class BacnetDeviceObject;
 class Property;
+namespace Bacnet {class PropertyValue;}
 class AnalogInputObject:
         public BacnetObject,
         public BacnetObjectInternalSupport
@@ -39,7 +40,7 @@ public://functions overridden from PropertyOwner
 
     //! Adds support of COV for present value with it's COV increment. If previous one existed - gets deleted!
     void addCOVSupport(Bacnet::RealCovSupport *support);
-    virtual Bacnet::BacnetList *readCovValuesList();
+    virtual QList<Bacnet::PropertyValue*> readCovValuesList();
 
 public:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);

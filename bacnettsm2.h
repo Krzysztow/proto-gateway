@@ -32,6 +32,7 @@ namespace Bacnet {
 //        bool sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend);
 
         bool send(ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+        bool send(BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 
         void receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data);
         void receive(BacnetAddress &source, BacnetAddress &destination, BacnetComplexAckData *data, quint8 *bodyPtr, quint16 bodyLength);

@@ -7,6 +7,8 @@
 #include "bacnetdeviceobject.h"
 #include "readpropertyservicedata.h"
 
+#include "propertyvalue.h"
+
 using namespace Bacnet;
 
 AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdStruct identifier, BacnetDeviceObject *parent):
@@ -181,10 +183,18 @@ void AnalogInputObject::addCOVSupport(Bacnet::RealCovSupport *support)
     _specializedProperties.insert(propertyId, _presValueCovSupport->covIncrement());
 }
 
-Bacnet::BacnetList *AnalogInputObject::readCovValuesList()
+QList<Bacnet::PropertyValue*> AnalogInputObject::readCovValuesList()
 {
+    QList<PropertyValue*> valuesRead;
     //properties being loaded PRESENT VALUE and STATUS FLAGS
-    Bacnet::BacnetList *list = new Bacnet::BacnetList();
+    BacnetDataInterface *prop = propertyReadInstantly(BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent, 0);
+    Q_CHECK_PTR(prop);
+    valuesRead.append(new PropertyValue(BacnetProperty::PresentValue, prop));
+    prop = propertyReadInstantly(BacnetProperty::StatusFlags, Bacnet::ArrayIndexNotPresent, 0);
+    Q_CHECK_PTR(prop);
+    valuesRead.append(new PropertyValue(BacnetProperty::StatusFlags, prop));
+
+    return valuesRead;
 }
 
 void AnalogInputObject::propertyValueChanged(Property *property)

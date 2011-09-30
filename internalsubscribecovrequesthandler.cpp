@@ -47,7 +47,7 @@ void InternalSubscribeCOVRequestHandler::finalize(bool *deleteAfter)
 bool InternalSubscribeCOVRequestHandler::execute()
 {
     Q_CHECK_PTR(_internalHandler);//should never happen in case of confirmed services.
-    _internalHandler->subscribeCOV(_device, _data, &_error);//if something wrong happens, object will set error.
+    _internalHandler->subscribeCOV(_device, _requester, _data, &_error);//if something wrong happens, object will set error.
     finalizeInstant(_tsm);
     return true;//we are done. This instance may be deleted.
 }

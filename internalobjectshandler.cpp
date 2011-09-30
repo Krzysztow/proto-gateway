@@ -19,6 +19,23 @@
 #include "analoginputobject.h"
 
 #include "subscribecovservicedata.h"
+#include "covnotificationrequestdata.h"
+#include "covconfnotificationservicehandler.h"
+
+InternalObjectsHandler::CovSubscription::CovSubscription(Bacnet::SubscribeCOVServiceData &data, BacnetAddress &address):
+    _subscriberProcId(data._subscriberProcId),
+    _monitoredObjectId(data._monitoredObjectId),
+    _issueConfNotification(data._issueConfNotification),
+    _subscriberAddress(address),
+    _timeLeft(data._lifetime)
+{
+}
+
+bool InternalObjectsHandler::CovSubscription::compareSubscriptions(SubscribeCOVServiceData &subscription)
+{
+    return ( (_subscriberProcId == subscription._subscriberProcId) &&
+             (_monitoredObjectId == subscription._monitoredObjectId) );
+}
 
 //void AsynchSetter::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
 void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
@@ -57,18 +74,34 @@ void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDe
         return;//no object subscription
 
     TCovObjectSubscriptionList::Iterator subscriptionsIt = (*subObjIt).begin();
+    CovNotificationRequestData *covData(0);
     //inform each subscriber that value have changed!
     for (; subscriptionsIt != (*subObjIt).end(); ++subscriptionsIt) {
-        //! \todo We could have optimization here - get the value only once, not everytime sending is needed. Then SharedData should be used as well.
-        Bacnet::BacnetDataInterface *data = object->propertyReadInstantly(propId, Bacnet::ArrayIndexNotPresent, 0);
-        if (0 == data) {
+        //! \todo We could have optimization here - get the value only once, instead of for each subscribed device. Then SharedData should be used as well.
+        QList<Bacnet::PropertyValue*> dataList = object->readCovValuesList();
+        if (dataList.isEmpty()) {
             qDebug("InternalObjectsHandler::propertyValueChanged() : data changed but we got zero pointer dev (0x%x), obj (0x%x), propId (0x%x)",
                    device->objectIdNum(), object->objectIdNum(), propId);
             Q_ASSERT(false);
             return;
         }
 
+        if (0 == covData)
+            covData = new CovNotificationRequestData((*subscriptionsIt)._subscriberProcId, device->objectId(),
+                                                     (*subscriptionsIt)._monitoredObjectId, (*subscriptionsIt)._timeLeft);
 
+        foreach (Bacnet::PropertyValue *data, dataList) {
+            covData->_listOfValues.append(data);
+        }
+
+        if ((*subscriptionsIt)._issueConfNotification) {
+            //send
+            CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
+            covData = 0;//so that next time, new one is created.
+            _tsm->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
+        } else {
+            _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
+        }
     }
 }
 
@@ -108,7 +141,7 @@ InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
     Q_CHECK_PTR(_tsm);
 }
 
-void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error)
+void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error)
 {
     Q_CHECK_PTR(error);
     Q_CHECK_PTR(device);
@@ -180,9 +213,9 @@ void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, Bacnet::Su
             error->setError(BacnetError::ClassServices, BacnetError::CodeCovSubscriptionFailed);
             return;
         }
-        (*objSubscriptionHashIt).append(covData);
+        (*objSubscriptionHashIt).append(CovSubscription(covData, requester));
     } else {//the subscription is already there. That means we have to update it.
         objSubscriptionListIt->_issueConfNotification = covData._issueConfNotification;
-        objSubscriptionListIt->_lifetime = covData._lifetime;
+        objSubscriptionListIt->_timeLeft = covData._lifetime;
     }
 }

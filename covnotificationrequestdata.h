@@ -15,6 +15,9 @@ namespace Bacnet {
     public:
         CovNotificationRequestData();
 
+        CovNotificationRequestData(quint8 subscrProcId, ObjectIdStruct initiatingObjectId, ObjectIdStruct monitoredObjectId,
+                                   quint32 timeLeft = 0x00);
+
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);

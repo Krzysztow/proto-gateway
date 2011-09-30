@@ -42,7 +42,7 @@ QString BacnetObject::objectName()
     return _name;
 }
 
-Bacnet::BacnetList *BacnetObject::readCovValuesList()
+QList<Bacnet::PropertyValue*> BacnetObject::readCovValuesList()
 {
-    return 0;
+    return QList<Bacnet::PropertyValue*>();
 }

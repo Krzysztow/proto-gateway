@@ -120,9 +120,3 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
 
     return consumedBytes;
 }
-
-bool SubscribeCOVServiceData::compareSubscriptions(SubscribeCOVServiceData &other)
-{
-    return ( (_subscriberProcId == other._subscriberProcId) &&
-             (_monitoredObjectId == other._monitoredObjectId) );
-}

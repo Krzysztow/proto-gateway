@@ -36,7 +36,7 @@ public:
 public:
     void finalizeInstant(Bacnet::BacnetTSM2 *tsm);
 
-private:
+protected:
     BacnetConfirmedRequestData *_reqData;
     BacnetAddress _requester;
     BacnetAddress _destination;

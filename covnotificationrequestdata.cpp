@@ -4,6 +4,15 @@ CovNotificationRequestData::CovNotificationRequestData()
 {
 }
 
+CovNotificationRequestData::CovNotificationRequestData(quint8 subscrProcId, ObjectIdStruct initiatingObjectId, ObjectIdStruct monitoredObjectId,
+                           quint32 timeLeft):
+_subscribProcess(subscrProcId),
+_initiatingObjectId(initiatingObjectId),
+_monitoredObjectId(monitoredObjectId),
+_timeLeft(timeLeft)
+{
+}
+
 qint32 CovNotificationRequestData::fromRaw(quint8 *serviceData, quint16 buffLength)
 {
     quint8 *actualPtr(serviceData);
@@ -110,6 +119,8 @@ qint32 CovNotificationRequestData::toRaw(quint8 *startPtr, quint16 buffLength)
     return (actualPtr - startPtr);
 }
 
+//#define COV_NOTIF_TEST
+#ifdef COV_NOTIF_TEST
 #include <QBitArray>
 #include "bacnetprimitivedata.h"
 #include "propertyvalue.h"
@@ -181,3 +192,4 @@ int main()
     Q_ASSERT(0 == memcmp(covNotifData, rawData, ret));
 }
 
+#endif

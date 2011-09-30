@@ -12,6 +12,7 @@ class BacnetDeviceObject;
 namespace Bacnet{
     class Error;
     class ReadPropertyServiceData;
+    class PropertyValue;
 }
 namespace BacnetProperty{enum Identifier;}
 
@@ -35,7 +36,7 @@ public:
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error) = 0;
 
     //so far this is not compulsory. Function returns 0 on default, if not supported.
-    virtual Bacnet::BacnetList *readCovValuesList();
+    virtual QList<Bacnet::PropertyValue*> readCovValuesList();
 
     Bacnet::ObjectIdStruct &objectId();
     quint32 objectIdNum();
