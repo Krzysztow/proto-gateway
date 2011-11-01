@@ -5,6 +5,7 @@
 
 #include "bacnetcommon.h"
 #include "bacnetprimitivedata.h"
+#include "covsupport.h"
 
 struct WriteAccessSpecificationStruct;
 class BacnetDataBase;
@@ -52,6 +53,10 @@ public:
 private:
     Bacnet::ObjectIdStruct _id;
     QString _name;
+
+protected:
+    BacnetDeviceObject *_parentDevice;
+    Bacnet::RealCovSupport *_presValueCovSupport;
 };
 
 #endif // BACNETOBJECT_H

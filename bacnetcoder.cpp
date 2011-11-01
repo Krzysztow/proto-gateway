@@ -120,12 +120,12 @@ qint32 BacnetCoder::uintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 valu
     return (ret + bytesUsed);
 }
 
-qint32 BacnetCoder::sintToRaw(quint8 *ptrStart, quint16 buffLength, quint32 value, bool isContextTag, quint8 tagNumber)
+qint32 BacnetCoder::sintToRaw(quint8 *ptrStart, quint16 buffLength, qint32 value, bool isContextTag, quint8 tagNumber)
 {
     Q_CHECK_PTR(ptrStart);
 
     quint8 tempData[4];
-    quint8 bytesUsed = HelperCoder::uint32ToVarLengthRaw(&tempData[0], value);
+    quint8 bytesUsed = HelperCoder::sint32ToVarLengthRaw(&tempData[0], value);
     qint8 ret = BacnetCoder::encodeTagAndLength(ptrStart, buffLength, isContextTag, tagNumber, bytesUsed);
     if (ret < 0)
         return ret;

@@ -17,7 +17,7 @@ namespace Bacnet {
 
         qint16 parseFromRaw(quint8 *servicePtr, quint16 length);
 
-//    private:
+    private:
         quint32 _subscrProcessId;
         ObjectIdStruct _monitoredObjId;
         bool _issueConfirmedNotifs;

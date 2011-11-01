@@ -5,6 +5,12 @@
 
 #include "bacnetservicedata.h"
 #include "bacnetcommon.h"
+#include "bacnetconstructeddata.h"
+
+/**
+   This data is meant to be used both for SubscribeCOV service and SubscribeCOVProperty service. In the first case
+   the pointer to BacnetPropertyReference and Increment is simply 0.
+  */
 
 namespace Bacnet {
 
@@ -27,11 +33,18 @@ namespace Bacnet {
         inline void setLifetimePresent() {flags |= LifetimePresent;}
         inline void clearLifetimePresent() {flags &= (~LifetimePresent);}
 
+        inline bool hasPropertyReference() {0 != _propReference;}
+        inline void clearHasPropertyReference() {delete _propReference; _propReference = 0;}
+
+
+
     public://is there any reason we should make it private?
         quint32 _subscriberProcId;
         ObjectIdStruct _monitoredObjectId;
         bool _issueConfNotification;
         quint32 _lifetime;
+        PropertyReference *_propReference;
+        BacnetDataInterface *_covIncrement;
 
     private:
         enum {
@@ -40,7 +53,7 @@ namespace Bacnet {
 
             AllFlags = IssueConfNotifPresent | LifetimePresent
         };
-        quint8 flags;
+        quint8 _flags;
     };
 
 }

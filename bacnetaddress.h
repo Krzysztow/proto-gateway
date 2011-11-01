@@ -86,6 +86,9 @@ public:
       */
     quint8 setNetworkNumFromRaw(quint8 *data);
 
+    //! Sets network number.
+    void setNetworkNum(quint16 netNum);
+
     /**
       Reads lenght bytes *data and sets them as this address (in network byte orded,
       as there is no profit to do it in host byte orde)

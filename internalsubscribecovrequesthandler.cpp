@@ -47,8 +47,15 @@ void InternalSubscribeCOVRequestHandler::finalize(bool *deleteAfter)
 bool InternalSubscribeCOVRequestHandler::execute()
 {
     Q_CHECK_PTR(_internalHandler);//should never happen in case of confirmed services.
-    _internalHandler->subscribeCOV(_device, _requester, _data, &_error);//if something wrong happens, object will set error.
-    finalizeInstant(_tsm);
+    BacnetObject *object = bacnetObject(objIdToNum(_data._monitoredObjectId));
+    Q_CHECK_PTR(object);
+
+    if (0 == object) {
+        _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+    } else {
+        object->subscribeCOV(_device, _requester, _data, &_error);//if something wrong happens, object will set error.
+        finalizeInstant(_tsm);
+    }
     return true;//we are done. This instance may be deleted.
 }
 

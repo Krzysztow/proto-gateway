@@ -22,21 +22,6 @@
 #include "covnotificationrequestdata.h"
 #include "covconfnotificationservicehandler.h"
 
-InternalObjectsHandler::CovSubscription::CovSubscription(Bacnet::SubscribeCOVServiceData &data, BacnetAddress &address):
-    _subscriberProcId(data._subscriberProcId),
-    _monitoredObjectId(data._monitoredObjectId),
-    _issueConfNotification(data._issueConfNotification),
-    _subscriberAddress(address),
-    _timeLeft(data._lifetime)
-{
-}
-
-bool InternalObjectsHandler::CovSubscription::compareSubscriptions(SubscribeCOVServiceData &subscription)
-{
-    return ( (_subscriberProcId == subscription._subscriberProcId) &&
-             (_monitoredObjectId == subscription._monitoredObjectId) );
-}
-
 //void AsynchSetter::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
 void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
 {
@@ -141,81 +126,81 @@ InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
     Q_CHECK_PTR(_tsm);
 }
 
-void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error)
-{
-    Q_CHECK_PTR(error);
-    Q_CHECK_PTR(device);
+//void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error)
+//{
+//    Q_CHECK_PTR(error);
+//    Q_CHECK_PTR(device);
 
-    BacnetObject *object = device->bacnetObject(objIdToNum(covData._monitoredObjectId));
-    Q_CHECK_PTR(object);//this is not a software error, but a requester mistake. Leave it just for now.
-    if (0 == object) {
-        error->setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
-        return;
-    }
+//    BacnetObject *object = device->bacnetObject(objIdToNum(covData._monitoredObjectId));
+//    Q_CHECK_PTR(object);//this is not a software error, but a requester mistake. Leave it just for now.
+//    if (0 == object) {
+//        error->setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+//        return;
+//    }
 
-    //we have found the object.
-    TCovDevicesSubscriptions::Iterator devSubscirptionIt;;
-    TCovSubscriptionsHash::Iterator objSubscriptionHashIt;
+//    //we have found the object.
+//    TCovDevicesSubscriptions::Iterator devSubscirptionIt;;
+//    TCovSubscriptionsHash::Iterator objSubscriptionHashIt;
 
-    //initialize those iterators that are reachable.
-    devSubscirptionIt = _covSubscriptions.find(device);
-    if (devSubscirptionIt != _covSubscriptions.end()) {
-        objSubscriptionHashIt = (*devSubscirptionIt).find(object);
-    }
+//    //initialize those iterators that are reachable.
+//    devSubscirptionIt = _covSubscriptions.find(device);
+//    if (devSubscirptionIt != _covSubscriptions.end()) {
+//        objSubscriptionHashIt = (*devSubscirptionIt).find(object);
+//    }
 
-    if (!covData.isLifetimePresent() && !covData.isConfirmedNotificationPresent()) {//unsubscription request
-        if ( (devSubscirptionIt == _covSubscriptions.end()) ||
-             (objSubscriptionHashIt == (*devSubscirptionIt).end()) ||
-             ((*objSubscriptionHashIt).isEmpty()) )//we don't have to do anything - no such subscription.
-            return;
+//    if (!covData.isLifetimePresent() && !covData.isConfirmedNotificationPresent()) {//unsubscription request
+//        if ( (devSubscirptionIt == _covSubscriptions.end()) ||
+//             (objSubscriptionHashIt == (*devSubscirptionIt).end()) ||
+//             ((*objSubscriptionHashIt).isEmpty()) )//we don't have to do anything - no such subscription.
+//            return;
 
-        //there are some subscriptions for this object, check if we have a match
-        TCovObjectSubscriptionList::Iterator objSubscriptionIt = (*objSubscriptionHashIt).begin();
-        for (; objSubscriptionIt != (*objSubscriptionHashIt).end(); ++objSubscriptionIt) {
-            if ((*objSubscriptionIt).compareSubscriptions(covData)) //have we found appropriate entry?
-                break;
-        }
-        if (objSubscriptionIt != (*objSubscriptionHashIt).end()) {//we have found matching entry.
-            (*objSubscriptionHashIt).erase(objSubscriptionIt);
-            //if there are no more subcriptions associated with the device, clean some hashes and lists.
-            if ((*objSubscriptionHashIt).isEmpty()) {
-                devSubscirptionIt->remove(object);
-                if(devSubscirptionIt->isEmpty()) {
-                    _covSubscriptions.erase(devSubscirptionIt);
-                    --_totalCOVsubscriptionsNum;
-                }
-            }
-        }
-        return;//all done
-    }
-    if (!covData.isLifetimePresent() || !covData.isConfirmedNotificationPresent()) {
-        error->setError(BacnetError::ClassServices, BacnetError::CodeInconsistentParameters);
-        return;
-    }
+//        //there are some subscriptions for this object, check if we have a match
+//        TCovObjectSubscriptionList::Iterator objSubscriptionIt = (*objSubscriptionHashIt).begin();
+//        for (; objSubscriptionIt != (*objSubscriptionHashIt).end(); ++objSubscriptionIt) {
+//            if ((*objSubscriptionIt).compareSubscriptions(covData)) //have we found appropriate entry?
+//                break;
+//        }
+//        if (objSubscriptionIt != (*objSubscriptionHashIt).end()) {//we have found matching entry.
+//            (*objSubscriptionHashIt).erase(objSubscriptionIt);
+//            //if there are no more subcriptions associated with the device, clean some hashes and lists.
+//            if ((*objSubscriptionHashIt).isEmpty()) {
+//                devSubscirptionIt->remove(object);
+//                if(devSubscirptionIt->isEmpty()) {
+//                    _covSubscriptions.erase(devSubscirptionIt);
+//                    --_totalCOVsubscriptionsNum;
+//                }
+//            }
+//        }
+//        return;//all done
+//    }
+//    if (!covData.isLifetimePresent() || !covData.isConfirmedNotificationPresent()) {
+//        error->setError(BacnetError::ClassServices, BacnetError::CodeInconsistentParameters);
+//        return;
+//    }
 
-    //that was a subscription request
-    if (devSubscirptionIt == _covSubscriptions.end()) {//no device subscriptions has been done yet
-        devSubscirptionIt = _covSubscriptions.insert(device, TCovSubscriptionsHash());
-        objSubscriptionHashIt = devSubscirptionIt->end();
-    }
+//    //that was a subscription request
+//    if (devSubscirptionIt == _covSubscriptions.end()) {//no device subscriptions has been done yet
+//        devSubscirptionIt = _covSubscriptions.insert(device, TCovSubscriptionsHash());
+//        objSubscriptionHashIt = devSubscirptionIt->end();
+//    }
 
-    if (objSubscriptionHashIt == (*devSubscirptionIt).end()) {
-        objSubscriptionHashIt = (*devSubscirptionIt).insert(object, TCovObjectSubscriptionList());
-    }
+//    if (objSubscriptionHashIt == (*devSubscirptionIt).end()) {
+//        objSubscriptionHashIt = (*devSubscirptionIt).insert(object, TCovObjectSubscriptionList());
+//    }
 
-    TCovObjectSubscriptionList::Iterator objSubscriptionListIt = (*objSubscriptionHashIt).begin();
-    for (; objSubscriptionListIt != (*objSubscriptionHashIt).end(); ++objSubscriptionListIt) {
-        if ((*objSubscriptionListIt).compareSubscriptions(covData))
-            break;
-    }
-    if (objSubscriptionListIt != (*objSubscriptionHashIt).end()) {//was not found, we have to add it.
-        if (MAX_TOTAL_COV_SUBSCRIPTIONS == _totalCOVsubscriptionsNum) {//haven't we exceeded a maximum number of subscriptions possible?
-            error->setError(BacnetError::ClassServices, BacnetError::CodeCovSubscriptionFailed);
-            return;
-        }
-        (*objSubscriptionHashIt).append(CovSubscription(covData, requester));
-    } else {//the subscription is already there. That means we have to update it.
-        objSubscriptionListIt->_issueConfNotification = covData._issueConfNotification;
-        objSubscriptionListIt->_timeLeft = covData._lifetime;
-    }
-}
+//    TCovObjectSubscriptionList::Iterator objSubscriptionListIt = (*objSubscriptionHashIt).begin();
+//    for (; objSubscriptionListIt != (*objSubscriptionHashIt).end(); ++objSubscriptionListIt) {
+//        if ((*objSubscriptionListIt).compareSubscriptions(covData))
+//            break;
+//    }
+//    if (objSubscriptionListIt != (*objSubscriptionHashIt).end()) {//was not found, we have to add it.
+//        if (MAX_TOTAL_COV_SUBSCRIPTIONS == _totalCOVsubscriptionsNum) {//haven't we exceeded a maximum number of subscriptions possible?
+//            error->setError(BacnetError::ClassServices, BacnetError::CodeCovSubscriptionFailed);
+//            return;
+//        }
+//        (*objSubscriptionHashIt).append(CovSubscription(covData, requester));
+//    } else {//the subscription is already there. That means we have to update it.
+//        objSubscriptionListIt->_issueConfNotification = covData._issueConfNotification;
+//        objSubscriptionListIt->_timeLeft = covData._lifetime;
+//    }
+//}

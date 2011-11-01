@@ -1,19 +1,13 @@
-#-------------------------------------------------
-#
+# -------------------------------------------------
 # Project created by QtCreator 2011-07-19T19:54:05
-#
-#-------------------------------------------------
-
-QT       += core network
-
-QT       -= gui
-
+# -------------------------------------------------
+QT += core \
+    network
+QT -= gui
 TARGET = BACnet_KW
-CONFIG   += console
-CONFIG   -= app_bundle
-
+CONFIG += console
+CONFIG -= app_bundle
 TEMPLATE = app
-
 SOURCES += main.cpp \
     bacnetvirtuallinklayer.cpp \
     bacnetnetworklayer.cpp \
@@ -43,16 +37,14 @@ SOURCES += main.cpp \
     internalconfirmedrequesthandler.cpp \
     internalobjectshandler.cpp \
     bacnettsm.cpp \
-    bacnetreadpropertyack.cpp \
-    #bacnetreadpropertyservice.cpp \
+    bacnetreadpropertyack.cpp \ # bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
     bacnetobjectinternalsupport.cpp \
     bacnetexternalobjects.cpp \
     analoginputobject.cpp \
     bacnetdeviceobject.cpp \
     bacnetobject.cpp \
-    bacnetprimitivedata.cpp \
-    #bacneterrorack.cpp \
+    bacnetprimitivedata.cpp \ # bacneterrorack.cpp \
     servicefactory.cpp \
     asynchronousbacnettsmaction.cpp \
     bacnetservice.cpp \
@@ -68,9 +60,7 @@ SOURCES += main.cpp \
     bacnetdata.cpp \
     bacnetserviceack.cpp \
     propertyowner.cpp \
-    propertyfactory.cpp \
-#    check.cpp \
-    cos.cpp \
+    propertyfactory.cpp \ # check.cpp \
     readpropertyservicedata.cpp \
     bacnetinternaladdresshelper.cpp \
     whoisservicedata.cpp \
@@ -87,10 +77,9 @@ SOURCES += main.cpp \
     internalrprequesthandler.cpp \
     covsupport.cpp \
     covnotificationrequestdata.cpp \
-    covconfnotificationservicehandler.cpp
-
-HEADERS += \
-    bacnetvirtuallinklayer.h \
+    covconfnotificationservicehandler.cpp \
+    bacnetcovsupport.cpp
+HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
     bacnetbbmdhandler.h \
     bacnetbipaddress.h \
@@ -114,17 +103,15 @@ HEADERS += \
     bacnetwritepropertyservice.h \
     bacnetwritepropertyservicehandler.h \
     externalobjectshandler.h \
-    bacnettsm2.h \
-#    asynchronousconfirmedhandler.h \
+    bacnettsm2.h \ # asynchronousconfirmedhandler.h \
     internalobjectshandler.h \
     asynchsetter.h \
     bacnettsm.h \
     bacnetreadpropertyack.h \
     bacnetreadpropertyservicehandler.h \
     cdm.h \
-    bacnetservice.h \
-    #bacneterrorack.h \
-    #bacnetreadpropertyservice.h \
+    bacnetservice.h \ # bacneterrorack.h \
+# bacnetreadpropertyservice.h \
     bacnetconfirmedservicehandler.h \
     bacnetexternalobjects.h \
     internalconfirmedrequesthandler.h \
@@ -148,8 +135,7 @@ HEADERS += \
     bacnetdata.h \
     bacnetserviceack.h \
     propertyowner.h \
-    propertyfactory.h \
-#    check.h \
+    propertyfactory.h \ # check.h \
     cos.h \
     readpropertyservicedata.h \
     bacnetinternaladdresshelper.h \
@@ -168,8 +154,8 @@ HEADERS += \
     internalrprequesthandler.h \
     covsupport.h \
     covnotificationrequestdata.h \
-    covconfnotificationservicehandler.h
-
-OTHER_FILES +=
+    covconfnotificationservicehandler.h \
+    bacnetcovsupport.h
+OTHER_FILES += 
 
 

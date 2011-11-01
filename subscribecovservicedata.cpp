@@ -6,9 +6,12 @@
 using namespace Bacnet;
 
 SubscribeCOVServiceData::SubscribeCOVServiceData():
-        _subscriberProcId(0),
-        _issueConfNotification(false),
-        _lifetime(0)
+    _subscriberProcId(0),
+    _issueConfNotification(false),
+    _lifetime(0),
+    _propReference(0),
+    _covIncrement(0),
+    _flags(0)//nothing set yet
 {
     _monitoredObjectId.objectType = BacnetObjectType::Undefined;
     _monitoredObjectId.instanceNum = Bacnet::InvalidInstanceNumber;
@@ -44,22 +47,22 @@ qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
     if (isConfirmedNotificationPresent()) {
         ret = BacnetCoder::boolToRaw(actualPtr, leftLength, _issueConfNotification, true, 2);
         if (ret <= 0) {//something wrong?
-                Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode bool.");
-                qDebug("SubscribeCOVServiceData::toRaw() : Cannot encode bool: %d", ret);
-                return ret;
-            }
-            actualPtr += ret;
+            Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode bool.");
+            qDebug("SubscribeCOVServiceData::toRaw() : Cannot encode bool: %d", ret);
+            return ret;
+        }
+        actualPtr += ret;
     }
 
     //encode lifetime
     if (isLifetimePresent()) {
         ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _lifetime, true, 3);
         if (ret <= 0) {//something wrong?
-                Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode lifetime.");
-                qDebug("SubscribeCOVServiceData::toRaw() : Cannot encode lifetime: %d", ret);
-                return ret;
-            }
-            actualPtr += ret;
+            Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode lifetime.");
+            qDebug("SubscribeCOVServiceData::toRaw() : Cannot encode lifetime: %d", ret);
+            return ret;
+        }
+        actualPtr += ret;
     }
 
     return (actualPtr - startPtr);
@@ -113,6 +116,35 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         setLifetimePresent();
     } else {
         clearLifetimePresent();
+    }
+
+    //in case of BACnet subscribeCOV-Request we may have two additional fields
+    ret = bParser.nextTagNumber(&convOkOrCtxt);
+    if (4 == ret && convOkOrCtxt) {//monitored property id (BacnetpropertyReference is there);
+        if (0 == _propReference) _propReference = new Bacnet::PropertyReference();
+        ret = _propReference->fromRaw(parser, 4);
+        if (ret < 0)
+            return -BacnetReject::ReasonInconsistentParameters;
+        consumedBytes += ret;
+
+        ret = bParser.nextTagNumber(&convOkOrCtxt);
+
+        //check for COV increment
+        if (5 == ret && convOkOrCtxt){
+            Q_ASSERT(_propReference != 0);
+            if (0 == _propReference)
+                return -BacnetReject::ReasonInconsistentParameters;//whene COVIncrement is  provided, then this could happen only for subscribeCOV-Request
+
+            if (0 != _covIncrement)  {
+                delete _covIncrement;
+                _covIncrement = 0;
+            }
+            ret = BacnetTagParser::parseStructuredData(bParser, _monitoredObjectId.objectType, _propReference->identifier(),
+                                                       _propReference->arrayIndex(), 5, &_covIncrement);
+            if (ret <= 0) //something worng, check it
+                return -BacnetReject::ReasonInconsistentParameters;
+            consumedBytes += ret;
+        }
     }
 
     if (bParser.hasNext())

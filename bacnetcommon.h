@@ -529,7 +529,7 @@ namespace BacnetServices
         VtData                          = 23,
         // Security Services
         Authenticate                    = 24,
-        RequestKey                      = 25,
+        RequestKey                      = 25
         // Services added after 1995
         // readRange 	= 26 see Object Access Services
         // lifeSafetyOperation 	= 27 see Alarm and Event Services
@@ -616,10 +616,11 @@ namespace Bacnet {
             BACnetSessionKey,
             BACnetRecipient,
             BACnetAddressBinding,
+            BACnetAddress,
             BACnetTimeStamp,
             BACnetDateTime,
             BACnetCOVSubscription,
-            DataTypeBOOLEAN,
+            BACnetPropertyRefernce,
             BACnetArray           = 0x010000,
             BACnetList            = 0x020000,
             BACnetSequence        = BACnetArray | BACnetList,

@@ -37,6 +37,9 @@ namespace Bacnet
 
         virtual DataType::DataType typeId();
 
+    public:
+        bool toValue();
+
     private:
         bool _value;
     };
@@ -130,6 +133,13 @@ namespace Bacnet
         virtual QVariant toInternal();
 
         virtual DataType::DataType typeId();
+
+    public:
+        OctetString(QByteArray value);
+        OctetString();
+
+        void setValue(QByteArray value);
+        QByteArray value();
 
     private:
         QByteArray _value;

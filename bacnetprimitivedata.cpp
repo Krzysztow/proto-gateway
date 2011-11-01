@@ -486,6 +486,25 @@ DataType::DataType OctetString::typeId()
     return DataType::OctetString;
 }
 
+OctetString::OctetString():
+{
+}
+
+OctetString::OctetString(QByteArray value):
+    _value(value)
+{
+}
+
+void OctetString::setValue(QByteArray value)
+{
+    _value = value;
+}
+
+QByteArray OctetString::value()
+{
+    return _value;
+}
+
 ////Character STRING
 //qint32 CharacterString::toRaw_helper(quint8 *ptrStart, quint16 buffLength, bool isContext, quint8 tagNumber)
 //{

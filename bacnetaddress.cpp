@@ -93,6 +93,11 @@ quint8 BacnetAddress::setNetworkNumFromRaw(quint8 *data)
     return 2;
 }
 
+void BacnetAddress::setNetworkNum(quint16 netNum)
+{
+    _networkNumber = netNum;
+}
+
 void BacnetAddress::resetMacAddress()
 {
     _networkNumber = UninitizlizedNet;

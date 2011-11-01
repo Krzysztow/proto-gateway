@@ -6,7 +6,6 @@
 #include "bacnetdata.h"
 #include "bacnetobject.h"
 #include "bacnetobjectinternalsupport.h"
-#include "covsupport.h"
 
 class BacnetDeviceObject;
 class Property;
@@ -46,8 +45,6 @@ public:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);
     Bacnet::BacnetDataInterface *createBacnetTypeForProperty_helper(BacnetProperty::Identifier propertyId, quint32 arrayIdx);
 
-    BacnetDeviceObject *_parentDevice;
-    Bacnet::RealCovSupport *_presValueCovSupport;
     Bacnet::ObjectIdStruct _id;
     QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> _specializedProperties;
 };

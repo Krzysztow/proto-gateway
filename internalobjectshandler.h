@@ -45,21 +45,10 @@ public:
           COV handling part
     ****************************/
 public:
-    static const int MAX_TOTAL_COV_SUBSCRIPTIONS = 64;
-    void subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
+//    static const int MAX_TOTAL_COV_SUBSCRIPTIONS = 64;
+//    void subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
 
 private:
-    class CovSubscription {
-    public:
-        quint32 _subscriberProcId;
-        Bacnet::ObjectIdStruct _monitoredObjectId;
-        bool _issueConfNotification;
-        BacnetAddress _subscriberAddress;
-        quint32 _timeLeft;
-    public:
-        CovSubscription(Bacnet::SubscribeCOVServiceData &data, BacnetAddress &address);
-        bool compareSubscriptions(Bacnet::SubscribeCOVServiceData &other);
-    };
 
     typedef QList<CovSubscription> TCovObjectSubscriptionList;
     typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;

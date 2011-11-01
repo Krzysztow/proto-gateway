@@ -25,6 +25,16 @@ namespace Bacnet
         virtual QVariant toInternal() = 0;
 
         virtual DataType::DataType typeId() = 0;
+
+    protected:
+        //! this function encodes the opening (and closing tag) and invokes overridef \sa toRaw(quint8* ptrStart) one.
+        qint32 toRawTagEnclosed_helper(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
+        //! This function decodes the opened tag and invokes overridden \sa fromRaw(BacnetTagParser &parser) one.
+        qint32 fromRawTagEnclosed_helper(BacnetTagParser &parser, quint8 tagNum);
+        //! Another helper, this time encoding not sequence, but choice value.
+        qint32 fromRawChoiceValue_helper(BacnetTagParser &parser, QList<DataType::DataType> choices, Bacnet::BacnetDataInterface *choiceValue);
+
+
     };
 }
 
