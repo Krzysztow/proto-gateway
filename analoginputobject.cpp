@@ -12,9 +12,7 @@
 using namespace Bacnet;
 
 AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdStruct identifier, BacnetDeviceObject *parent):
-        BacnetObject(identifier),
-        _parentDevice(parent),
-        _presValueCovSupport(0)
+        BacnetObject(identifier, parent)
 {
     Q_ASSERT( (identifier.objectType) == BacnetObjectType::Device);
     Q_CHECK_PTR(parent);
@@ -22,8 +20,7 @@ AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdStruct identifier, BacnetDe
 }
 
 AnalogInputObject::AnalogInputObject(quint32 instanceNumber, BacnetDeviceObject *parent):
-        BacnetObject(BacnetObjectType::AnalogInput, instanceNumber),
-        _parentDevice(parent)
+        BacnetObject(BacnetObjectType::AnalogInput, instanceNumber, parent)
 {
     Q_ASSERT(instanceNumber <= 0x03fffff);
     Q_CHECK_PTR(parent);
@@ -170,50 +167,50 @@ void AnalogInputObject::asynchActionFinished(int asynchId, Property *property, P
     propertyValueChanged(property);
 }
 
-void AnalogInputObject::addCOVSupport(Bacnet::RealCovSupport *support)
-{
-    const BacnetProperty::Identifier propertyId(BacnetProperty::ClientCovIncrement);
-    if (0 != _presValueCovSupport && _specializedProperties.contains(propertyId)) {
-        _specializedProperties.remove(propertyId);//pointer to BacnetDataInterface is not lost, since it's being deleted with _presValueCovSupport, as is it's integral part.
-        delete _presValueCovSupport;
-    }
-    _presValueCovSupport = support;
-    if (0 == _presValueCovSupport)
-        return;
-    _specializedProperties.insert(propertyId, _presValueCovSupport->covIncrement());
-}
+//void AnalogInputObject::addCOVSupport(Bacnet::RealCovSupport *support)
+//{
+//    const BacnetProperty::Identifier propertyId(BacnetProperty::ClientCovIncrement);
+//    if (0 != _presValueCovSupport && _specializedProperties.contains(propertyId)) {
+//        _specializedProperties.remove(propertyId);//pointer to BacnetDataInterface is not lost, since it's being deleted with _presValueCovSupport, as is it's integral part.
+//        delete _presValueCovSupport;
+//    }
+//    _presValueCovSupport = support;
+//    if (0 == _presValueCovSupport)
+//        return;
+//    _specializedProperties.insert(propertyId, _presValueCovSupport->covIncrement());
+//}
 
-QList<Bacnet::PropertyValue*> AnalogInputObject::readCovValuesList()
-{
-    QList<PropertyValue*> valuesRead;
-    //properties being loaded PRESENT VALUE and STATUS FLAGS
-    BacnetDataInterface *prop = propertyReadInstantly(BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent, 0);
-    Q_CHECK_PTR(prop);
-    valuesRead.append(new PropertyValue(BacnetProperty::PresentValue, prop));
-    prop = propertyReadInstantly(BacnetProperty::StatusFlags, Bacnet::ArrayIndexNotPresent, 0);
-    Q_CHECK_PTR(prop);
-    valuesRead.append(new PropertyValue(BacnetProperty::StatusFlags, prop));
+//QList<Bacnet::PropertyValue*> AnalogInputObject::readCovValuesList()
+//{
+//    QList<PropertyValue*> valuesRead;
+//    //properties being loaded PRESENT VALUE and STATUS FLAGS
+//    BacnetDataInterface *prop = propertyReadInstantly(BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent, 0);
+//    Q_CHECK_PTR(prop);
+//    valuesRead.append(new PropertyValue(BacnetProperty::PresentValue, prop));
+//    prop = propertyReadInstantly(BacnetProperty::StatusFlags, Bacnet::ArrayIndexNotPresent, 0);
+//    Q_CHECK_PTR(prop);
+//    valuesRead.append(new PropertyValue(BacnetProperty::StatusFlags, prop));
 
-    return valuesRead;
-}
+//    return valuesRead;
+//}
 
-void AnalogInputObject::propertyValueChanged(Property *property)
-{
-    Q_CHECK_PTR(property);
-    /** \note Some simplifications are introduced. We compare agains COV increment only a present value. Otherwise all the other
-      property changes are forwarded.
-      */
+//void AnalogInputObject::propertyValueChanged(Property *property)
+//{
+//    Q_CHECK_PTR(property);
+//    /** \note Some simplifications are introduced. We compare agains COV increment only a present value. Otherwise all the other
+//      property changes are forwarded.
+//      */
 
-    BacnetProperty::Identifier propId = findPropertyIdentifier(property);
-    if (BacnetProperty::PresentValue) {
-        if (0 == _presValueCovSupport)
-            return;
-        QVariant value;
-        int ret = property->getValueInstant(&value);
-        Q_ASSERT(Property::ResultOk == ret);
-        if (_presValueCovSupport->hasChangeOccured(value))
-            _parentDevice->propertyValueChanged(this, propId);//inform devicep parent
-    } else {
-        _parentDevice->propertyValueChanged(this, propId);
-    }
-}
+//    BacnetProperty::Identifier propId = findPropertyIdentifier(property);
+//    if (BacnetProperty::PresentValue) {
+//        if (0 == _presValueCovSupport)
+//            return;
+//        QVariant value;
+//        int ret = property->getValueInstant(&value);
+//        Q_ASSERT(Property::ResultOk == ret);
+//        if (_presValueCovSupport->hasChangeOccured(value))
+//            _parentDevice->propertyValueChanged(this, propId);//inform devicep parent
+//    } else {
+//        _parentDevice->propertyValueChanged(this, propId);
+//    }
+//}

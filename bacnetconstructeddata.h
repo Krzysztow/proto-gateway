@@ -136,7 +136,6 @@ private:
     BacnetDataInterface *_choiceValue;
 };
 
-
 class PropertyReference:
         public BacnetDataInterface
 {
@@ -162,6 +161,33 @@ public:
 
 private:
     BacnetProperty::Identifier _identifier;
+    quint32 _arrayIdx;
+};
+
+class ObjectPropertyReference:
+        public BacnetDataInterface
+{
+public:
+    virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
+    virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
+
+    virtual qint32 fromRaw(BacnetTagParser &parser);
+    virtual qint32 fromRaw(BacnetTagParser &parser, quint8 tagNum);
+
+    virtual bool setInternal(QVariant &value);
+    virtual QVariant toInternal();
+
+    virtual DataType::DataType typeId();
+
+public:
+    ObjectPropertyReference(ObjectIdentifier &objId, BacnetProperty::Identifier propId, quint32 arrayIdx);
+    ObjectIdentifier &objId();
+    BacnetProperty::Identifier propId();
+    quint32 arrayIdx();
+
+private:
+    ObjectIdentifier _objId;
+    BacnetProperty::Identifier _propId;
     quint32 _arrayIdx;
 };
 
@@ -205,11 +231,18 @@ public://iverridden BacnetDataInterface methods.
     virtual DataType::DataType typeId();
 
 public:
-    Recipient(ObjectIdStruct objectId, BacnetAddress &address);
+    Recipient();
+    Recipient(ObjectIdStruct objectId);
+    Recipient(BacnetAddress &address);
     ~Recipient();
 
+    bool operator==(const Recipient &other) const;
+    bool hasAddress() const;
+    const Address *address() const;
+    const ObjectIdentifier *objId() const;
+
 private:
-    ObjectIdStruct *_objectId;
+    ObjectIdentifier *_objectId;
     Address *_address;
 };
 

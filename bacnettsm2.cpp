@@ -174,7 +174,7 @@ bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAdd
     }
     BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
 
-    send(destAddr, srcAddr, service, serviceToSend, timeout_ms);
+    return send(destAddr, srcAddr, service, serviceToSend, timeout_ms);
 }
 
 

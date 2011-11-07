@@ -2,13 +2,16 @@
 
 #include "property.h"
 #include "bacnetdeviceobject.h"
+#include "bacnetaddress.h"
 
-BacnetObject::BacnetObject(Bacnet::ObjectIdStruct id):
-        _id(id)
+BacnetObject::BacnetObject(Bacnet::ObjectIdStruct id, BacnetDeviceObject *parentDevice):
+    _id(id),
+    _parentDevice(parentDevice)
 {
 }
 
-BacnetObject::BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber)
+BacnetObject::BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice):
+    _parentDevice(parentDevice)
 {
     _id.objectType = objectType;
     _id.instanceNum = instanceNumber;
@@ -45,4 +48,11 @@ QString BacnetObject::objectName()
 QList<Bacnet::PropertyValue*> BacnetObject::readCovValuesList()
 {
     return QList<Bacnet::PropertyValue*>();
+}
+
+void BacnetObject::addOrUpdateCov(Bacnet::SubscribeCOVServiceData &covData, BacnetAddress &requester, Bacnet::Error *error)
+{
+    Q_CHECK_PTR(error);
+
+
 }

@@ -3,6 +3,7 @@
 #include "helpercoder.h"
 #include "bacnetcommon.h"
 #include "bacnettagparser.h"
+#include "datavisitor.h"
 
 using namespace Bacnet;
 
@@ -85,14 +86,32 @@ qint32 Boolean::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 
 qint32 Boolean::fromRaw(BacnetTagParser &parser)
 {
-#warning "Not implemented, yet. Must be!"
-    return -1;
+    qint16 ret = parser.parseNext();
+    Q_ASSERT(parser.isApplicationTag(AppTags::Boolean));
+    if (ret >= 0) {
+        if (!parser.isApplicationTag(AppTags::Boolean))
+            return BacnetTagParser::AppTagNotRequestedType;
+        bool ok;
+        _value = parser.toBoolean(&ok);
+        if (!ok)
+            return parser.error();
+    }
+    return ret;
 }
 
 qint32 Boolean::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 {
-#warning "Not implemented, yet. Must be!"
-    return -1;
+    qint16 ret = parser.parseNext();
+    Q_ASSERT(parser.isContextTag(tagNum));
+    if (ret >= 0) {
+        if (!parser.isContextTag(tagNum))
+            return BacnetTagParser::AppTagNotRequestedType;
+        bool ok;
+        _value = parser.toBoolean(&ok);
+        if (!ok)
+            return parser.error();
+    }
+    return ret;
 }
 
 bool Boolean::setInternal(QVariant &value)
@@ -131,6 +150,8 @@ quint32 UnsignedInteger::value()
 {
     return _value;
 }
+
+DEFINE_VISITABLE_FUNCTION(UnsignedInteger);
 
 qint32 UnsignedInteger::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
@@ -259,6 +280,18 @@ DataType::DataType SignedInteger::typeId()
     return DataType::Signed;
 }
 
+qint32 SignedInteger::value()
+{
+    return _value;
+}
+
+void SignedInteger::setValue(qint32 value)
+{
+    _value = value;
+}
+
+DEFINE_VISITABLE_FUNCTION(SignedInteger);
+
 //REAL
 qint32 Real::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
@@ -340,6 +373,18 @@ DataType::DataType Real::typeId()
     return DataType::Real;
 }
 
+float Real::value()
+{
+    return _value;
+}
+
+void Real::setValue(float value)
+{
+    _value = value;
+}
+
+DEFINE_VISITABLE_FUNCTION(Real);
+
 //DOUBLE
 qint32 Double::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
@@ -416,6 +461,18 @@ DataType::DataType Double::typeId()
     return DataType::Double;
 }
 
+double &Double::value()
+{
+    return _value;
+}
+
+void Double::setValue(double &value)
+{
+    _value = value;
+}
+
+DEFINE_VISITABLE_FUNCTION(Double);
+
 //OCtet String
 qint32 OctetString::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
@@ -486,7 +543,7 @@ DataType::DataType OctetString::typeId()
     return DataType::OctetString;
 }
 
-OctetString::OctetString():
+OctetString::OctetString()
 {
 }
 
@@ -638,6 +695,17 @@ DataType::DataType CharacterString::typeId()
 {
     return DataType::CharacterString;
 }
+
+QString &CharacterString::value()
+{
+    return _value;
+}
+
+void CharacterString::setValue(QString &value)
+{
+    _value = value;
+}
+
 
 //BIT STRING
 void BitString::toRaw_helper(quint8 *dataStart)

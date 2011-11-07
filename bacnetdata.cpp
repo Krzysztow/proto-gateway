@@ -1,5 +1,9 @@
 #include "bacnetdata.h"
 
+#include "bacnetcoder.h"
+#include "bacnettagparser.h"
+#include "bacnetdefaultobject.h"
+
 using namespace Bacnet;
 
 BacnetDataInterface::BacnetDataInterface()
@@ -68,6 +72,8 @@ qint32 BacnetDataInterface::fromRawChoiceValue_helper(BacnetTagParser &parser, Q
         return -1;
 
     choiceValue = BacnetDefaultObject::createDataType(choices.at(ret));
-    Q_CHECK_PTR(_choiceValue);
+    Q_CHECK_PTR(choiceValue);
     return choiceValue->fromRaw(parser);
 }
+
+DEFINE_VISITABLE_FUNCTION(BacnetDataInterface)

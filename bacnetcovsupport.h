@@ -2,8 +2,11 @@
 #define BACNETCOVSUPPORT_H
 
 #include "bacnetconstructeddata.h"
+#include "covincrementhandlers.h"
 
 namespace Bacnet {
+
+class SubscribeCOVServiceData;
 
 class CovSubscription :
     public BacnetDataInterface
@@ -20,16 +23,17 @@ public://overriden BacnetDataInterface methonds
     virtual DataType::DataType typeId() = 0;
 
 public:
-    CovSubscription(Bacnet::SubscribeCOVServiceData &data, BacnetAddress &address);
-    bool compareSubscriptions(Bacnet::SubscribeCOVServiceData &other);
+    CovSubscription(SubscribeCOVServiceData &data, BacnetAddress &address);
+    bool compareSubscriptions(CovSubscription &other);
+
 
 public:
-
-    PropertyReference _subscriberProcId;
-    ObjectIdStruct _monitoredObjectId;
+    Recipient _recipient;
+    ObjectPropertyReference _monitoredPropertyRef;
     bool _issueConfNotification;
-    BacnetAddress _subscriberAddress;
+    //BacnetAddress _subscriberAddress;
     quint32 _timeLeft;
+    CovRealIcnrementHandler *_covIncrement;
 };
 
 class BacnetCovSupport

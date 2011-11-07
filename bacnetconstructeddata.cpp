@@ -161,6 +161,7 @@ qint32 DateTime::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool DateTime::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, "DateTime::setInternal()", "Structured data types shouldn't be used for internal use!");
     return false;
 }
@@ -222,6 +223,7 @@ qint32 TimeStamp::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool TimeStamp::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, "DateTime::setInternal()", "Structured data types shouldn't be used for internal use!");
     return false;
 }
@@ -252,7 +254,7 @@ qint32 PropertyReference::toRaw(quint8 *ptrStart, quint16 buffLength)
     qint32 ret;
     quint8 *actualPtr(ptrStart);
 
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, buffLength, _identifier, true, 0);
+    ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _identifier, true, 0);
     if (ret<0)
         return -1;
     actualPtr += ret;
@@ -276,26 +278,29 @@ qint32 PropertyReference::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tag
 qint32 PropertyReference::fromRaw(BacnetTagParser &parser)
 {
     bool okOrCtxt;
+    qint16 ret, total(0);
+
     //firstly parse obligatory propertyId
-    qint16 ret = parser.parseNext();
+    ret = parser.parseNext();
     if (!parser.isContextTag(0))
         return -1;
-    _identifier = parser.toObjectId(&okOrCtxt);
+    _identifier = (BacnetProperty::Identifier)parser.toUInt(&okOrCtxt);
     if (ret < 0 || !okOrCtxt)
         return -1;
+    total += ret;
     //now check if we are provided with property array index. If so, parse it.
     if (parser.nextTagNumber(&okOrCtxt) == 1 && okOrCtxt) {
-        qint16 temp = parser.parseNext();
-        if (temp < 0)
+        ret = parser.parseNext();
+        if (ret < 0)
             return -2;
         _arrayIdx = parser.toUInt(&okOrCtxt);
         if (!okOrCtxt)
             return -2;
-        total += temp;
+        total += ret;
     } else
         _arrayIdx = ArrayIndexNotPresent;
 
-    return ret;
+    return total;
 }
 
 qint32 PropertyReference::fromRaw(BacnetTagParser &parser, quint8 tagNum)
@@ -305,6 +310,7 @@ qint32 PropertyReference::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool PropertyReference::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, "PropertyReferecnce::setInternal()", "Structured data types shouldn't be used for internal use!");
     return false;
 }
@@ -360,7 +366,7 @@ qint32 Address::toRaw(quint8 *ptrStart, quint16 buffLength)
     buffLength -= ret;
 
     //encode the MAC address part
-    Bacnet::OctetString octetAddress(QByteArray(_bacAddress.macPtr(), _bacAddress.macAddrLength()));
+    Bacnet::OctetString octetAddress(QByteArray((const char*)_bacAddress.macPtr(), _bacAddress.macAddrLength()));
     ret = octetAddress.toRaw(actualPtr, buffLength);
     if (ret < 0)
         return -2;
@@ -377,7 +383,7 @@ qint32 Address::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 qint32 Address::fromRaw(BacnetTagParser &parser)
 {
     qint32 ret;
-    qint32 total;
+    qint32 total(0);
     bool convOk;
 
     //parse network number
@@ -397,7 +403,7 @@ qint32 Address::fromRaw(BacnetTagParser &parser)
     total += ret;
 
     _bacAddress.setNetworkNum(netNum);
-    _bacAddress.macAddressFromRaw(octetAddress.constData(), octetAddress.size());
+    _bacAddress.macAddressFromRaw((quint8*)octetAddress.constData(), octetAddress.size());
 
     return total;
 }
@@ -409,6 +415,7 @@ qint32 Address::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool Address::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
     return false;
 }
@@ -426,9 +433,15 @@ DataType::DataType Address::typeId()
 
 ///////////////////////////////////////////////////////////////
 
-Recipient::Recipient():
-    _address(0),
-    _objectId(0)
+Recipient::Recipient(ObjectIdStruct objectId):
+    _objectId(new ObjectIdentifier(objectId)),
+    _address(0)
+{
+}
+
+Recipient::Recipient(BacnetAddress &address):
+    _objectId(0),
+    _address(new Address(address))
 {
 }
 
@@ -438,14 +451,48 @@ Recipient::~Recipient()
     delete _address; _address = 0;
 }
 
+bool Recipient::operator==(const Recipient &other) const
+{
+#warning "Needs correction. We have to utilize routing lookup table."
+    //! \todo Correct it! May get duplicatied if one specified by object id and other by its address.
+    if (this->hasAddress() != other.hasAddress())
+        return false;
+
+    //addresses or recipient device id have to be the same
+    if ( this->address() == other.address() &&
+            this->objId() == other.objId() ) {
+        return true;
+    }
+
+    return false;
+}
+
+bool Recipient::hasAddress() const
+{
+    Q_ASSERT(_objectId != 0 || _address != 0);
+    return (_address != 0);
+}
+
+const Address *Recipient::address() const
+{
+    return _address;
+}
+
+const ObjectIdentifier *Recipient::objId() const
+{
+    return _objectId;
+}
+
 qint32 Recipient::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
     if (0 != _address)
         return _address->toRaw(ptrStart, buffLength);
     else if (0 != _objectId)
-        return BacnetCoder::objectIdentifierToRaw(ptrStart, buffLength, *_objectId, false);
+        return _objectId->toRaw(ptrStart, buffLength);
     else
         Q_ASSERT(false);
+
+    return -1;
 }
 
 qint32 Recipient::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
@@ -455,20 +502,17 @@ qint32 Recipient::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 
 qint32 Recipient::fromRaw(BacnetTagParser &parser)
 {
-    bool convOkOrCtxt;
     qint32 ret(0);
 
     ret = parser.parseNext();
     if (ret > 0) {
         if (parser.isContextTag(0)) {
-            if (0 == _objectId) _objectId = new ObjectIdStruct;
+            if (0 == _objectId) _objectId = new ObjectIdentifier();
             if (0 != _address) {
                 delete _address;
                 _address = 0;
             }
-            *_objectId = parser.toObjectId(&convOkOrCtxt);
-            if (convOkOrCtxt)
-                return ret;
+            return _objectId->fromRaw(parser);
         } else if (parser.isContextTag(1)) {
             if (0 != _objectId) {
                 delete _objectId;
@@ -494,6 +538,7 @@ qint32 Recipient::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool Recipient::setInternal(QVariant &value)
 {
+            Q_UNUSED(value);
     Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
     return false;
 }
@@ -509,4 +554,114 @@ DataType::DataType Recipient::typeId()
     return DataType::BACnetRecipient;
 }
 
+///////////////////////////////////////////////////////////////////////
 
+qint32 ObjectPropertyReference::toRaw(quint8 *ptrStart, quint16 buffLength)
+{
+    quint8 *actualPtr(ptrStart);
+    qint32 total(0), ret(0);
+
+    //encode object identifier
+    ret = _objId.toRaw(actualPtr, buffLength, 0);
+    if (ret < 0)
+        return ret;
+    total += ret;
+    actualPtr += ret;
+    buffLength -= ret;
+
+    //encode property ID
+    ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _propId, true, 1);
+    if (ret < 0)
+        return ret;
+    total += ret;
+    actualPtr += ret;
+    buffLength -= ret;
+
+    //encode property array index, if existing
+    if (_arrayIdx != ArrayIndexNotPresent) {
+        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _arrayIdx, true, 2);
+        if (ret < 0)
+            return ret;
+        total += ret;
+        actualPtr += ret;
+        buffLength -= ret;
+    }
+
+    return total;
+}
+
+qint32 ObjectPropertyReference::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
+{
+    return toRawTagEnclosed_helper(ptrStart, buffLength, tagNumber);
+}
+
+qint32 ObjectPropertyReference::fromRaw(BacnetTagParser &parser)
+{
+    qint32 ret(0), total(0);
+    bool convOkOrCtxt;
+
+    //decode object Identifier
+    ret = _objId.fromRaw(parser, 0);
+    if (ret < 0)
+        return ret;
+
+    //decode property identifier
+    ret = parser.parseNext();
+    _propId = (BacnetProperty::Identifier)parser.toUInt(&convOkOrCtxt);
+    if (ret < 0 || !parser.isContextTag(1))
+        return -BacnetError::CodeMissingRequiredParameter;
+    else if (!convOkOrCtxt)
+        return -BacnetError::CodeInvalidDataType;
+    total += ret;
+
+    //decode proeprty array index, if present
+    if (parser.hasNext() && parser.nextTagNumber(&convOkOrCtxt) == 2) {
+        ret = parser.parseNext();
+        _arrayIdx = parser.toUInt(&convOkOrCtxt);
+        if (ret < 0 || !convOkOrCtxt)
+            return -BacnetError::CodeInconsistentParameters;
+
+        total += ret;
+    } else
+        _arrayIdx = ArrayIndexNotPresent;
+
+    return total;
+}
+
+qint32 ObjectPropertyReference::fromRaw(BacnetTagParser &parser, quint8 tagNum)
+{
+    return fromRawTagEnclosed_helper(parser, tagNum);
+}
+
+bool ObjectPropertyReference::setInternal(QVariant &value)
+{
+    Q_UNUSED(value);
+    Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
+    return false;
+}
+
+QVariant ObjectPropertyReference::toInternal()
+{
+    Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
+    return QVariant();
+}
+
+DataType::DataType ObjectPropertyReference::typeId()
+{
+    return DataType::BACnetObjectPropertyReference;
+}
+
+ObjectIdentifier &ObjectPropertyReference::objId()
+{
+    return _objId;
+}
+
+BacnetProperty::Identifier ObjectPropertyReference::propId()
+{
+    return _propId;
+}
+
+quint32 ObjectPropertyReference::arrayIdx()
+{
+    return _arrayIdx;
+}

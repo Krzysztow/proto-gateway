@@ -11,6 +11,7 @@ DataAbstract::DataAbstract()
 
 qint32 DataAbstract::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
+    Q_UNUSED(ptrStart); Q_UNUSED(buffLength);
     Q_ASSERT_X(false, "DataAbstract", "Are you sure you want to use it for writing data?");
     return BacnetCoder::UnknownError;
     //or else
@@ -23,6 +24,7 @@ qint32 DataAbstract::toRaw(quint8 *ptrStart, quint16 buffLength)
 
 qint32 DataAbstract::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 {
+    Q_UNUSED(ptrStart); Q_UNUSED(buffLength); Q_UNUSED(tagNumber);
     Q_ASSERT_X(false, "DataAbstract", "Are you sure you want to use it for writing data?");
     return BacnetCoder::UnknownError;
     //or else

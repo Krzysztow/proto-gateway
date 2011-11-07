@@ -11,13 +11,13 @@
 using namespace Bacnet;
 
 BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdStruct identifier):
-        BacnetObject(identifier)
+        BacnetObject(identifier, this)
 {
     Q_ASSERT( (identifier.objectType) == BacnetObjectType::Device);
 }
 
 BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber):
-        BacnetObject(BacnetObjectType::Device, instanceNumber)
+        BacnetObject(BacnetObjectType::Device, instanceNumber, this)
 {
     Q_ASSERT(instanceNumber <= 0x03fffff);
 }

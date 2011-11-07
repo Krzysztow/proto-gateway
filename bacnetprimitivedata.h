@@ -63,6 +63,9 @@ namespace Bacnet
         void setValue(quint32 value);
         quint32 value();
 
+    public:
+        DECLARE_VISITABLE_FUNCTION(UnsignedInteger);
+
     protected:
         quint32 _value;
     };
@@ -80,6 +83,14 @@ namespace Bacnet
         virtual QVariant toInternal();
 
         virtual DataType::DataType typeId();
+
+    public:
+        qint32 value();
+        void setValue(qint32 value);
+
+    public:
+        DECLARE_VISITABLE_FUNCTION(SignedInteger);
+
     private:
         qint32 _value;
     };
@@ -99,6 +110,14 @@ namespace Bacnet
         virtual QVariant toInternal();
 
         virtual DataType::DataType typeId();
+
+    public:
+        float value();
+        void setValue(float value);
+
+    public:
+        DECLARE_VISITABLE_FUNCTION(Real);
+
     private:
         float _value;
     };
@@ -116,11 +135,20 @@ namespace Bacnet
         virtual QVariant toInternal();
 
         virtual DataType::DataType typeId();
+
+    public:
+        double &value();
+        void setValue(double &value);
+
+    public:
+        DECLARE_VISITABLE_FUNCTION(Double);
+
     private:
         double _value;
     };
 
-    class OctetString: public BacnetDataInterface
+    class OctetString:
+            public BacnetDataInterface
     {
     public:
         virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
@@ -160,6 +188,10 @@ namespace Bacnet
         virtual DataType::DataType typeId();
     private:
         qint32 toRaw_helper(quint8 *ptrStart, quint16 buffLength, bool isContext, quint8 tagNumber);
+
+    public:
+        QString &value();
+        void setValue(QString &value);
 
     public:
         QString _value;

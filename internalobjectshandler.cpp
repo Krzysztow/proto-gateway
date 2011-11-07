@@ -42,53 +42,53 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
     }
 }
 
-void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId)
-{
-    Q_CHECK_PTR(device);
-    Q_CHECK_PTR(object);
-//    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
-//    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
-//    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
+//void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId)
+//{
+//    Q_CHECK_PTR(device);
+//    Q_CHECK_PTR(object);
+////    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
+////    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
+////    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
 
-    TCovDevicesSubscriptions::Iterator devIt = _covSubscriptions.find(device);
-    if (devIt == _covSubscriptions.end())
-        return;//nothing subscribed
+//    TCovDevicesSubscriptions::Iterator devIt = _covSubscriptions.find(device);
+//    if (devIt == _covSubscriptions.end())
+//        return;//nothing subscribed
 
-    TCovSubscriptionsHash::Iterator subObjIt = (*devIt).find(object);
-    if (subObjIt == (*devIt).end())
-        return;//no object subscription
+//    TCovSubscriptionsHash::Iterator subObjIt = (*devIt).find(object);
+//    if (subObjIt == (*devIt).end())
+//        return;//no object subscription
 
-    TCovObjectSubscriptionList::Iterator subscriptionsIt = (*subObjIt).begin();
-    CovNotificationRequestData *covData(0);
-    //inform each subscriber that value have changed!
-    for (; subscriptionsIt != (*subObjIt).end(); ++subscriptionsIt) {
-        //! \todo We could have optimization here - get the value only once, instead of for each subscribed device. Then SharedData should be used as well.
-        QList<Bacnet::PropertyValue*> dataList = object->readCovValuesList();
-        if (dataList.isEmpty()) {
-            qDebug("InternalObjectsHandler::propertyValueChanged() : data changed but we got zero pointer dev (0x%x), obj (0x%x), propId (0x%x)",
-                   device->objectIdNum(), object->objectIdNum(), propId);
-            Q_ASSERT(false);
-            return;
-        }
+//    TCovObjectSubscriptionList::Iterator subscriptionsIt = (*subObjIt).begin();
+//    CovNotificationRequestData *covData(0);
+//    //inform each subscriber that value have changed!
+//    for (; subscriptionsIt != (*subObjIt).end(); ++subscriptionsIt) {
+//        //! \todo We could have optimization here - get the value only once, instead of for each subscribed device. Then SharedData should be used as well.
+//        QList<Bacnet::PropertyValue*> dataList = object->readCovValuesList();
+//        if (dataList.isEmpty()) {
+//            qDebug("InternalObjectsHandler::propertyValueChanged() : data changed but we got zero pointer dev (0x%x), obj (0x%x), propId (0x%x)",
+//                   device->objectIdNum(), object->objectIdNum(), propId);
+//            Q_ASSERT(false);
+//            return;
+//        }
 
-        if (0 == covData)
-            covData = new CovNotificationRequestData((*subscriptionsIt)._subscriberProcId, device->objectId(),
-                                                     (*subscriptionsIt)._monitoredObjectId, (*subscriptionsIt)._timeLeft);
+//        if (0 == covData)
+//            covData = new CovNotificationRequestData((*subscriptionsIt)._subscriberProcId, device->objectId(),
+//                                                     (*subscriptionsIt)._monitoredObjectId, (*subscriptionsIt)._timeLeft);
 
-        foreach (Bacnet::PropertyValue *data, dataList) {
-            covData->_listOfValues.append(data);
-        }
+//        foreach (Bacnet::PropertyValue *data, dataList) {
+//            covData->_listOfValues.append(data);
+//        }
 
-        if ((*subscriptionsIt)._issueConfNotification) {
-            //send
-            CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
-            covData = 0;//so that next time, new one is created.
-            _tsm->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
-        } else {
-            _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
-        }
-    }
-}
+//        if ((*subscriptionsIt)._issueConfNotification) {
+//            //send
+//            CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
+//            covData = 0;//so that next time, new one is created.
+//            _tsm->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
+//        } else {
+//            _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
+//        }
+//    }
+//}
 
 void InternalObjectsHandler::addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler)
 {
@@ -120,8 +120,7 @@ QList<BacnetDeviceObject*> InternalObjectsHandler::devices()
 }
 
 InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
-        _tsm(tsm),
-        _totalCOVsubscriptionsNum(0)
+    _tsm(tsm)
 {
     Q_CHECK_PTR(_tsm);
 }

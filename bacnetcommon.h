@@ -450,7 +450,7 @@ namespace Bacnet
         SegmentedNOT        = 3
     };
 
-    struct ObjectIdStruct {
+    struct  ObjectIdStruct {
         BacnetObjectType::ObjectType objectType;
         quint32 instanceNum;
     };
@@ -621,6 +621,7 @@ namespace Bacnet {
             BACnetDateTime,
             BACnetCOVSubscription,
             BACnetPropertyRefernce,
+            BACnetObjectPropertyReference,
             BACnetArray           = 0x010000,
             BACnetList            = 0x020000,
             BACnetSequence        = BACnetArray | BACnetList,

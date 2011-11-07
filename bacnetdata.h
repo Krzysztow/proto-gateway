@@ -3,10 +3,13 @@
 
 #include <QtCore>
 #include "bacnetcommon.h"
+#include "datavisitor.h"
 
 class BacnetTagParser;
 namespace Bacnet
 {
+    class DataVisitor;
+
     class BacnetDataInterface
     {
     public:
@@ -26,6 +29,9 @@ namespace Bacnet
 
         virtual DataType::DataType typeId() = 0;
 
+    public://visitee interface
+        DECLARE_VISITABLE_FUNCTION(BacnetDataInterface)
+
     protected:
         //! this function encodes the opening (and closing tag) and invokes overridef \sa toRaw(quint8* ptrStart) one.
         qint32 toRawTagEnclosed_helper(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
@@ -34,7 +40,15 @@ namespace Bacnet
         //! Another helper, this time encoding not sequence, but choice value.
         qint32 fromRawChoiceValue_helper(BacnetTagParser &parser, QList<DataType::DataType> choices, Bacnet::BacnetDataInterface *choiceValue);
 
-
+        template<class T>
+        void visitTemplate_helper(T *visitee, DataVisitor *visitor)
+        {
+            //default implementation
+            Q_CHECK_PTR(visitee);
+            Q_CHECK_PTR(visitor);
+            if (0 != visitor)
+                visitor->visit(visitee);
+        }
     };
 }
 

@@ -7,7 +7,7 @@
 
 namespace Bacnet {
 
-template <class T>
+template <class T, class V>
 class CovIncrementHandler:
         public DataVisitor
 {
@@ -41,20 +41,28 @@ public:
                                            EqualWithinInvrement == _state);}
     ComparisonState state() {return _state;}
 
+public://functions used to parse and write cov increment
+    qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
+    qint32 toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
+    qint32 fromRaw(BacnetTagParser &parser);
+    qint32 fromRaw(BacnetTagParser &parser, quint8 tagNum);
+
 private:
-    void comparison_helper(T dataValue);
+    void comparison_helper(V dataValue);
 
 private:
     ComparisonState _state;
 
 public:
-    CovIncrementHandler(T &covIncremenet, T &lastValue);
+    CovIncrementHandler(T &covIncremenet);
+    CovIncrementHandler();
 
-private:
-    T _lastInformedValue;
+public:
+    V _lastInformedValue;
     T _covIncrement;
 };
 
+typedef class CovIncrementHandler<Real, float> CovRealIcnrementHandler;
 }
 
 #endif // COVINCREMENTHANDLERS_H

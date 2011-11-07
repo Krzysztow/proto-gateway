@@ -38,7 +38,6 @@ public://functions overridden from PropertyOwner
     virtual void propertyValueChanged(Property *property);
 
     //! Adds support of COV for present value with it's COV increment. If previous one existed - gets deleted!
-    void addCOVSupport(Bacnet::RealCovSupport *support);
     virtual QList<Bacnet::PropertyValue*> readCovValuesList();
 
 public:

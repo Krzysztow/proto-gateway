@@ -4,26 +4,33 @@
 
 using namespace Bacnet;
 
-template <class T>
-CovIncrementHandler<T>::CovIncrementHandler(T &covIncremenet, T &lastValue):
-    _lastInformedValue(lastValue),
+template <class T, class V>
+CovIncrementHandler<T, V>::CovIncrementHandler(T &covIncremenet):
+    _lastInformedValue(0),
     _covIncrement(covIncremenet)
 {
 }
 
-template <class T>
-void CovIncrementHandler<T>::comparison_helper(T dataValue)
+template <class T, class V>
+CovIncrementHandler<T, V>::CovIncrementHandler():
+    _lastInformedValue(0)
+{
+    _covIncrement.setValue(0);
+}
+
+template <class T, class V>
+void CovIncrementHandler<T, V>::comparison_helper(V dataValue)
 {
     if (_lastInformedValue == dataValue)
         _state = Equal;
     else if ( (dataValue >= _lastInformedValue) ) {
-        if (_lastInformedValue + _covIncrement > dataValue)
+        if (_lastInformedValue + _covIncrement.value() > dataValue)
             _state = EqualWithinInvrement;
         else
             _state = NotEqualWithinIncrement;
     }
     else if (dataValue <= _lastInformedValue) {
-        if (_lastInformedValue - _covIncrement < dataValue)
+        if (_lastInformedValue - _covIncrement.value() < dataValue)
             _state = EqualWithinInvrement;
         else
             _state = NotEqualWithinIncrement;
@@ -33,47 +40,68 @@ void CovIncrementHandler<T>::comparison_helper(T dataValue)
         _lastInformedValue = dataValue;
 }
 
-template <class T>
-void CovIncrementHandler<T>::visit(Real &data)
+template <class T, class V>
+void CovIncrementHandler<T, V>::visit(Real &data)
 {
-    T dataValue = data.value();
-    comparison_helper(dataValue);
+    comparison_helper(data.value());
 }
 
-template <class T>
-void CovIncrementHandler<T>::visit(Double &data)
+template <class T, class V>
+void CovIncrementHandler<T, V>::visit(Double &data)
 {
-    T dataValue = data.value();
-    comparison_helper(dataValue);
+    comparison_helper(data.value());
 }
 
-template <class T>
-void CovIncrementHandler<T>::visit(UnsignedInteger &data)
+template <class T, class V>
+void CovIncrementHandler<T, V>::visit(UnsignedInteger &data)
 {
-    T dataValue = data.value();
-    comparison_helper(dataValue);
+    comparison_helper(data.value());
 }
 
-template <class T>
-void CovIncrementHandler<T>::visit(SignedInteger &data)
+template <class T, class V>
+void CovIncrementHandler<T, V>::visit(SignedInteger &data)
 {
-    T dataValue = data.value();
-    comparison_helper(dataValue);
+    comparison_helper(data.value());
 }
 
-template <class T>
-void CovIncrementHandler<T>::visit(BacnetDataInterface &data)
+template <class T, class V>
+void CovIncrementHandler<T, V>::visit(BacnetDataInterface &data)
 {
     Q_UNUSED(data);
-    qDebug("CovIncrementHandler<T>::visit(BacnetDataInterface&) always marks as not equal!");
+    qDebug("CovIncrementHandler<T, V>::visit(BacnetDataInterface&) always marks as not equal!");
     //! \todo Or maybe we should compare qvariants?
     _state = NotEqualWithinIncrement;
 }
 
+template <class T, class V>
+qint32 CovIncrementHandler<T, V>::toRaw(quint8 *ptrStart, quint16 buffLength)
+{
+    return _covIncrement.toRaw(ptrStart, buffLength);
+}
+
+template <class T, class V>
+qint32 CovIncrementHandler<T, V>::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
+{
+    return _covIncrement.toRaw(ptrStart, buffLength, tagNumber);
+}
+
+template <class T, class V>
+qint32 CovIncrementHandler<T, V>::fromRaw(BacnetTagParser &parser)
+{
+    return _covIncrement.fromRaw(parser);
+}
+
+template <class T, class V>
+qint32 CovIncrementHandler<T, V>::fromRaw(BacnetTagParser &parser, quint8 tagNum)
+{
+    return _covIncrement.fromRaw(parser, tagNum);
+}
+
+
 namespace Bacnet {//otherwise compilator complains there are specializations in a differenet namespace
 
 template <>
-void CovIncrementHandler<float>::visit(BacnetDataInterface &data)
+void CovIncrementHandler<Real, float>::visit(BacnetDataInterface &data)
 {
     QVariant dataValue = data.toInternal();
     if (dataValue.canConvert(QVariant::Double)) {
@@ -85,49 +113,49 @@ void CovIncrementHandler<float>::visit(BacnetDataInterface &data)
     }
 }
 
-template <>
-void CovIncrementHandler<double>::visit(BacnetDataInterface &data)
-{
-    QVariant dataValue = data.toInternal();
-    if (dataValue.canConvert(QVariant::Double)) {
-        bool ok;
-        double value = dataValue.toDouble(&ok);
-        Q_ASSERT(ok);
-        if (ok)
-            comparison_helper(value);
-    }
+//template <>
+//void CovIncrementHandler<double>::visit(BacnetDataInterface &data)
+//{
+//    QVariant dataValue = data.toInternal();
+//    if (dataValue.canConvert(QVariant::Double)) {
+//        bool ok;
+//        double value = dataValue.toDouble(&ok);
+//        Q_ASSERT(ok);
+//        if (ok)
+//            comparison_helper(value);
+//    }
+//}
+
+//template <>
+//void CovIncrementHandler<qint32>::visit(BacnetDataInterface &data)
+//{
+//    QVariant dataValue = data.toInternal();
+//    if (dataValue.canConvert(QVariant::Int)) {
+//        bool ok;
+//        qint32 value = dataValue.toInt(&ok);
+//        Q_ASSERT(ok);
+//        if (ok)
+//            comparison_helper(value);
+//    }
+//}
+
+//template <>
+//void CovIncrementHandler<quint32>::visit(BacnetDataInterface &data)
+//{
+//    QVariant dataValue = data.toInternal();
+//    if (dataValue.canConvert(QVariant::Int)) {
+//        bool ok;
+//        quint32 value = dataValue.toInt(&ok);
+//        Q_ASSERT(ok);
+//        if (ok)
+//            comparison_helper(value);
+//    }
+//}
+
 }
 
-template <>
-void CovIncrementHandler<qint32>::visit(BacnetDataInterface &data)
-{
-    QVariant dataValue = data.toInternal();
-    if (dataValue.canConvert(QVariant::Int)) {
-        bool ok;
-        qint32 value = dataValue.toInt(&ok);
-        Q_ASSERT(ok);
-        if (ok)
-            comparison_helper(value);
-    }
-}
-
-template <>
-void CovIncrementHandler<quint32>::visit(BacnetDataInterface &data)
-{
-    QVariant dataValue = data.toInternal();
-    if (dataValue.canConvert(QVariant::Int)) {
-        bool ok;
-        quint32 value = dataValue.toInt(&ok);
-        Q_ASSERT(ok);
-        if (ok)
-            comparison_helper(value);
-    }
-}
-
-}
-
-//avoiding linking problems
-template class CovIncrementHandler<float>;
-template class CovIncrementHandler<double>;
-template class CovIncrementHandler<quint32>;
-template class CovIncrementHandler<qint32>;
+////avoiding linking problems
+template class CovIncrementHandler<Real, float>;
+//template class CovIncrementHandler<double>;
+//template class CovIncrementHandler<quint32>;
+//template class CovIncrementHandler<qint32>;

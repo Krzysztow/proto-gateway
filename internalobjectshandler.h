@@ -41,20 +41,20 @@ public:
     QHash<int, InternalRequestHandler*> _asynchRequests;
     Bacnet::BacnetTSM2 *_tsm;
 
-    /****************************
-          COV handling part
-    ****************************/
-public:
-//    static const int MAX_TOTAL_COV_SUBSCRIPTIONS = 64;
-//    void subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
+//    /****************************
+//          COV handling part
+//    ****************************/
+//public:
+////    static const int MAX_TOTAL_COV_SUBSCRIPTIONS = 64;
+////    void subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
 
-private:
+//private:
 
-    typedef QList<CovSubscription> TCovObjectSubscriptionList;
-    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
-    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
-    TCovDevicesSubscriptions _covSubscriptions;
-    int _totalCOVsubscriptionsNum;
+//    typedef QList<CovSubscription> TCovObjectSubscriptionList;
+//    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
+//    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
+//    TCovDevicesSubscriptions _covSubscriptions;
+//    int _totalCOVsubscriptionsNum;
 };
 
 

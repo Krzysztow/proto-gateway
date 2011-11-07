@@ -17,6 +17,13 @@ SubscribeCOVServiceData::SubscribeCOVServiceData():
     _monitoredObjectId.instanceNum = Bacnet::InvalidInstanceNumber;
 }
 
+SubscribeCOVServiceData::~SubscribeCOVServiceData()
+{
+    clearHasPropertyReference();
+    clearCovIncrement();
+}
+
+
 qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
 {
     Q_CHECK_PTR(startPtr);
@@ -42,6 +49,7 @@ qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
         return ret;
     }
     actualPtr += ret;
+    leftLength -= ret;
 
     //encode issue confirmed notification, if present
     if (isConfirmedNotificationPresent()) {
@@ -52,6 +60,7 @@ qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
             return ret;
         }
         actualPtr += ret;
+        leftLength -= ret;
     }
 
     //encode lifetime
@@ -63,6 +72,30 @@ qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
             return ret;
         }
         actualPtr += ret;
+        leftLength -= ret;
+    }
+
+    //if this is a sunscribeCovProperty request, it has more parameters to encode
+    if (hasPropertyReference()) {
+        ret = _propReference->toRaw(actualPtr, leftLength, 4);
+        if (ret <= 0) {
+            Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode property ref.");
+            qDebug("%s : Cannot encode prop ref: %d", __PRETTY_FUNCTION__, ret);
+            return ret;
+        }
+        actualPtr += ret;
+        leftLength -= ret;
+
+        if (hasCovIncrement()) {
+            ret = _propReference->toRaw(actualPtr, leftLength, 5);
+            if (ret <= 0) {
+                Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode cov increment.");
+                qDebug("%s : Cannot encode cov increment: %d", __PRETTY_FUNCTION__, ret);
+                return ret;
+            }
+            actualPtr += ret;
+            leftLength -= ret;
+        }
     }
 
     return (actualPtr - startPtr);
@@ -118,33 +151,34 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         clearLifetimePresent();
     }
 
-    //in case of BACnet subscribeCOV-Request we may have two additional fields
+    //in case of BACnet subscribeCOVProperty-Request we may have two additional fields
     ret = bParser.nextTagNumber(&convOkOrCtxt);
     if (4 == ret && convOkOrCtxt) {//monitored property id (BacnetpropertyReference is there);
         if (0 == _propReference) _propReference = new Bacnet::PropertyReference();
-        ret = _propReference->fromRaw(parser, 4);
+        ret = _propReference->fromRaw(bParser, 4);
         if (ret < 0)
             return -BacnetReject::ReasonInconsistentParameters;
         consumedBytes += ret;
 
         ret = bParser.nextTagNumber(&convOkOrCtxt);
-
         //check for COV increment
-        if (5 == ret && convOkOrCtxt){
+        if ( (5 == ret) && convOkOrCtxt){
             Q_ASSERT(_propReference != 0);
             if (0 == _propReference)
                 return -BacnetReject::ReasonInconsistentParameters;//whene COVIncrement is  provided, then this could happen only for subscribeCOV-Request
 
-            if (0 != _covIncrement)  {
-                delete _covIncrement;
-                _covIncrement = 0;
+            if (0 == _covIncrement)  {
+                _covIncrement = new CovRealIcnrementHandler();
             }
-            ret = BacnetTagParser::parseStructuredData(bParser, _monitoredObjectId.objectType, _propReference->identifier(),
-                                                       _propReference->arrayIndex(), 5, &_covIncrement);
+
+            ret = _covIncrement->fromRaw(bParser, 5);
             if (ret <= 0) //something worng, check it
                 return -BacnetReject::ReasonInconsistentParameters;
             consumedBytes += ret;
         }
+    } else {//if this was not
+        clearHasPropertyReference();
+        clearCovIncrement();
     }
 
     if (bParser.hasNext())

@@ -78,7 +78,10 @@ SOURCES += main.cpp \
     covsupport.cpp \
     covnotificationrequestdata.cpp \
     covconfnotificationservicehandler.cpp \
-    bacnetcovsupport.cpp
+    bacnetcovsupport.cpp \
+    datavisitor.cpp \
+    covincrementhandlers.cpp \
+    internalsubscribecovservicehandler.cpp
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
     bacnetbbmdhandler.h \
@@ -155,7 +158,18 @@ HEADERS += bacnetvirtuallinklayer.h \
     covsupport.h \
     covnotificationrequestdata.h \
     covconfnotificationservicehandler.h \
-    bacnetcovsupport.h
-OTHER_FILES += 
+    bacnetcovsupport.h \
+    datavisitor.h \
+    covincrementhandlers.h \
+    internalsubscribecovservicehandler.h
+OTHER_FILES +=
+
+
+
+
+
+
+
+
 
 
