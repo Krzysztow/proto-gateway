@@ -122,6 +122,13 @@ int AnalogInputObject::ensurePropertyReadySet(Bacnet::PropertyValueStruct &write
     return Property::UnknownError;
 }
 
+const QList<BacnetProperty::Identifier> &AnalogInputObject::covProperties()
+{
+    static QList<BacnetProperty::Identifier> identifiers =
+            QList<BacnetProperty::Identifier>() << BacnetProperty::PresentValue << BacnetProperty::StatusFlags;
+    return identifiers;
+}
+
 QVariant::Type AnalogInputObject::variantTypeForProperty_helper(BacnetProperty::Identifier propertyId)
 {
     switch (propertyId)
@@ -194,8 +201,8 @@ void AnalogInputObject::asynchActionFinished(int asynchId, Property *property, P
 //    return valuesRead;
 //}
 
-//void AnalogInputObject::propertyValueChanged(Property *property)
-//{
+void AnalogInputObject::propertyValueChanged(Property *property)
+{
 //    Q_CHECK_PTR(property);
 //    /** \note Some simplifications are introduced. We compare agains COV increment only a present value. Otherwise all the other
 //      property changes are forwarded.
@@ -213,4 +220,4 @@ void AnalogInputObject::asynchActionFinished(int asynchId, Property *property, P
 //    } else {
 //        _parentDevice->propertyValueChanged(this, propId);
 //    }
-//}
+}

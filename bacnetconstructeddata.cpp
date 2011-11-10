@@ -326,12 +326,12 @@ DataType::DataType PropertyReference::typeId()
     return DataType::BACnetPropertyRefernce;
 }
 
-BacnetProperty::Identifier PropertyReference::identifier()
+BacnetProperty::Identifier PropertyReference::propIdentifier()
 {
     return _identifier;
 }
 
-quint32 PropertyReference::arrayIndex()
+quint32 PropertyReference::propArrayIndex()
 {
     return _arrayIdx;
 }
@@ -486,9 +486,9 @@ const ObjectIdentifier *Recipient::objId() const
 qint32 Recipient::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
     if (0 != _address)
-        return _address->toRaw(ptrStart, buffLength);
+        return _address->toRaw(ptrStart, buffLength, 0);
     else if (0 != _objectId)
-        return _objectId->toRaw(ptrStart, buffLength);
+        return _objectId->toRaw(ptrStart, buffLength, 1);
     else
         Q_ASSERT(false);
 
@@ -664,4 +664,140 @@ BacnetProperty::Identifier ObjectPropertyReference::propId()
 quint32 ObjectPropertyReference::arrayIdx()
 {
     return _arrayIdx;
+}
+
+ObjectPropertyReference::ObjectPropertyReference(ObjectIdentifier &objId, BacnetProperty::Identifier propId, quint32 arrayIdx):
+    _objId(objId),
+    _propId(propId),
+    _arrayIdx(arrayIdx)
+{
+}
+
+bool ObjectPropertyReference::compareParameters(ObjectIdentifier &objId, BacnetProperty::Identifier propId, quint32 arrayIdx) const
+{
+    return ( (objId == _objId) && (propId == _propId) && (arrayIdx == _arrayIdx) );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+RecipientProcess::RecipientProcess(BacnetAddress &address, quint32 processId):
+    _recipient(address),
+    _procId(processId)
+{
+
+}
+
+RecipientProcess::RecipientProcess(ObjectIdStruct objectId, quint32 processId):
+    _recipient(objectId),
+    _procId(processId)
+{
+
+}
+
+quint32 RecipientProcess::processId()
+{
+    return _procId.value();
+}
+
+bool RecipientProcess::operator==(const RecipientProcess &other) const
+{
+    return ( (this->_procId == other._procId)/* &&
+             (this->_recipient == other._recipient)*/);
+}
+
+bool RecipientProcess::compare(BacnetAddress &address, quint32 processId)
+{
+    Q_ASSERT(processId != 0);
+    if (_recipient.address() == 0) {
+        qDebug("%s : address not specified!", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    return ( (processId == _procId.value()) && (*(_recipient.address()) == address) );
+}
+
+bool RecipientProcess::compare(ObjectIdStruct &objId, quint32 processId)
+{
+    Q_ASSERT(processId != 0);
+    if (_recipient.objId() == 0) {
+        qDebug("%s : objId not specified!", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    return ( (processId == _procId.value()) && (*(_recipient.objId()) == objId) );
+}
+
+qint32 RecipientProcess::toRaw(quint8 *ptrStart, quint16 buffLength)
+{
+    quint32 total(0);
+    qint32 ret(0);
+    quint8 *actualPtr(ptrStart);
+
+    //encode recipient
+    ret = _recipient.toRaw(actualPtr, buffLength, 0);
+    if (ret < 0)
+        return ret;
+    total += ret;
+    actualPtr += ret;
+    buffLength -= ret;
+
+    //encode process id
+    ret = _procId.toRaw(actualPtr, buffLength, 1);
+    if (ret < 0)
+        return ret;
+    total += ret;
+//    actualPtr += ret;
+//    buffLength -= ret;
+
+    return total;
+}
+
+qint32 RecipientProcess::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
+{
+    return toRawTagEnclosed_helper(ptrStart, buffLength, tagNumber);
+}
+
+qint32 RecipientProcess::fromRaw(BacnetTagParser &parser)
+{
+    qint32 total(0);
+    qint32 ret(0);
+
+    //decode recipient
+    ret = _recipient.fromRaw(parser, 0);
+    if (ret < 0) {
+        qDebug("%s : Can't parse recipient", __PRETTY_FUNCTION__);
+        return BacnetError::CodeMissingRequiredParameter;
+    }
+    total += ret;
+
+    //decode process id
+    ret = _procId.fromRaw(parser, 1);
+    if (ret < 0) {
+        qDebug("%s : Can't parse process Id", __PRETTY_FUNCTION__);
+        return BacnetError::CodeMissingRequiredParameter;
+    }
+    total += ret;
+
+    return total;
+}
+
+qint32 RecipientProcess::fromRaw(BacnetTagParser &parser, quint8 tagNum)
+{
+    return fromRawTagEnclosed_helper(parser, tagNum);
+}
+
+bool RecipientProcess::setInternal(QVariant &value)
+{
+    Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
+    return false;
+}
+
+QVariant RecipientProcess::toInternal()
+{
+    Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
+    return QVariant();
+}
+
+DataType::DataType RecipientProcess::typeId()
+{
+    return DataType::BACnetRecipientProcess;
 }

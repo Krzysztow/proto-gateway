@@ -7,6 +7,8 @@
 
 namespace Bacnet {
 
+class BacnetTagParser;
+
 template <class T, class V>
 class CovIncrementHandler:
         public DataVisitor

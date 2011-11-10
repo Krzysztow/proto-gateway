@@ -1,10 +1,39 @@
-//#ifndef COVSUPPORT_H
-//#define COVSUPPORT_H
+#ifndef COVSUPPORT_H
+#define COVSUPPORT_H
 
-//#include <QVariant>
-//#include "bacnetprimitivedata.h"
+#include "bacnetcovsubscription.h"
 
-//namespace Bacnet {
+namespace Bacnet {
+
+class Error;
+class CovRealIcnrementHandler;
+
+class CovSupport
+{
+public:
+    CovSupport():
+        _incrementHandler(0)
+    {}
+    ~CovSupport();
+
+    //so far this is not compulsory. Function returns 0 on default, if not supported.
+    virtual const QList<BacnetProperty::Identifier> &covProperties() = 0;
+
+    void addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &covData, BacnetAddress &requester, Bacnet::Error *error);
+    void rmCovSubscription(quint32 processId, BacnetAddress &requester, Bacnet::ObjectIdentifier &monitoredObjectId, Bacnet::PropertyReference &propReference, Bacnet::Error *error);
+
+    void setDefaultIncrementHandler(CovRealIcnrementHandler *covIncrement);
+    //! \note If the value is of real type, increment handler visits it to check if notification of subscribers is needed. Otherwise, notification is needed (because CDM invokes other functions
+    //  only if change occured.
+    void valueChanged(BacnetDataInterface *value);
+
+protected:
+    QList<Bacnet::CovSubscription> _subscriptions;
+    //this increment should be used only when
+    CovRealIcnrementHandler *_incrementHandler;
+};
+
+
 
 
 //    /////////////////////////////////////////////////////
@@ -56,55 +85,5 @@
 
 //    typedef ConcreteCovSupport<float, Bacnet::Real> RealCovSupport;
 //    typedef ConcreteCovSupport<double, Bacnet::Double> DoubleCovSupport;
-
-//    class AnyCovSupport:
-//            public CovSupport
-//    {
-//        public:
-//            virtual bool hasChangeOccured(QVariant &actualValue) = 0;
-//            virtual void setCovIncrement(BacnetDataInterface *newIncrement) = 0;
-//            virtual BacnetDataInterface *covIncrement() = 0;
-//    };
-
-//    //    /////////////////////////////////////////////////////
-//    //    ///////////////////RealCovSupport////////////////////
-//    //    /////////////////////////////////////////////////////
-//    //    class RealCovSupport:
-//    //            public CovSupport
-//    //    {
-//    //    public:
-//    //        RealCovSupport(float covIncrement, float lastValue = 0);
-//    //        void setCovIncrement(float covIncrement);
-
-//    //    public://overriden from CovSupport
-//    //        virtual bool hasChangeOccured(QVariant &actualValue);
-//    //        virtual void setCovIncrement(BacnetDataInterface *newIncrement);
-//    //        virtual BacnetDataInterface *covIncrement();
-
-//    //    private:
-//    //        float _lastValue;
-//    //        Bacnet::Real _covIncrement;
-//    //    };
-
-
-//    //    /////////////////////////////////////////////////////
-//    //    ///////////////////DoubleCovSupport//////////////////
-//    //    /////////////////////////////////////////////////////
-//    //    class DoubleCovSupport:
-//    //            public CovSupport
-//    //    {
-//    //    public:
-//    //        DoubleCovSupport(double covIncrement, double lastValue = 0);
-//    //        void setCovIncrement(double covIncrement);
-
-//    //    public://overriden from CovSupport
-//    //        virtual bool hasChangeOccured(QVariant &actualValue);
-//    //        virtual void setCovIncrement(BacnetDataInterface *newIncrement);
-//    //        virtual BacnetDataInterface *covIncrement();
-
-//    //    private:
-//    //        double _lastValue;
-//    //        Bacnet::Double _covIncrement;
-//    //    };
-//}
-//#endif // COVSUPPORT_H
+}
+#endif // COVSUPPORT_H

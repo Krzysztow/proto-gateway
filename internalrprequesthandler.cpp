@@ -5,6 +5,8 @@
 #include "bacnetreadpropertyack.h"
 #include "internalobjectshandler.h"
 
+using namespace Bacnet;
+
 InternalRPRequestHandler::InternalRPRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                    InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
 InternalConfirmedRequestHandler(/*tsm, device, internalHandler, externalHandler*/),

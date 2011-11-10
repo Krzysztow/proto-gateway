@@ -22,7 +22,8 @@ namespace BacnetProperty{enum Identifier;}
 
 class Property;
 
-class BacnetObject
+class BacnetObject:
+        public Bacnet::CovSupport
 {
 public:
     BacnetObject(Bacnet::ObjectIdStruct id, BacnetDeviceObject *parentDevice);
@@ -38,11 +39,6 @@ public:
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error) = 0;
 
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error) = 0;
-
-    //so far this is not compulsory. Function returns 0 on default, if not supported.
-    virtual QList<Bacnet::PropertyValue*> readCovValuesList();
-    virtual void addOrUpdateCov(Bacnet::SubscribeCOVServiceData &covData, BacnetAddress &requester, Bacnet::Error *error);
-
 
     Bacnet::ObjectIdStruct &objectId();
     quint32 objectIdNum();

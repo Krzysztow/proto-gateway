@@ -1,5 +1,7 @@
 #include "covnotificationrequestdata.h"
 
+using namespace Bacnet;
+
 CovNotificationRequestData::CovNotificationRequestData()
 {
 }

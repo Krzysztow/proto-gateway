@@ -33,7 +33,7 @@ qint16 BacnetWritePropertyService::fromRaw(quint8 *servicePtr, quint16 length)
     qint16 ret(0);
     bool convOk;
 
-    BacnetTagParser bParser(servicePtr, length);
+    Bacnet::BacnetTagParser bParser(servicePtr, length);
 
     //get object identifier
     ret = bParser.parseNext();
@@ -51,7 +51,7 @@ qint16 BacnetWritePropertyService::fromRaw(quint8 *servicePtr, quint16 length)
 
     //we are supposed to parse Abstract type, which type depends on the object type and property Id
     _propValue.value = 0;
-    ret = BacnetTagParser::parseStructuredData(bParser, _objectId.objectType, _propValue.propertyId,
+    ret = Bacnet::BacnetTagParser::parseStructuredData(bParser, _objectId.objectType, _propValue.propertyId,
                                                _propValue.arrayIndex, 3, &_propValue.value);
     if (ret <= 0) //something worng, check it
         return -1;

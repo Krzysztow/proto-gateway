@@ -7,14 +7,13 @@ using namespace Bacnet;
 
 SubscribeCOVServiceData::SubscribeCOVServiceData():
     _subscriberProcId(0),
+    _monitoredObjectId(),
     _issueConfNotification(false),
     _lifetime(0),
     _propReference(0),
     _covIncrement(0),
     _flags(0)//nothing set yet
 {
-    _monitoredObjectId.objectType = BacnetObjectType::Undefined;
-    _monitoredObjectId.instanceNum = Bacnet::InvalidInstanceNumber;
 }
 
 SubscribeCOVServiceData::~SubscribeCOVServiceData()
@@ -23,6 +22,10 @@ SubscribeCOVServiceData::~SubscribeCOVServiceData()
     clearCovIncrement();
 }
 
+bool SubscribeCOVServiceData::isCancellation()
+{
+    return ( isLifetimePresent() && isConfirmedNotificationPresent() );
+}
 
 qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
 {
@@ -42,7 +45,7 @@ qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
     leftLength -= ret;
 
     //encode high range limit
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, leftLength, _monitoredObjectId, true, 1);
+    ret = _monitoredObjectId.toRaw(actualPtr, leftLength, 1);
     if (ret <= 0) {//something wrong?
         Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode obj id.");
         qDebug("SubscribeCOVServiceData::toRaw() : Cannot encode obj id: %d", ret);
@@ -118,14 +121,13 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     if (!convOkOrCtxt)
         return -BacnetReject::ReasonInvalidParameterDataType;
     consumedBytes += ret;
+
     //monitored object id
-    ret = bParser.parseNext();
-    if (ret < 0 || !bParser.isContextTag(1))
+    ret = _monitoredObjectId.fromRaw(bParser, 1);
+    if (ret < 0)
         return -BacnetReject::ReasonMissingRequiredParameter;
-    _monitoredObjectId = bParser.toObjectId(&convOkOrCtxt);
-    if (!convOkOrCtxt)
-        return -BacnetReject::ReasonInvalidParameterDataType;
     consumedBytes += ret;
+
     //confirmed notifications flag OPTIONAL
     ret = bParser.nextTagNumber(&convOkOrCtxt);
     if (2 == ret && convOkOrCtxt) {//has the flag

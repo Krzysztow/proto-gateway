@@ -1079,10 +1079,10 @@ DataType::DataType Time::typeId()
 }
 
 //OBJECT IDENTIFIER
-ObjectIdentifier::ObjectIdentifier()
+ObjectIdentifier::ObjectIdentifier(BacnetObjectType::ObjectType type, quint32 instanceNum)
 {
-    _value.instanceNum = 0x3fffff;
-    _value.objectType = BacnetObjectType::Undefined;
+    _value.instanceNum = instanceNum;
+    _value.objectType = type;
 }
 
 ObjectIdentifier::ObjectIdentifier(Bacnet::ObjectIdStruct &objId):

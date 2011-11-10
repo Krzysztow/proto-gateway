@@ -110,7 +110,7 @@ bool BacnetAddress::isAddrInitialized() const
     return (_macAddrLength > 0);
 }
 
-bool BacnetAddress::operator ==(BacnetAddress &other)
+bool BacnetAddress::operator ==(const BacnetAddress &other) const
 {
     quint8 addrLength = macAddrLength();
     //if other address has length different address length, surely they can't be the same

@@ -369,10 +369,10 @@ int main(int argc, char *argv[])
     BacnetNetworkLayerHandler *netHandler = new BacnetNetworkLayerHandler();
     BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(netHandler);
 
-    Bacnet::BacnetTSM2 *tsm = new BacnetTSM2();
+    Bacnet::BacnetTSM2 *tsm = new Bacnet::BacnetTSM2();
 
     InternalObjectsHandler *intHandler = new InternalObjectsHandler(tsm);
-    ExternalObjectsHandler *extHandler = new ExternalObjectsHandler(tsm);
+    Bacnet::ExternalObjectsHandler *extHandler = new Bacnet::ExternalObjectsHandler(tsm);
     InternalAddress extObjHandlerAddress = 32;
     extHandler->addRegisteredAddress(extObjHandlerAddress);
 
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
     extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
                                   BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
                                   0x00000001,
-                                  BacnetExternalObjects::Access_ReadRequest);
+                                  Bacnet::BacnetExternalObjects::Access_ReadRequest);
 
     PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
     proto2->addProperty(extObserver);

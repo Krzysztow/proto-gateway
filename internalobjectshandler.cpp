@@ -42,8 +42,8 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
     }
 }
 
-//void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId)
-//{
+void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId)
+{
 //    Q_CHECK_PTR(device);
 //    Q_CHECK_PTR(object);
 ////    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
@@ -88,7 +88,7 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
 //            _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
 //        }
 //    }
-//}
+}
 
 void InternalObjectsHandler::addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler)
 {

@@ -4,6 +4,8 @@
 #include "propertyvalue.h"
 #include "sequenceof.h"
 
+using namespace Bacnet;
+
 BacnetConfirmedCOV::BacnetConfirmedCOV()
 {
 

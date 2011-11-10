@@ -156,8 +156,8 @@ public://iverridden BacnetDataInterface methods.
     virtual DataType::DataType typeId();
 
 public:
-    BacnetProperty::Identifier identifier();
-    quint32 arrayIndex();
+    BacnetProperty::Identifier propIdentifier();
+    quint32 propArrayIndex();
 
 private:
     BacnetProperty::Identifier _identifier;
@@ -180,10 +180,19 @@ public:
     virtual DataType::DataType typeId();
 
 public:
-    ObjectPropertyReference(ObjectIdentifier &objId, BacnetProperty::Identifier propId, quint32 arrayIdx);
+    ObjectPropertyReference(ObjectIdentifier &objId,
+                            BacnetProperty::Identifier propId = BacnetProperty::UndefinedProperty,
+                            quint32 arrayIdx = ArrayIndexNotPresent);
+
+    bool compareParameters(ObjectIdentifier &objId, BacnetProperty::Identifier propId = BacnetProperty::UndefinedProperty,
+                           quint32 arrayIdx = ArrayIndexNotPresent) const;
+
     ObjectIdentifier &objId();
     BacnetProperty::Identifier propId();
     quint32 arrayIdx();
+    bool operator==(const ObjectPropertyReference &other) const {return ( (_objId == other._objId) &&
+                                                                          (_propId == other._propId) &&
+                                                                          (_arrayIdx == other._arrayIdx));}
 
 private:
     ObjectIdentifier _objId;
@@ -210,6 +219,8 @@ public://iverridden BacnetDataInterface methods.
 public:
     Address(BacnetAddress &address);
     Address();
+
+    bool operator == (const Address &other) const {return (_bacAddress == other._bacAddress);}
 
 private:
     BacnetAddress _bacAddress;
@@ -245,6 +256,36 @@ private:
     ObjectIdentifier *_objectId;
     Address *_address;
 };
+
+class RecipientProcess:
+        public BacnetDataInterface
+{
+public://iverridden BacnetDataInterface methods.
+    virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
+    virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
+
+    virtual qint32 fromRaw(BacnetTagParser &parser);
+    virtual qint32 fromRaw(BacnetTagParser &parser, quint8 tagNum);
+
+    virtual bool setInternal(QVariant &value);
+    virtual QVariant toInternal();
+
+    virtual DataType::DataType typeId();
+
+public:
+    RecipientProcess(ObjectIdStruct objectId, quint32 processId);
+    RecipientProcess(BacnetAddress &address, quint32 processId);
+    quint32 processId();
+    bool compare(BacnetAddress &address, quint32 processId);
+    bool compare(ObjectIdStruct &objId, quint32 processId);
+
+    bool operator == (const RecipientProcess &other) const;
+
+private:
+    Recipient _recipient;
+    UnsignedInteger _procId;
+};
+
 
 }
 

@@ -1,11 +1,12 @@
-#include "bacnetcovsupport.h"
+#include "bacnetcovsubscription.h"
 
 #include "subscribecovservicedata.h"
+#include "bacnettagparser.h"
 
 using namespace Bacnet;
 
 CovSubscription::CovSubscription(SubscribeCOVServiceData &data, BacnetAddress &address):
-    _recipient(data._subscriberProcId, address),
+    _recipientProcess(address, data._subscriberProcId),
     _monitoredPropertyRef(data._monitoredObjectId),
     _issueConfNotification(data._issueConfNotification),
     _timeLeft(data._lifetime),
@@ -13,13 +14,34 @@ CovSubscription::CovSubscription(SubscribeCOVServiceData &data, BacnetAddress &a
 {
 }
 
+CovSubscription::~CovSubscription()
+{
+    delete _covIncrement;
+    _covIncrement = 0;
+}
+
 bool CovSubscription::compareSubscriptions(CovSubscription &subscription)
 {
-    return ( this->_recipient == subscription._recipient &&
+    return ( this->_recipientProcess == subscription._recipientProcess &&
              this->_monitoredPropertyRef == subscription._monitoredPropertyRef);
 }
 
+bool CovSubscription::compareParametrs(BacnetAddress &recipientAddress, quint32 recipientProcessId,
+                                       ObjectIdentifier &objectId, BacnetProperty::Identifier propertyId, quint32 propertyArrayIdx)
+{
+    return ( (_recipientProcess.compare(recipientAddress, recipientProcessId) &&
+              (_monitoredPropertyRef.compareParameters(objectId, propertyId, propertyArrayIdx))) );
+}
 
+void CovSubscription::update(quint32 lifetime, CovRealIcnrementHandler *covIncrement)
+{
+    _timeLeft = lifetime;
+    //remove old increment
+    if (0 != _covIncrement)
+        delete _covIncrement;
+
+    _covIncrement = covIncrement;
+}
 
 qint32 CovSubscription::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
@@ -27,7 +49,7 @@ qint32 CovSubscription::toRaw(quint8 *ptrStart, quint16 buffLength)
     qint32 total(0), ret;
 
     //code recipient
-    ret = _recipient.toRaw(actualPtr, buffLength, 0);
+    ret = _recipientProcess.toRaw(actualPtr, buffLength, 0);
     if (ret < 0) {
         qDebug("%s : error while coding recipient", __PRETTY_FUNCTION__);
         return -1;
@@ -68,7 +90,18 @@ qint32 CovSubscription::toRaw(quint8 *ptrStart, quint16 buffLength)
 
     //OPTIONAL
     //code COVIncrement
-    if (_)
+    if (0 != _covIncrement) {
+        ret = _covIncrement->toRaw(actualPtr, buffLength, 4);
+        if (ret < 0) {
+            qDebug("%s : error while coding time remaining", __PRETTY_FUNCTION__);
+            return -5;
+        }
+        total += ret;
+        actualPtr += ret;
+        buffLength -= ret;
+    }
+
+    return total;
  }
 
 qint32 CovSubscription::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
@@ -78,7 +111,48 @@ qint32 CovSubscription::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNu
 
 qint32 CovSubscription::fromRaw(BacnetTagParser &parser)
 {
+    qint32 ret(0), total(0);
+    bool okOrCtxt;
 
+    //decode recipient
+    ret = _recipientProcess.fromRaw(parser, 0);
+    if (ret < 0)
+        return ret;
+    total += ret;
+
+    //decode monitored property refference
+    ret = _monitoredPropertyRef.fromRaw(parser, 1);
+    if (ret < 0)
+        return ret;
+    total += ret;
+
+    //decode information aobut confirmed notifications
+    ret = parser.parseNext();
+    _issueConfNotification = parser.toBoolean(&okOrCtxt);
+    if ((ret < 0) || !okOrCtxt || !parser.isContextTag(2) )
+        return BacnetError::CodeMissingRequiredParameter;
+    total += ret;
+
+    //decode time remaining
+    ret = parser.parseNext();
+    _timeLeft = parser.toUInt(&okOrCtxt);
+    if ( (ret < 0) || !okOrCtxt || !parser.isContextTag(3) )
+        return BacnetError::CodeMissingRequiredParameter;
+    total += ret;
+
+    //cov increment?
+    ret = parser.nextTagNumber(&okOrCtxt);
+    if ( okOrCtxt && (4 == ret) ) {//has increment
+        if (0 == _covIncrement)
+            _covIncrement = new CovRealIcnrementHandler();
+
+        ret = _covIncrement->fromRaw(parser, 4);
+        if (ret < 0)
+            return ret;
+        total += ret;
+    }
+
+    return total;
 }
 
 qint32 CovSubscription::fromRaw(BacnetTagParser &parser, quint8 tagNum)
@@ -88,6 +162,7 @@ qint32 CovSubscription::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool CovSubscription::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, "CovSubscription::setInternal()", "Structured data types shouldn't be used for internal use!");
     return false;
 }

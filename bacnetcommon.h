@@ -615,6 +615,7 @@ namespace Bacnet {
             BACnetVTSession,
             BACnetSessionKey,
             BACnetRecipient,
+            BACnetRecipientProcess,
             BACnetAddressBinding,
             BACnetAddress,
             BACnetTimeStamp,

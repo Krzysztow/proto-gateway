@@ -1,107 +1,81 @@
-//#include "covsupport.h"
+#include "covsupport.h"
 
-//using namespace Bacnet;
+#include "error.h"
+#include "subscribecovservicedata.h"
+#include "bacnetaddress.h"
+#include "covincrementhandlers.h"
 
-//bool AnyCovSupport::hasChangeOccured(QVariant &actualValue)
-//{
-//    Q_UNUSED(actualValue);
-//    return true;//for other types than Real and Bool, whenever the value changes anyhow, we consider it as a significant change.
-//}
+using namespace Bacnet;
 
-//void AnyCovSupport::setCovIncrement(BacnetDataInterface *newIncrement)
-//{
-//    Q_CHECK_PTR(newIncrement);
-//    Q_ASSERT(false);
-//}
+CovSupport::~CovSupport()
+{
+    delete _incrementHandler;
+    _incrementHandler = 0;
+}
 
-//BacnetDataInterface *AnyCovSupport::covIncrement()
-//{
-//    return 0;
-//}
+void CovSupport::addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &covData, BacnetAddress &requester, Bacnet::Error *error)
+{
+    Q_CHECK_PTR(error);
 
-/////////////////////////////////////////////////////////
-///////////////////////RealCovSupport////////////////////
-/////////////////////////////////////////////////////////
+    //is property supported?
+    if (!covProperties().contains(covData._propReference->propIdentifier())) {
+        qDebug("%s : Property is not cov supported", __PRETTY_FUNCTION__);
+        error->setError(BacnetError::ClassObject, BacnetError::CodeNotCovProperty);
+        return;
+    }
 
-////RealCovSupport::RealCovSupport(float covIncrement, float lastValue):
-////        _lastValue(lastValue)
-////{
-////    QVariant value(covIncrement);
-////    _covIncrement.setInternal(value);
-////}
+    //first try to find such an existing subscription
+    Bacnet::CovSubscription *subscription(0);
+    foreach (Bacnet::CovSubscription subscr, _subscriptions) {
+        //! \warning Comparison is only done by requester address, not requester deviceIdentifier. It could be dangerous, when we make subscriptions with configuration files
+        // Then most probably we want to use device identifier, not address.
+        if (subscr.compareParametrs(requester, covData._subscriberProcId,
+                                    covData._monitoredObjectId, covData._propReference->propIdentifier(), covData._propReference->propArrayIndex())) {
+            //such subscription already exists, we take reference to it and will update values later.
+            subscription = &subscr;
+            break;
+        }
+    }
 
-////void RealCovSupport::setCovIncrement(float covIncrement)
-////{
-////    QVariant value(covIncrement);
-////    _covIncrement.setInternal(value);
-////}
+    if (0 == subscription) {
+        _subscriptions.append(Bacnet::CovSubscription(covData, requester));
+        subscription = &(_subscriptions.last());
+    }
 
-////bool RealCovSupport::hasChangeOccured(QVariant &actualValue)
-////{
-////    bool ok;
-////    float covIncrement = _covIncrement.toInternal().toFloat(&ok);
-////    Q_ASSERT(ok);
-////    if (!ok) return true; //if something wrong happens during conversion, treat it that value has changed!
-////    float actValue = actualValue.toFloat(&ok);
-////    Q_ASSERT(ok);
-////    if (!ok) return true;//same as above
-////    actValue -= _lastValue;
-////    return qAbs(actValue) >= covIncrement;
-////}
+    Q_ASSERT(0 != subscription);
+    if (subscription == 0) {
+        error->setError(BacnetError::ClassResources, BacnetError::CodeOther);
+        return;
+    }
 
-////void RealCovSupport::setCovIncrement(BacnetDataInterface *newIncrement)
-////{
-////    Q_ASSERT(newIncrement);
-////    QVariant value = newIncrement->toInternal();
-////    _covIncrement.setInternal(value);
-////}
+    subscription->update(covData._lifetime, covData.takeCovIncrement());
+}
 
-////BacnetDataInterface *RealCovSupport::covIncrement()
-////{
-////    return &_covIncrement;
-////}
+void CovSupport::rmCovSubscription(quint32 processId, BacnetAddress &requester, Bacnet::ObjectIdentifier &monitoredObjectId, Bacnet::PropertyReference &propReference, Bacnet::Error *error)
+{
+    Q_CHECK_PTR(error);
 
-/////////////////////////////////////////////////////////
-///////////////////////DoubleCovSupport//////////////////
-/////////////////////////////////////////////////////////
+    QList<Bacnet::CovSubscription>::Iterator it = _subscriptions.begin();
+    QList<Bacnet::CovSubscription>::Iterator end = _subscriptions.end();
+    for (; it != end; ++it) {
+        //! \warning Comparison is only done by requester address, not requester deviceIdentifier. It could be dangerous, when we make subscriptions with configuration files
+        // Then most probably we want to use device identifier, not address.
+        if (it->compareParametrs(requester, processId, monitoredObjectId, propReference.propIdentifier(), propReference.propArrayIndex()))
+            break;
+    }
 
-////DoubleCovSupport::DoubleCovSupport(double covIncrement, double lastValue):
-////        _lastValue(lastValue)
-////{
-////    QVariant value(covIncrement);
-////    _covIncrement.setInternal(value);
-////}
+    if (it != end) {
+        //such subscription exists, indeed.
+        qDebug("%s : subscription removed.", __PRETTY_FUNCTION__);
+        _subscriptions.erase(it);
+    }
+}
 
-////void DoubleCovSupport::setCovIncrement(double covIncrement)
-////{
-////    QVariant value(covIncrement);
-////    _covIncrement.setInternal(value);
-////}
-
-////bool DoubleCovSupport::hasChangeOccured(QVariant &actualValue)
-////{
-////    bool ok;
-////    double covIncrement = _covIncrement.toInternal().toDouble(&ok);
-////    Q_ASSERT(ok);
-////    if (!ok) return true; //if something wrong happens during conversion, treat it that value has changed!
-////    double actValue = actualValue.toDouble(&ok);
-////    Q_ASSERT(ok);
-////    if (!ok) return true;//same as above
-////    actValue -= _lastValue;
-////    return qAbs(actValue) >= covIncrement;
-////}
-
-////void DoubleCovSupport::setCovIncrement(BacnetDataInterface *newIncrement)
-////{
-////    Q_ASSERT(newIncrement);
-////    QVariant value = newIncrement->toInternal();
-////    _covIncrement.setInternal(value);
-////}
-
-////BacnetDataInterface *DoubleCovSupport::covIncrement()
-////{
-////    return &_covIncrement;
-////}
+void CovSupport::setDefaultIncrementHandler(CovRealIcnrementHandler *covIncrement)
+{
+    delete _incrementHandler;
+    _incrementHandler = covIncrement;
+}
 
 
 /////////////////////////////////////////////////////////////

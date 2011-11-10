@@ -108,7 +108,7 @@ public:
     /**
       Compares two BacnetAddresses
       */
-    bool operator ==(BacnetAddress &other);
+    bool operator ==(const BacnetAddress &other) const;
 
     /**
       The function returns pointer to _address table.

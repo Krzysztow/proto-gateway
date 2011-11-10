@@ -5,10 +5,10 @@
 #include "bacnetcommon.h"
 #include "datavisitor.h"
 
-class BacnetTagParser;
 namespace Bacnet
 {
     class DataVisitor;
+    class BacnetTagParser;
 
     class BacnetDataInterface
     {

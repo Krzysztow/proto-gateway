@@ -62,6 +62,7 @@ namespace Bacnet
     public:
         void setValue(quint32 value);
         quint32 value();
+        bool operator==(const UnsignedInteger &other) const {return (this->_value == other._value);}
 
     public:
         DECLARE_VISITABLE_FUNCTION(UnsignedInteger);
@@ -297,8 +298,16 @@ namespace Bacnet
         virtual DataType::DataType typeId();
 
     public:
-        ObjectIdentifier();
+        ObjectIdentifier(BacnetObjectType::ObjectType type = BacnetObjectType::Undefined,
+                quint32 instanceNum = Bacnet::InvalidInstanceNumber);
         ObjectIdentifier(Bacnet::ObjectIdStruct &objId);
+
+        quint32 instanceNumber() {return _value.instanceNum;}
+        BacnetObjectType::ObjectType type() {return _value.objectType;}
+        bool operator==(const ObjectIdentifier &other) const {return ( (_value.instanceNum == other._value.instanceNum) &&
+                                                                        (_value.objectType == other._value.objectType) );}
+        bool operator==(const ObjectIdStruct &other) const { return ( (_value.instanceNum == other.instanceNum) &&
+                                                                      (_value.objectType == other.objectType) );}
 
     private:
         Bacnet::ObjectIdStruct _value;

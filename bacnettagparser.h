@@ -15,7 +15,7 @@
 #define CLOSE_TAG (0x00 | BitFields::Bit0 | BitFields::Bit1 | BitFields::Bit2 | BitFields::Bit3)
 
 
-using namespace Bacnet;
+namespace Bacnet {
 
 class BacnetTagParser
 {
@@ -238,7 +238,6 @@ private:
     BacnetTagParserError _error;
 };
 
-
-
+}
 
 #endif // BACNETTAGPARSER_H

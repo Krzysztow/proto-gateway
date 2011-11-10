@@ -35,6 +35,8 @@ namespace Bacnet {
         inline void setLifetimePresent() {_flags |= LifetimePresent;}
         inline void clearLifetimePresent() {_flags &= (~LifetimePresent);}
 
+        bool isCancellation();
+
         inline bool hasPropertyReference() {return 0 != _propReference;}
         inline void clearHasPropertyReference() {delete _propReference; _propReference = 0;}
         inline PropertyReference *takePropReference() {PropertyReference *tmp = _propReference; _propReference = 0; return tmp;}
@@ -45,7 +47,7 @@ namespace Bacnet {
 
     public://is there any reason we should make it private?
         quint32 _subscriberProcId;
-        ObjectIdStruct _monitoredObjectId;
+        ObjectIdentifier _monitoredObjectId;
         bool _issueConfNotification;
         quint32 _lifetime;
         PropertyReference *_propReference;

@@ -1,0 +1,6 @@
+#ignore object files
+*.o
+#ignore backup files
+*~
+#ignore moc files
+*moc_*

@@ -27,6 +27,8 @@ public://functions overridden from
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
     virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
 
+    const QList<BacnetProperty::Identifier> &covProperties();
+
 public://functions overridden from PropertyOwner
     /** Hook function that is called after having requested reading/writting a property (which obviously doesn't
         belong to Bacnet). Here we find, which property it is, add some BACnet specific parameters and propagate
@@ -38,7 +40,7 @@ public://functions overridden from PropertyOwner
     virtual void propertyValueChanged(Property *property);
 
     //! Adds support of COV for present value with it's COV increment. If previous one existed - gets deleted!
-    virtual QList<Bacnet::PropertyValue*> readCovValuesList();
+//    virtual QList<Bacnet::PropertyValue*> readCovValuesList();
 
 public:
     QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);

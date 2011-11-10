@@ -155,6 +155,13 @@ int BacnetDeviceObject::ensurePropertyReadySet(Bacnet::PropertyValueStruct &writ
     return 0;
 }
 
+const QList<BacnetProperty::Identifier> &BacnetDeviceObject::covProperties()
+{
+    static QList<BacnetProperty::Identifier> identifiers =
+            QList<BacnetProperty::Identifier>() << BacnetProperty::StatusFlags;
+    return identifiers;
+}
+
 QVariant::Type BacnetDeviceObject::variantTypeForProperty_helper(BacnetProperty::Identifier propertyId)
 {
     switch (propertyId)

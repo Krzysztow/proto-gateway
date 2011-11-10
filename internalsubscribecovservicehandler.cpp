@@ -1,77 +1,80 @@
-#include "internalsubscribecovservicehandler.h"
+//#include "internalsubscribecovservicehandler.h"
 
-using namespace Bacnet;
+//#include "bacnetobject.h"
+//#include "bacnetdeviceobject.h"
 
-InternalSubscribeCovServiceHanlder::InternalSubscribeCovServiceHanlder(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                                       InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-    _tsm(tsm),
-    _device(device),
-    _internalHandler(internalHandler),
-    _externalHandler(externalHandler)
+//using namespace Bacnet;
 
-{
-}
+//InternalSubscribeCovServiceHanlder::InternalSubscribeCovServiceHanlder(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+//                                                                       InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
+//    _tsm(tsm),
+//    _device(device),
+//    _internalHandler(internalHandler),
+//    _externalHandler(externalHandler)
 
-InternalSubscribeCovServiceHanlder::~InternalSubscribeCovServiceHanlder()
-{
-}
+//{
+//}
 
-bool InternalSubscribeCovServiceHanlder::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
-{
-    Q_UNUSED(object);
-    Q_ASSERT((quint32)asynchId == _asynchId);
-    if ((quint32)asynchId == _asynchId) {//this is response to our querry
-        return finishWriting_helper(device, result);
-    }
-    return false;
-}
+//InternalSubscribeCovServiceHanlder::~InternalSubscribeCovServiceHanlder()
+//{
+//}
 
-bool InternalSubscribeCovServiceHanlder::isFinished()
-{
-    return true;
-}
+//bool InternalSubscribeCovServiceHanlder::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
+//{
+//    Q_UNUSED(asynchId);
+//    Q_UNUSED(result);
+//    Q_UNUSED(object);
+//    Q_UNUSED(device);
+//    Q_ASSERT_X(false, __PRETTY_FUNCTION__, "This shouldn't happen. COV subscription is not asynchronous.");
+//    return true;
+//}
 
-void InternalSubscribeCovServiceHanlder::finalize(bool *deleteAfter)
-{
-    Q_CHECK_PTR(deleteAfter);
-    finalizeInstant(_tsm);
-    if (deleteAfter)
-        *deleteAfter = true;
-}
+//bool InternalSubscribeCovServiceHanlder::isFinished()
+//{
+//    return true;
+//}
 
-bool InternalSubscribeCovServiceHanlder::execute()
-{
-    Q_CHECK_PTR(_device);
-    Q_ASSERT(!_error.hasError());
+//void InternalSubscribeCovServiceHanlder::finalize(bool *deleteAfter)
+//{
+//    Q_CHECK_PTR(deleteAfter);
+//    finalizeInstant(_tsm);
+//    if (deleteAfter)
+//        *deleteAfter = true;
+//}
 
-    BacnetObject *object = _device->bacnetObject(objIdToNum(_data.));
-    Q_CHECK_PTR(object);
-    if (0 == object) {
-        _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
-        finalizeInstant(_tsm);
-        return true;
-    }
+//bool InternalSubscribeCovServiceHanlder::execute()
+//{
+//    Q_CHECK_PTR(_device);
+//    Q_ASSERT(!_error.hasError());
 
+//    BacnetObject *object = _device->bacnetObject(_data._monitoredObjectId.instanceNumber());
+//    Q_CHECK_PTR(object);
+//    if (0 == object) {
+//        _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+//    } else {//we have that object
+//        object->addOrUpdateCov(_data, _requester, &_error);
+//    }
 
-    return true;
-}
+//    finalizeInstant(_tsm);
+//    return true;
+//}
 
-bool InternalSubscribeCovServiceHanlder::hasError()
-{
-    return _error.hasError();
-}
+//bool InternalSubscribeCovServiceHanlder::hasError()
+//{
+//    return _error.hasError();
+//}
 
-Error &InternalSubscribeCovServiceHanlder::error()
-{
-    return _error;
-}
+//Error &InternalSubscribeCovServiceHanlder::error()
+//{
+//    return _error;
+//}
 
-Bacnet::BacnetServiceData *InternalSubscribeCovServiceHanlder::takeResponseData()
-{
-    return 0;
-}
+//Bacnet::BacnetServiceData *InternalSubscribeCovServiceHanlder::takeResponseData()
+//{
+//    return 0;
+//}
 
-qint32 InternalSubscribeCovServiceHanlder::fromRaw(quint8 *servicePtr, quint16 length)
-{
-    return _data.fromRaw(servicePtr, length);
-}
+//qint32 InternalSubscribeCovServiceHanlder::fromRaw(quint8 *servicePtr, quint16 length)
+//{
+//    return _data.fromRaw(servicePtr, length);
+//}
