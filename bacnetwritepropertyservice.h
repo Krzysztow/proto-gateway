@@ -6,6 +6,7 @@
 #include "internalconfirmedrequesthandler.h"
 #include "bacnetservice.h"
 #include "bacnetcommon.h"
+#include "propertyvalue.h"
 #include "error.h"
 
 class BacnetDeviceObject;
@@ -38,7 +39,7 @@ private:
 
 private:
     Bacnet::ObjectIdStruct _objectId;
-    Bacnet::PropertyValueStruct _propValue;
+    Bacnet::PropertyValue _propValue;
 
     BacnetService *_response;
     Bacnet::Error _error;

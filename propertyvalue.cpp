@@ -5,33 +5,33 @@
 
 using namespace Bacnet;
 
-PropertyValue::PropertyValue()
+PropertyValue::PropertyValue():
+    _value(0)
 {
-    _value.value = 0;
 }
 
 PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterface *value,
-              quint32 arrayIndex, quint8 priority)
+                             quint32 arrayIndex, quint8 priority):
+    _propertyId(propertyId),
+    _arrayIndex(arrayIndex),
+    _value(value),
+    _priority(priority)
 {
-    _value.propertyId = propertyId;
-    _value.value = value;
-    Q_CHECK_PTR(value);
-    _value.arrayIndex = arrayIndex;
-    _value.priority = priority;
+    Q_CHECK_PTR(_value);
 }
 
 PropertyValue::~PropertyValue()
 {
-    delete _value.value;
+    delete _value;
 }
 
-qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength)
+qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength, int sequenceShift)
 {
     quint8 *actualPtr(ptrStart);
     qint32 ret;
 
     //set property identifier
-    ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _value.propertyId, true, 0);
+    ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _propertyId, true, 0 + sequenceShift);
     if (ret <= 0) {//something wrong?
         Q_ASSERT_X(false, "PropertyValue::toRaw()", "Cannot encode property id.");
         qDebug("PropertyValue::toRaw() : Cannot encode property id: %d", ret);
@@ -41,8 +41,8 @@ qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength)
     buffLength -= ret;
 
     //set array index, if exists
-    if (Bacnet::ArrayIndexNotPresent != _value.arrayIndex) {//is present
-        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _value.arrayIndex, true, 1);
+    if (Bacnet::ArrayIndexNotPresent != _arrayIndex) {//is present
+        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _arrayIndex, true, 1 + sequenceShift);
         if (ret <= 0) {//something wrong?
             Q_ASSERT_X(false, "PropertyValue::toRaw()", "Cannot encode array idx.");
             qDebug("PropertyValue::toRaw() : Cannot encode array idx: %d", ret);
@@ -53,24 +53,24 @@ qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength)
     }
 
     //write sequence of
-    ret = BacnetCoder::openingTagToRaw(actualPtr,  buffLength, 2);
+    ret = BacnetCoder::openingTagToRaw(actualPtr,  buffLength, 2  + sequenceShift);
     if (ret < 0) return ret;
     actualPtr += ret;
     buffLength -= ret;
 
-    ret = _value.value->toRaw(actualPtr, buffLength);
+    ret = _value->toRaw(actualPtr, buffLength);
     if (ret < 0) return ret;
     actualPtr += ret;
     buffLength -= ret;
 
-    ret = BacnetCoder::closingTagToRaw(actualPtr, buffLength, 2);
+    ret = BacnetCoder::closingTagToRaw(actualPtr, buffLength, 2 + sequenceShift);
     if (ret < 0) return ret;
     actualPtr += ret;
     buffLength -= ret;
 
     //set priority if necessary
-    if (PriorityValueNotPresent != _value.priority) {
-        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _value.priority, true, 3);
+    if (PriorityValueNotPresent != _priority) {
+        ret = BacnetCoder::uintToRaw(actualPtr, buffLength, _priority, true, 3 + sequenceShift);
         if (ret <= 0) {//something wrong?
             Q_ASSERT_X(false, "PropertyValue::toRaw()", "Cannot encode priority.");
             qDebug("PropertyValue::toRaw() : Cannot encode priority: %d", ret);
@@ -83,14 +83,7 @@ qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength)
     return (actualPtr - ptrStart);
 }
 
-qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
-{
-    Q_UNUSED(ptrStart); Q_UNUSED(buffLength); Q_UNUSED(tagNumber);
-    Q_ASSERT(false);
-    return -1;
-}
-
-qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objType)
+qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objType, int sequenceShift)
 {
     qint32 ret(0);
     qint32 total(0);
@@ -98,8 +91,8 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
 
     //get property identifier
     ret = parser.parseNext();
-    _value.propertyId = (BacnetProperty::Identifier)parser.toUInt(&convOkOrCtxt);
-    if (ret <= 0 || !parser.isContextTag(0) || !convOkOrCtxt) //not enough data, not context tag or not this tag
+    _propertyId = (BacnetProperty::Identifier)parser.toUInt(&convOkOrCtxt);
+    if (ret <= 0 || !parser.isContextTag(0  + sequenceShift) || !convOkOrCtxt) //not enough data, not context tag or not this tag
         return -1;
     total += ret;
 
@@ -107,21 +100,21 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
     ret = parser.nextTagNumber(&convOkOrCtxt);
     if (ret < 0)
         return -1;
-    if ( (1 == ret) && convOkOrCtxt) {
+    if ( ((1 + sequenceShift) == ret) && convOkOrCtxt) {
         ret = parser.parseNext();
-        _value.arrayIndex = parser.toUInt(&convOkOrCtxt);
+        _arrayIndex = parser.toUInt(&convOkOrCtxt);
         if ( (ret < 0) || !convOkOrCtxt )
             return -1;
         total += ret;
     } else {
-        _value.arrayIndex = Bacnet::ArrayIndexNotPresent;
+        _arrayIndex = Bacnet::ArrayIndexNotPresent;
     }
 
     //we are supposed to parse Abstract type, which type depends on the object type and property Id
-    _value.value = 0;
-    ret = BacnetTagParser::parseStructuredData(parser, objType, _value.propertyId, _value.arrayIndex,
-                                         2, &_value.value);
-    if (ret < 0 || (0 == _value.value) )
+    _value = 0;
+    ret = BacnetTagParser::parseStructuredData(parser, objType, _propertyId, _arrayIndex,
+                                         2  + sequenceShift, &_value);
+    if (ret < 0 || (0 == _value) )
         return -2;
 
 //    if (ret <= 0) //something worng, check it
@@ -129,18 +122,18 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
     total += ret;
 
     ret = parser.nextTagNumber(&convOkOrCtxt);
-    if ( (3 == ret) && (convOkOrCtxt) ) {
+    if ( ((3 + sequenceShift) == ret) && (convOkOrCtxt) ) {
         ret = parser.parseNext();
         if (ret < 0) {
             return -1;
         } else {
-            _value.priority = parser.toUInt(&convOkOrCtxt);
+            _priority = parser.toUInt(&convOkOrCtxt);
             if (!convOkOrCtxt)
                 return -1;
             total += ret;
         }
     } else {
-        _value.priority = PriorityValueNotPresent;
+        _priority = PriorityValueNotPresent;
     }
 
     return total;

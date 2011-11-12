@@ -38,7 +38,6 @@ void InternalConfirmedRequestHandler::finalizeInstant(Bacnet::BacnetTSM2 *tsm)
 {
     Bacnet::BacnetServiceData *response(0);
     if (hasError()) {
-#warning "Is it fine, we cast service to error choice?"
         tsm->sendError(_requester, _destination, _reqData->invokedId(), _reqData->service(), error());
     } else {
          response = takeResponseData();

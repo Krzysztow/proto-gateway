@@ -3,6 +3,8 @@
 
 #include "bacnetservicedata.h"
 #include "bacnetcommon.h"
+#include "propertyvalue.h"
+#include "bacnetconstructeddata.h"
 
 namespace Bacnet {
 
@@ -11,8 +13,8 @@ namespace Bacnet {
     {
     public:
         WritePropertyServiceData();
-        WritePropertyServiceData(Bacnet::ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
-                                 Bacnet::BacnetDataInterface *writeValue, quint32 arrayIndex);
+        WritePropertyServiceData(ObjectIdentifier &objId, BacnetProperty::Identifier propertyId,
+                                 BacnetDataInterface *writeValue, quint32 arrayIndex);
         virtual ~WritePropertyServiceData();
 
     public://implementations of BacnetServiceData interface.
@@ -20,8 +22,8 @@ namespace Bacnet {
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);
 
     public:
-        Bacnet::ObjectIdStruct _objectId;
-        Bacnet::PropertyValueStruct _propValue;
+        ObjectIdentifier _objectId;
+        PropertyValue _propValue;
     };
 
 }

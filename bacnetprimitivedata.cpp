@@ -1090,6 +1090,17 @@ ObjectIdentifier::ObjectIdentifier(Bacnet::ObjectIdStruct &objId):
 {
 }
 
+ObjectIdentifier::ObjectIdentifier(quint32 objectIdNum):
+    _value(numToObjId(objectIdNum))
+{
+}
+
+quint32 ObjectIdentifier::objectIdNum()
+{
+    return objIdToNum(_value);
+}
+
+
 qint32 ObjectIdentifier::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
     return BacnetCoder::objectIdentifierToRaw(ptrStart, buffLength, _value, false, AppTags::BacnetObjectIdentifier);

@@ -14,10 +14,10 @@
   */
 
 //! Macro for declaring visitable interface function.
-#define DECLARE_VISITABLE_FUNCTION(clazz) virtual void visit(DataVisitor *visitor);
+#define DECLARE_VISITABLE_FUNCTION(clazz) virtual void accept(DataVisitor *visitor);
 
 //! Macro for defining visitable interface function - class instance dispatches itself to the visitor.
-#define DEFINE_VISITABLE_FUNCTION(clazz) void clazz::visit(DataVisitor *visitor) {\
+#define DEFINE_VISITABLE_FUNCTION(clazz) void clazz::accept(DataVisitor *visitor) {\
     Q_CHECK_PTR(visitor);       \
     if (0 != visitor)           \
     visitor->visit(*this);  \

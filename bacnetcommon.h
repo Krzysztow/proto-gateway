@@ -450,7 +450,7 @@ namespace Bacnet
         SegmentedNOT        = 3
     };
 
-    struct  ObjectIdStruct {
+    struct ObjectIdStruct {
         BacnetObjectType::ObjectType objectType;
         quint32 instanceNum;
     };
@@ -475,10 +475,10 @@ namespace Bacnet
 
     class BacnetDataInterface;
     struct PropertyValueStruct {
-        BacnetProperty::Identifier propertyId;
-        quint32 arrayIndex;
-        BacnetDataInterface *value;
-        quint8 priority;
+//        BacnetProperty::Identifier propertyId;
+//        quint32 arrayIndex;
+//        BacnetDataInterface *value;
+//        quint8 priority;
     };
 
     enum NetworkPriority {

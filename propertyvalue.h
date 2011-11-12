@@ -13,18 +13,21 @@ namespace Bacnet {
 
         virtual ~PropertyValue();
 
-        qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
-        qint32 toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
+        qint32 toRaw(quint8 *ptrStart, quint16 buffLength, int sequenceShift = 0);
 
     public:
-        qint32 fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objType);
+        qint32 fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objType, int sequenceShift = 0);
         qint32 fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objType);
 
     public:
 
 
     public:
-        Bacnet::PropertyValueStruct _value;
+//        Bacnet::PropertyValueStruct _value;
+        BacnetProperty::Identifier _propertyId;
+        quint32 _arrayIndex;
+        BacnetDataInterface *_value;
+        quint8 _priority;
     };
 }
 #endif // PROPERTYVALUE_H

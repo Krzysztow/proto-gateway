@@ -360,6 +360,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
 #include "bacnetnetworklayer.h"
 #include "cdm.h"
 
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -449,7 +450,7 @@ int main(int argc, char *argv[])
     //        0x0F,
 
     //        0x0c,
-    //        0x00, 0x00/*0x80*/, 0x00, 0x01,
+    //        0x00, 0x00/\*0x80*\/, 0x00, 0x01,
     //        0x19,
     //        0x55,
     //        0x3e,

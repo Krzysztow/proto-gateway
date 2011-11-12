@@ -301,15 +301,18 @@ namespace Bacnet
         ObjectIdentifier(BacnetObjectType::ObjectType type = BacnetObjectType::Undefined,
                 quint32 instanceNum = Bacnet::InvalidInstanceNumber);
         ObjectIdentifier(Bacnet::ObjectIdStruct &objId);
+        ObjectIdentifier(quint32 objectIdNum);
 
         quint32 instanceNumber() {return _value.instanceNum;}
+        quint32 objectIdNum();
+
         BacnetObjectType::ObjectType type() {return _value.objectType;}
         bool operator==(const ObjectIdentifier &other) const {return ( (_value.instanceNum == other._value.instanceNum) &&
                                                                         (_value.objectType == other._value.objectType) );}
         bool operator==(const ObjectIdStruct &other) const { return ( (_value.instanceNum == other.instanceNum) &&
                                                                       (_value.objectType == other.objectType) );}
 
-    private:
+    public:
         Bacnet::ObjectIdStruct _value;
     };
 

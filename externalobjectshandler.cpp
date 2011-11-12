@@ -305,9 +305,9 @@ int ExternalObjectsHandler::setPropertyRequest(::PropertySubject *toBeSet, QVari
         return Property::UnknownError;
     }
 
+    ObjectIdentifier devId(rEntry._objectIdentifier);
     WritePropertyServiceData *serviceData =
-            new WritePropertyServiceData(numToObjId(rEntry._objectIdentifier),
-                                           rEntry._propertyId, writeData, rEntry._propertyArrayIdx);
+            new WritePropertyServiceData(devId, rEntry._propertyId, writeData, rEntry._propertyArrayIdx);
     Q_CHECK_PTR(serviceData);
     BacnetWritePropertyServiceHandler *serviceHandler =
             new BacnetWritePropertyServiceHandler(serviceData, this);

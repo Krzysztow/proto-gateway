@@ -7,6 +7,7 @@
 #include "error.h"
 #include "internalobjectshandler.h"
 #include "readpropertyservicedata.h"
+#include "propertyvalue.h"
 
 using namespace Bacnet;
 
@@ -111,11 +112,11 @@ Bacnet::BacnetDataInterface *BacnetDeviceObject::propertyReadInstantly(Bacnet::R
     return propertyReadInstantly(rpStruct->propertyId, rpStruct->arrayIndex, error);
 }
 
-int BacnetDeviceObject::ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error)
+int BacnetDeviceObject::ensurePropertyReadySet(Bacnet::PropertyValue &writeData, Bacnet::Error *error)
 {
     //assume one can set only cdm properties and those that are specialized.
     Q_CHECK_PTR(error);
-    if (BacnetProperty::ObjectList == writeData.propertyId) {
+    if (BacnetProperty::ObjectList == writeData._propertyId) {
         error->errorClass = BacnetError::ClassProperty;
         error->errorCode = BacnetError::CodeWriteAccessDenied;
         qDebug("ensurePropertyReadySet() : no reason to write to the childlist.");

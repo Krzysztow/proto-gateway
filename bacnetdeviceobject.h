@@ -23,7 +23,7 @@ public://overridden from BacnetObject
     virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
-    virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error);
+    virtual int ensurePropertyReadySet(Bacnet::PropertyValue &writeData, Bacnet::Error *error);
 
     virtual const QList<BacnetProperty::Identifier> &covProperties();
 

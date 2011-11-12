@@ -12,19 +12,14 @@ BacnetWritePropertyService::BacnetWritePropertyService():
 
 BacnetWritePropertyService::BacnetWritePropertyService(Bacnet::ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
                                                        Bacnet::BacnetDataInterface *writeValue, quint32 arrayIndex):
-_objectId(objId),
-_asynchId(0)
+    _objectId(objId),
+    _propValue(propertyId, writeValue, arrayIndex, 16),
+    _asynchId(0)
 {
-    _propValue.value = writeValue;
-    _propValue.arrayIndex = arrayIndex;
-    _propValue.propertyId = propertyId;
-    //! \todo get this priority value from some settings file.
-    _propValue.priority = 16;
 }
 
 BacnetWritePropertyService::~BacnetWritePropertyService()
 {
-    delete _propValue.value;
 }
 
 qint16 BacnetWritePropertyService::fromRaw(quint8 *servicePtr, quint16 length)
@@ -44,26 +39,26 @@ qint16 BacnetWritePropertyService::fromRaw(quint8 *servicePtr, quint16 length)
 
     //get property identifier
     ret = bParser.parseNext();
-    _propValue.propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
+    _propValue._propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
     if (ret <= 0 || !bParser.isContextTag(1) || !convOk) //not enough data, not context tag or not this tag
         return -1;
     actualPtr += ret;
 
     //we are supposed to parse Abstract type, which type depends on the object type and property Id
-    _propValue.value = 0;
-    ret = Bacnet::BacnetTagParser::parseStructuredData(bParser, _objectId.objectType, _propValue.propertyId,
-                                               _propValue.arrayIndex, 3, &_propValue.value);
+    _propValue._value = 0;
+    ret = Bacnet::BacnetTagParser::parseStructuredData(bParser, _objectId.objectType, _propValue._propertyId,
+                                               _propValue._arrayIndex, 3, &_propValue._value);
     if (ret <= 0) //something worng, check it
         return -1;
     actualPtr += ret;
 
     ret = bParser.parseNext();
     if (0 == ret) {//no priority passed
-        _propValue.priority = 0xff;
+        _propValue._priority = 0xff;
     } else if (ret < 0) {
         return -1;
     } else {
-        _propValue.priority = bParser.toUInt(&convOk);
+        _propValue._priority = bParser.toUInt(&convOk);
         if (!convOk)
             return -1;
     }
@@ -89,7 +84,7 @@ qint32 BacnetWritePropertyService::toRaw(quint8 *startPtr, quint8 buffLength)
     actualPtr += ret;
     leftLength -= ret;
     //encode proeprty identifier
-    ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue.propertyId, true, 1);
+    ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._propertyId, true, 1);
     if (ret <= 0) {//something wrong?
         Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode propId");
         qDebug("BacnetWritePropertyAck::toRaw() : propertyencoding problem: propId : %d", ret);
@@ -98,8 +93,8 @@ qint32 BacnetWritePropertyService::toRaw(quint8 *startPtr, quint8 buffLength)
     actualPtr += ret;
     leftLength -= ret;
     //encode array index if present - OPTIONAL
-    if (Bacnet::ArrayIndexNotPresent != _propValue.arrayIndex) {//present
-        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue.arrayIndex, true, 2);
+    if (Bacnet::ArrayIndexNotPresent != _propValue._arrayIndex) {//present
+        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._arrayIndex, true, 2);
         if (ret <= 0) {//something wrong?
             Q_ASSERT_X(false, "BacnetWritePropertyAck::toRaw()", "Cannot encode arrayIndex");
             qDebug("BacnetWritePropertyAck::toRaw() : propertyencoding problem: arrayIndex : %d", ret);
@@ -118,7 +113,7 @@ qint32 BacnetWritePropertyService::toRaw(quint8 *startPtr, quint8 buffLength)
     actualPtr += ret;
     leftLength -= ret;
 
-    ret = _propValue.value->toRaw(actualPtr, leftLength);
+    ret = _propValue._value->toRaw(actualPtr, leftLength);
     if (ret < 0) {
         Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode value");
         qDebug("BacnetWriteProperty::toRaw() : value problem: value: %d", ret);
@@ -136,8 +131,8 @@ qint32 BacnetWritePropertyService::toRaw(quint8 *startPtr, quint8 buffLength)
     actualPtr += ret;
     leftLength -= ret;
 
-    if (_propValue.priority != 16) {
-        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue.priority, true, 4);
+    if (_propValue._priority != 16) {
+        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._priority, true, 4);
         if (ret < 0) {
             Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode priority");
             qDebug("BacnetWriteProperty::toRaw() : value problem: priority: %d", ret);

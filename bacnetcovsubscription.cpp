@@ -183,3 +183,8 @@ DataType::DataType CovSubscription::typeId()
 BacnetCovSupport::BacnetCovSupport()
 {
 }
+
+bool CovSubscription::isCovPropertySubscription(BacnetProperty::Identifier propId, quint32 propertyArrayIdx)
+{
+    return _monitoredPropertyRef.compareParameters(_monitoredPropertyRef.objId(), propId, propertyArrayIdx);
+}

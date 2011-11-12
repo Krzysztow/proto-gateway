@@ -38,7 +38,7 @@ public:
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error) = 0;
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error) = 0;
 
-    virtual int ensurePropertyReadySet(Bacnet::PropertyValueStruct &writeData, Bacnet::Error *error) = 0;
+    virtual int ensurePropertyReadySet(Bacnet::PropertyValue &writeData, Bacnet::Error *error) = 0;
 
     Bacnet::ObjectIdStruct &objectId();
     quint32 objectIdNum();

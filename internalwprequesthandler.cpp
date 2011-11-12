@@ -67,7 +67,7 @@ bool InternalWPRequestHandler::execute()
     Q_CHECK_PTR(_device);
     Q_ASSERT(!_error.hasError());
 
-    BacnetObject *object = _device->bacnetObject(objIdToNum(_data._objectId));
+    BacnetObject *object = _device->bacnetObject(_data._objectId.objectIdNum());
     Q_CHECK_PTR(object);
     if (0 == object) {
         _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
