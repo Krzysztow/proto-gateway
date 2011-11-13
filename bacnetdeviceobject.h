@@ -7,6 +7,7 @@
 #include "bacnetcommon.h"
 #include "bacnetdata.h"
 #include "bacnetobjectinternalsupport.h"
+#include "propertyvalue.h"
 
 class InternalObjectsHandler;
 
@@ -15,7 +16,7 @@ class BacnetDeviceObject:
         public BacnetObjectInternalSupport
 {
 public:
-    BacnetDeviceObject(Bacnet::ObjectIdStruct identifier);
+    BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier);
     BacnetDeviceObject(quint32 instanceNumber);
     ~BacnetDeviceObject();
 
@@ -34,7 +35,7 @@ public://functions specific to BACnet device
     void setHandler(InternalObjectsHandler *bHandler);
     const QMap<quint32, BacnetObject*> &childObjects();
     Bacnet::BacnetDataInterface *constProperty(BacnetProperty::Identifier propertyId);
-    void propertyValueChanged(BacnetObject *object, BacnetProperty::Identifier propId);
+    void propertyValueChanged(Bacnet::CovSubscription &subscriprion, BacnetObject *object, QList<Bacnet::PropertyValueShared> &propertiesValues);
 
 public://functions overridden from PropertyOwner
     /** Hook function that is called after having requested reading/writting a property (which obviously doesn't

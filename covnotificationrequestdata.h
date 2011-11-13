@@ -6,16 +6,18 @@
 #include "bacnetservicedata.h"
 #include "bacnetcommon.h"
 #include "sequenceof.h"
-#include "propertyvalue.h"
+#include "bacnetprimitivedata.h"
+#include "propertyvalue.h" //this has to be included for SequenceOf template.
 
 namespace Bacnet {
+
     class CovNotificationRequestData:
             public BacnetServiceData
     {
     public:
         CovNotificationRequestData();
 
-        CovNotificationRequestData(quint8 subscrProcId, ObjectIdStruct initiatingObjectId, ObjectIdStruct monitoredObjectId,
+        CovNotificationRequestData(quint8 subscrProcId, Bacnet::ObjectIdentifier &initiatingObjectId, Bacnet::ObjectIdentifier &monitoredObjectId,
                                    quint32 timeLeft = 0x00);
 
     public://implementations of BacnetServiceData interface.
@@ -25,8 +27,8 @@ namespace Bacnet {
     public:
         quint8 _subscribProcess;
 
-        Bacnet::ObjectIdStruct _initiatingObjectId;
-        Bacnet::ObjectIdStruct _monitoredObjectId;
+        Bacnet::ObjectIdentifier _initiatingObjectId;
+        Bacnet::ObjectIdentifier _monitoredObjectId;
         quint32 _timeLeft;
         SequenceOf<PropertyValue> _listOfValues;
     };

@@ -6,7 +6,7 @@
 
 using namespace Bacnet;
 
-IAmServiceData::IAmServiceData(ObjectIdStruct &objId, quint32 maxAPDULength, BacnetSegmentation segmentation, quint32 vendorId):
+IAmServiceData::IAmServiceData(ObjectIdentifier &objId, quint32 maxAPDULength, BacnetSegmentation segmentation, quint32 vendorId):
         _objId(objId),
         _maxApduLength(maxAPDULength),
         _segmentationSupported(segmentation),
@@ -19,7 +19,6 @@ IAmServiceData::IAmServiceData():
         _segmentationSupported(SegmentedNOT),
         _vendorId(SNGVendorIdentifier)
 {
-    _objId.objectType = BacnetObjectType::Undefined;
 }
 
 qint32 IAmServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
@@ -27,9 +26,9 @@ qint32 IAmServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
     qint32 ret(0);
     quint8 *actualPtr(startPtr);
 
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, buffLength, _objId, false, AppTags::BacnetObjectIdentifier);
+    ret = _objId.toRaw(actualPtr, buffLength);
     if (ret < 0)
-        return -1;
+        return ret;
     actualPtr += ret;
     buffLength -= ret;
 
@@ -63,11 +62,8 @@ qint32 IAmServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     bool convOkOrCtxt;
 
     //parse object identifier
-    ret = bParser.parseNext();
-    if (ret < 0 || !bParser.isApplicationTag(AppTags::BacnetObjectIdentifier))
-        return -BacnetReject::ReasonMissingRequiredParameter;
-    _objId = bParser.toObjectId(&convOkOrCtxt);
-    if (!convOkOrCtxt)
+    ret = _objId.fromRaw(bParser);
+    if (ret < 0)
         return -BacnetReject::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 

@@ -304,6 +304,9 @@ namespace Bacnet
         ObjectIdentifier(quint32 objectIdNum);
 
         quint32 instanceNumber() {return _value.instanceNum;}
+
+        void setObjectIdNum(quint32 objIdNum);
+        void setObjectId(ObjectIdStruct &value);
         quint32 objectIdNum();
 
         BacnetObjectType::ObjectType type() {return _value.objectType;}

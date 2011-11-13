@@ -24,10 +24,10 @@ public:
     DataType::DataType typeId();
 
 public:
-    void append(T *t);
+    void append(QSharedPointer<T> &t);
 
 public:
-    QList<T*> _sequence;
+    QList<QSharedPointer<T> > _sequence;
 };
 
 
@@ -38,7 +38,7 @@ public:
 template <class T>
 SequenceOf<T>::~SequenceOf()
 {
-    qDeleteAll(_sequence);
+//    qDeleteAll(_sequence);//no needed anymore - QSharedPointer will delete allocated resources if needed.
 }
 
 template <class T>
@@ -98,7 +98,7 @@ qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, Ba
     ret = parser.nextTagNumber(&okOrContext);
     while ((tagNum != ret) || (!okOrContext)) {
         seqElem = new T();
-        _sequence.append(seqElem);//append it first, so that in case of error not loose it.
+        _sequence.append(QSharedPointer<T>(seqElem));//append it first, so that in case of error we keep track of it and are able to delete later on.
 #warning "Take care of this - parameter objectType - is it really needed?"
         ret = seqElem->fromRawSpecific(parser, objectType);
         if (ret < 0)
@@ -133,7 +133,7 @@ DataType::DataType SequenceOf<T>::typeId()
 }
 
 template <class T>
-void SequenceOf<T>::append(T *t)
+void SequenceOf<T>::append(QSharedPointer<T> &t)
 {
     Q_CHECK_PTR(t);
     _sequence.append(t);

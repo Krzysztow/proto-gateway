@@ -14,10 +14,20 @@ PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataIn
                              quint32 arrayIndex, quint8 priority):
     _propertyId(propertyId),
     _arrayIndex(arrayIndex),
+    _value(BacnetDataInterfaceShared(value)),
+    _priority(priority)
+{
+    Q_CHECK_PTR(_value.data());
+}
+
+PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterfaceShared value,
+                             quint32 arrayIndex, quint8 priority):
+    _propertyId(propertyId),
+    _arrayIndex(arrayIndex),
     _value(value),
     _priority(priority)
 {
-    Q_CHECK_PTR(_value);
+    Q_CHECK_PTR(_value.data());
 }
 
 PropertyValue::~PropertyValue()

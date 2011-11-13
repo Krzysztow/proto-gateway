@@ -37,6 +37,8 @@ public:
     bool isCovPropertySubscription(BacnetProperty::Identifier propId, quint32 propertyArrayIdx = ArrayIndexNotPresent);
     CovRealIcnrementHandler *covHandler() {return _covIncrement;}
 
+    bool isIssueConfirmedNotifications() {return _issueConfNotification;}
+
 public:
     RecipientProcess _recipientProcess;
     ObjectPropertyReference _monitoredPropertyRef;

@@ -52,7 +52,7 @@ qint32 ReadPropertyServiceData::fromRaw(quint8 *serviceData, quint16 bufferLengt
 
     Q_ASSERT(consumedBytes == bufferLength);
     if (consumedBytes != bufferLength) {
-        return BacnetReject::ReasonTooManyArguments;
+        return -BacnetReject::ReasonTooManyArguments;
     }
 
     return consumedBytes;
@@ -98,3 +98,40 @@ qint32 ReadPropertyServiceData::toRaw(quint8 *startPtr, quint16 bufferLength)
 
     return actualPtr - startPtr;
 }
+
+//#define K_RP_TEST
+#ifdef K_RP_TEST
+int main()
+{
+    quint8 rpData[] = {
+        0x0c,
+        0x00, 0x00, 0x00, 0x05,
+        0x19,
+        0x55
+    };
+    const quint32 rpDataSize = sizeof rpData;
+
+    ReadPropertyServiceData rpServData;
+    qint32 ret = rpServData.fromRaw(rpData, rpDataSize);
+
+    Q_ASSERT(ret == rpDataSize);
+    Q_ASSERT(rpServData.objId.instanceNum == 5);
+    Q_ASSERT(rpServData.objId.objectType == BacnetObjectType::AnalogInput);
+    Q_ASSERT(rpServData.propertyId == BacnetProperty::PresentValue);
+
+    quint32 writeSize(64);
+    quint8 writeRpData[writeSize];
+
+    ret = rpServData.toRaw(writeRpData, writeSize);
+
+    Q_ASSERT(ret == rpDataSize);
+    Q_ASSERT(memcmp(rpData, writeRpData, rpDataSize) == 0);
+
+    HelperCoder::printArray(rpData, rpDataSize, "Original: \t");
+    HelperCoder::printArray(writeRpData, ret, "Written:\t");
+
+    qDebug("TEST SUCCEEDED");
+
+    return 0;
+}
+#endif

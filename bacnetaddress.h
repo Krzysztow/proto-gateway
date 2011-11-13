@@ -14,7 +14,7 @@
   - mac address
   */
 
-class BacnetAddress
+class   BacnetAddress
 {
 public:
     enum AddressConstants {

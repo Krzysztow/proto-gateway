@@ -2,13 +2,20 @@
 #define PROPERTYVALUE_H
 
 #include "bacnetdata.h"
+#include <QSharedPointer>
 
 namespace Bacnet {
+
+class PropertyValue;
+typedef QSharedPointer<PropertyValue> PropertyValueShared;
+
     class PropertyValue
     {
     public:
         PropertyValue();
         PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterface *value,
+                      quint32 arrayIndex = ArrayIndexNotPresent, quint8 priority = PriorityValueNotPresent);
+        PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterfaceShared value,
                       quint32 arrayIndex = ArrayIndexNotPresent, quint8 priority = PriorityValueNotPresent);
 
         virtual ~PropertyValue();

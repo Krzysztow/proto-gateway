@@ -1100,6 +1100,15 @@ quint32 ObjectIdentifier::objectIdNum()
     return objIdToNum(_value);
 }
 
+void ObjectIdentifier::setObjectIdNum(quint32 objIdNum)
+{
+    _value = numToObjId(objIdNum);
+}
+
+void ObjectIdentifier::setObjectId(ObjectIdStruct &value)
+{
+    _value = value;
+}
 
 qint32 ObjectIdentifier::toRaw(quint8 *ptrStart, quint16 buffLength)
 {

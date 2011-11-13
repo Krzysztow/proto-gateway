@@ -42,10 +42,29 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
     }
 }
 
-void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId)
+void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues)
 {
-//    Q_CHECK_PTR(device);
-//    Q_CHECK_PTR(object);
+    Q_CHECK_PTR(device);
+    Q_CHECK_PTR(object);
+
+    Q_ASSERT(object->objectIdNum() == subscription._monitoredPropertyRef.objId().objectIdNum());
+
+    Bacnet::CovNotificationRequestData *covData = new Bacnet::CovNotificationRequestData(subscription._recipientProcess.processId(), device->objectId(), object->objectId(),
+                                                                                         subscription._timeLeft);
+
+    //add properties list
+    for (int i = 0; i < propertiesValues.count(); ++i) {
+        covData->_listOfValues.append(propertiesValues[i]);
+    }
+
+    //send it
+    if (subscription.isIssueConfirmedNotifications()) {
+        CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
+        _tsm->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
+    } else {
+        _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
+    }
+
 ////    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
 ////    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
 ////    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;

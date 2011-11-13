@@ -56,14 +56,14 @@ bool InternalWhoIsRequestHandler::execute()
 
     //! \todo If not all the responses fit in the buffer divide it in some chunks and get asynchIds
     quint32 objIdNum;
-    ObjectIdStruct tmp = {BacnetObjectType::Undefined, 0};
+    ObjectIdentifier tmp(BacnetObjectType::Undefined, 0);
     IAmServiceData iAmData(tmp, Bacnet::ApduMaxSize, SegmentedNOT, SNGVendorIdentifier);
 
     for (; devIt != devListEnd; ++devIt) {
         objIdNum = (*devIt)->objectIdNum();
         if ( (lowLimit <= objIdNum) &&
              (objIdNum <= highLimit) ) {
-            iAmData._objId = (*devIt)->objectId();
+            iAmData._objId = (*devIt)->objectIdNum();
             _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServices::I_Am);
         }
     }

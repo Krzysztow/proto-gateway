@@ -181,6 +181,7 @@ int main()
     qint32 ret = wp->fromRaw(wpData, dataSize);
 
     Q_ASSERT(ret > 0);
+    Q_ASSERT(ret == dataSize);
     Q_ASSERT(wp->_objectId._value.instanceNum == 1);
     Q_ASSERT(wp->_objectId._value.objectType == BacnetObjectType::AnalogValue);
 

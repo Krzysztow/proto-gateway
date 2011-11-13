@@ -17,6 +17,9 @@ class InternalRequestHandler;
 namespace Bacnet {
     class BacnetTSM2;
     class SubscribeCOVServiceData;
+    class CovSubscription;
+    class PropertyValue;
+    typedef QSharedPointer<PropertyValue> PropertyValueShared;
 }
 
 class InternalObjectsHandler
@@ -26,8 +29,9 @@ public:
 
 public://interface for BacnetObject-Internal interaction
     void propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
-    void propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, BacnetProperty::Identifier propId);
     void addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler);
+
+    void propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues);
 
 public:
     bool addDevice(InternalAddress address, BacnetDeviceObject *device);

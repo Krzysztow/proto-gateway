@@ -12,10 +12,10 @@
 
 using namespace Bacnet;
 
-AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdStruct identifier, BacnetDeviceObject *parent):
+AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdentifier &identifier, BacnetDeviceObject *parent):
     BacnetObject(identifier, parent)
 {
-    Q_ASSERT( (identifier.objectType) == BacnetObjectType::Device);
+    Q_ASSERT( identifier.type() == BacnetObjectType::AnalogInput);
     Q_CHECK_PTR(parent);
     parent->addBacnetObject(this);
 }
@@ -215,8 +215,8 @@ void AnalogInputObject::propertyValueChanged(Property *property)
     QList<Bacnet::CovSubscription>::Iterator it = subscriptions.begin();
     QList<Bacnet::CovSubscription>::Iterator itEnd = subscriptions.end();
 
-    BacnetDataInterfaceShared propertyValue;
-    QList<BacnetDataInterfaceShared> covPropertiesValues;
+    int propertyValueIdx(-1);//index of changed property in covPropertiesValues list
+    QList<PropertyValueShared> covPropertiesValues;
     //helper variable, to make covPropertiesValues lazy initialized.
     enum {
         NotChecked,
@@ -228,9 +228,13 @@ void AnalogInputObject::propertyValueChanged(Property *property)
         if (it->isCovObjectSubscription() || it->isCovPropertySubscription(propId, propArrayIdx)) {
 
             //property value is lazy initialized; being here means we surely need it.
-            if (propertyValue.isNull()) {
-                propertyValue = BacnetDataInterfaceShared(propertyReadInstantly(propId, propArrayIdx, &error));
-                if (propertyValue.isNull()) {
+            if (-1 == propertyValueIdx) {
+                covPropertiesValues.append(PropertyValueShared(new PropertyValue(propId,
+                                                             BacnetDataInterfaceShared(propertyReadInstantly(propId, propArrayIdx, &error)),
+                                                             propArrayIdx)));
+                propertyValueIdx = covPropertiesValues.count() - 1;
+                Q_ASSERT(propertyValueIdx >= 0);
+                if (covPropertiesValues[propertyValueIdx].isNull() || covPropertiesValues[propertyValueIdx]->_value.isNull()) {
                     qDebug("%s : error while reading instantly value that changed %d", __PRETTY_FUNCTION__, propId);
                     return;
                 }
@@ -240,9 +244,9 @@ void AnalogInputObject::propertyValueChanged(Property *property)
             if (0 != covHandler) {
                 //subscription has its own covIncrementHandler.
                 Q_ASSERT(!it->isCovObjectSubscription()); //only property subscriptions are allowed to have their own covIncrements.
-                propertyValue->accept(covHandler);
+                covPropertiesValues[propertyValueIdx]->_value->accept(covHandler);
                 if (!covHandler->isEqualWithinIncrement()) { //changed more than the increment. Notify subscriber!
-#warning "notifySubscriber(covSubscription, propId, arrayIdx, propertyValue) - invoke function"
+                    _parentDevice->propertyValueChanged(*it, this, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
                 }
             } else {
                 //subscription uses common/default increment handler.
@@ -251,7 +255,7 @@ void AnalogInputObject::propertyValueChanged(Property *property)
                     covHandler = covIncrementHandler(propId);
                     //if we have registered covIncrementHandler, check if notification is to be sent.
                     if (0 != covHandler) {
-                        propertyValue->accept(covHandler);
+                        covPropertiesValues[propertyValueIdx]->_value->accept(covHandler);
                         if (covHandler->isEqualWithinIncrement()) {//the value changed less than the increment, since last time. Don't inform all.
                             defaultIncrementState = DontInform;
                             continue;
@@ -269,23 +273,22 @@ void AnalogInputObject::propertyValueChanged(Property *property)
                     */
                     if (covPropertiesValues.isEmpty()) {
                         foreach (BacnetProperty::Identifier id, covProperties()) {
-                            if (id == propId)
-                                covPropertiesValues.append(propertyValue);//shared pointer will be copied.
-                            else {
-                                BacnetDataInterfaceShared covPropertyValue(propertyReadInstantly(id, Bacnet::ArrayIndexNotPresent, &error));
-                                if (covPropertyValue.isNull()) {
+                            if (id != propId) {//the property with propId is already added.
+                                const quint32 arrayIdx = Bacnet::ArrayIndexNotPresent;
+                                BacnetDataInterfaceShared propertyValueData(propertyReadInstantly(id, arrayIdx, &error));
+                                if (propertyValueData.isNull()) {
                                     qDebug("%s : cannot read covPropertyValue for values list %d", __PRETTY_FUNCTION__, id);
                                     return;//all the allocated data will be freed by shared pointers.
                                 }
-                                covPropertiesValues.append(covPropertyValue);
+                                covPropertiesValues.append(PropertyValueShared(new PropertyValue(id, propertyValueData, arrayIdx)));
                             }
                         }
                     }
 
                     //covPropertiesValues is already initialized here.
-#warning "notifyObjectSubscriber(covSubscription, covPropertiesValues) - invoke function"
+                    _parentDevice->propertyValueChanged(*it, this, covPropertiesValues);
                 } else {
-#warning "notifySubscriber(covSubscription, propId, arrayIdx, propertyValue) - invoke function"
+                    _parentDevice->propertyValueChanged(*it, this, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
                 }
             }
         }

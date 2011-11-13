@@ -112,7 +112,7 @@ bool InternalWhoHasRequestHandler::execute()
                 if ( ( (0 != _data._objidentifier) && ((*objIt)->objectIdNum() == searchedObjInstance) ) ||
                      ( (0 != _data._objName) && ((*objIt)->objectName() == (*_data._objName)) ) ) {
                     //manipulate object data.
-                    iHaveData._devId = numToObjId(devInstanceNum | BacnetObjectType::Device << 22);
+                    iHaveData._devId.setObjectIdNum(devInstanceNum | BacnetObjectType::Device << 22);
                     iHaveData._objId = (*objIt)->objectId();
                     iHaveData._objName = (*objIt)->objectName();
                     _tsm->sendUnconfirmed(_requester, _destination, iHaveData, BacnetServices::I_Have);

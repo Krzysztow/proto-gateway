@@ -16,7 +16,7 @@ class AnalogInputObject:
         public BacnetObjectInternalSupport
 {
 public:
-    AnalogInputObject(Bacnet::ObjectIdStruct identifier, BacnetDeviceObject *parent);
+    AnalogInputObject(Bacnet::ObjectIdentifier &identifier, BacnetDeviceObject *parent);
     AnalogInputObject(quint32 instanceNumber, BacnetDeviceObject *parent);
     ~AnalogInputObject();
 

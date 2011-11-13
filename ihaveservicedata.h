@@ -3,6 +3,7 @@
 
 #include "bacnetservicedata.h"
 #include "bacnetcommon.h"
+#include "bacnetprimitivedata.h"
 
 namespace Bacnet {
 
@@ -11,15 +12,15 @@ namespace Bacnet {
     {
     public:
         IHaveServiceData();
-        IHaveServiceData(ObjectIdStruct &devId, ObjectIdStruct &objId, QString objName);
+        IHaveServiceData(ObjectIdentifier &devId, ObjectIdentifier &objId, QString objName);
 
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);
 
     public:
-        ObjectIdStruct _devId;
-        ObjectIdStruct _objId;
+        ObjectIdentifier _devId;
+        ObjectIdentifier _objId;
         QString _objName;
     };
 

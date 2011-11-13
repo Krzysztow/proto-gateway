@@ -26,7 +26,6 @@ qint16 BacnetWritePropertyService::fromRaw(quint8 *servicePtr, quint16 length)
 {
     quint8 *actualPtr(servicePtr);
     qint16 ret(0);
-    bool convOk;
 
     Bacnet::BacnetTagParser bParser(servicePtr, length);
 
@@ -243,7 +242,7 @@ bool BacnetWritePropertyService::asynchActionFinished(int asynchId, int result, 
     return false;
 }
 
-#define WRITE_PROPERTY_TEST
+//#define WRITE_PROPERTY_TEST
 #ifdef WRITE_PROPERTY_TEST
 int main()
 {

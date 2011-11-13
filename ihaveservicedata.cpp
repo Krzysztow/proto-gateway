@@ -6,7 +6,7 @@
 
 using namespace Bacnet;
 
-IHaveServiceData::IHaveServiceData(ObjectIdStruct &devId, ObjectIdStruct &objId, QString objName):
+IHaveServiceData::IHaveServiceData(ObjectIdentifier &devId, ObjectIdentifier &objId, QString objName):
         _devId(devId),
         _objId(objId),
         _objName(objName)
@@ -15,8 +15,6 @@ IHaveServiceData::IHaveServiceData(ObjectIdStruct &devId, ObjectIdStruct &objId,
 
 IHaveServiceData::IHaveServiceData()
 {
-    _devId.objectType = BacnetObjectType::Undefined;
-    _objId.objectType = BacnetObjectType::Undefined;
 }
 
 qint32 IHaveServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
@@ -25,14 +23,14 @@ qint32 IHaveServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
     quint8 *actualPtr(startPtr);
 
     //encode device id
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, buffLength, _devId, false, AppTags::BacnetObjectIdentifier);
+    ret = _devId.toRaw(actualPtr, buffLength);
     if (ret < 0)
-        return -1;
+        return ret;
     actualPtr += ret;
     buffLength -= ret;
 
     //encode object id
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, buffLength, _objId, false, AppTags::BacnetObjectIdentifier);
+    ret = _objId.toRaw(actualPtr, buffLength);
     if (ret < 0)
         return -2;
     actualPtr += ret;
@@ -58,27 +56,20 @@ qint32 IHaveServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     bool convOk;
 
     //parse object identifier
-    ret = bParser.parseNext();
-    if (ret < 0 || !bParser.isApplicationTag(AppTags::BacnetObjectIdentifier))
+    ret = _devId.fromRaw(bParser);
+    if (ret < 0)
         return -BacnetReject::ReasonMissingRequiredParameter;
-    _devId = bParser.toObjectId(&convOk);
-    if (!convOk)
-        return -BacnetReject::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     //parse object identifier
-    ret = bParser.parseNext();
-    if (ret < 0 || !bParser.isApplicationTag(AppTags::BacnetObjectIdentifier))
+    ret = _objId.fromRaw(bParser);
         return -BacnetReject::ReasonMissingRequiredParameter;
-    _objId = bParser.toObjectId(&convOk);
-    if (!convOk)
-        return -BacnetReject::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     //parse object name
     ret = bParser.parseNext();
     if (ret < 0 || !bParser.isContextTag(AppTags::CharacterString))
-        return BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetReject::ReasonMissingRequiredParameter;
     _objName = bParser.toString(&convOk);
     if (!convOk)
         return -BacnetReject::ReasonInvalidParameterDataType;

@@ -6,31 +6,30 @@
 #include "subscribecovservicedata.h"
 #include "error.h"
 
-BacnetObject::BacnetObject(Bacnet::ObjectIdStruct id, BacnetDeviceObject *parentDevice):
+BacnetObject::BacnetObject(Bacnet::ObjectIdentifier &id, BacnetDeviceObject *parentDevice):
     _id(id),
     _parentDevice(parentDevice)
 {
 }
 
 BacnetObject::BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice):
+    _id(objectType, instanceNumber),
     _parentDevice(parentDevice)
 {
-    _id.objectType = objectType;
-    _id.instanceNum = instanceNumber;
 }
 
 BacnetObject::~BacnetObject()
 {
 }
 
-Bacnet::ObjectIdStruct &BacnetObject::objectId()
+Bacnet::ObjectIdentifier &BacnetObject::objectId()
 {
     return _id;
 }
 
 quint32 BacnetObject::objectIdNum()
 {
-    return (_id.objectType << 22) | (_id.instanceNum);
+    return _id.objectIdNum();
 }
 
 void BacnetObject::setObjectName(QString name)

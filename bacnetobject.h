@@ -26,7 +26,7 @@ class BacnetObject:
         public Bacnet::CovSupport
 {
 public:
-    BacnetObject(Bacnet::ObjectIdStruct id, BacnetDeviceObject *parentDevice);
+    BacnetObject(Bacnet::ObjectIdentifier &id, BacnetDeviceObject *parentDevice);
     BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice);
     virtual ~BacnetObject();
 
@@ -40,14 +40,14 @@ public:
 
     virtual int ensurePropertyReadySet(Bacnet::PropertyValue &writeData, Bacnet::Error *error) = 0;
 
-    Bacnet::ObjectIdStruct &objectId();
+    Bacnet::ObjectIdentifier &objectId();
     quint32 objectIdNum();
 
     void setObjectName(QString name);
     QString objectName();
 
 private:
-    Bacnet::ObjectIdStruct _id;
+    Bacnet::ObjectIdentifier _id;
     QString _name;
 
 protected:

@@ -11,10 +11,10 @@
 
 using namespace Bacnet;
 
-BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdStruct identifier):
+BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier):
         BacnetObject(identifier, this)
 {
-    Q_ASSERT( (identifier.objectType) == BacnetObjectType::Device);
+    Q_ASSERT( identifier.type() == BacnetObjectType::Device);
 }
 
 BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber):
@@ -213,12 +213,11 @@ void BacnetDeviceObject::propertyIoFinished(int asynchId, int result, BacnetObje
     _handler->propertyIoFinished(asynchId, result, object, this);
 }
 
-void BacnetDeviceObject::propertyValueChanged(BacnetObject *object, BacnetProperty::Identifier propId)
+void BacnetDeviceObject::propertyValueChanged(Bacnet::CovSubscription &subscriprion, BacnetObject *object, QList<Bacnet::PropertyValueShared> &propertiesValues)
 {
     Q_CHECK_PTR(object);
-    Q_ASSERT(BacnetProperty::UndefinedProperty != propId);
     Q_CHECK_PTR(_handler);
-    _handler->propertyValueChanged(object, this, propId);
+    _handler->propertyValueChanged(object, this, subscriprion, propertiesValues);
 }
 
 void BacnetDeviceObject::propertyValueChanged(Property *property)
@@ -228,9 +227,9 @@ void BacnetDeviceObject::propertyValueChanged(Property *property)
       than the service increment (if provided) or determined by device. We don't assume any determination of increment, so will
       inform handler anytime internal property has changed.
       */
-    BacnetProperty::Identifier propId = findPropertyIdentifier(property);
-    Q_CHECK_PTR(_handler);
-    _handler->propertyValueChanged(this, this, propId);
+//    BacnetProperty::Identifier propId = findPropertyIdentifier(property);
+//    Q_CHECK_PTR(_handler);
+//    _handler->propertyValueChanged(this, this, propId);
 }
 
 void BacnetDeviceObject::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
