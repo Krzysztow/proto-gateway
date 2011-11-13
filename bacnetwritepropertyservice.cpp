@@ -31,37 +31,47 @@ qint16 BacnetWritePropertyService::fromRaw(quint8 *servicePtr, quint16 length)
     Bacnet::BacnetTagParser bParser(servicePtr, length);
 
     //get object identifier
-    ret = bParser.parseNext();
-    _objectId = bParser.toObjectId(&convOk);
-    if (ret <= 0 || !bParser.isContextTag(0) || !convOk) //not enough data, not context tag or not this tag
-        return -1;
+    ret = _objectId.fromRaw(bParser, 0);
+    if (ret <= 0) //not enough data, not context tag or not this tag
+        return ret;
     actualPtr += ret;
+    length -= ret;
 
-    //get property identifier
-    ret = bParser.parseNext();
-    _propValue._propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
-    if (ret <= 0 || !bParser.isContextTag(1) || !convOk) //not enough data, not context tag or not this tag
-        return -1;
+    //get property value
+    ret = _propValue.fromRawSpecific(bParser, _objectId.type(), 1);
+    if (ret <= 0)
+        return ret;
     actualPtr += ret;
+    length -= ret;
 
-    //we are supposed to parse Abstract type, which type depends on the object type and property Id
-    _propValue._value = 0;
-    ret = Bacnet::BacnetTagParser::parseStructuredData(bParser, _objectId.objectType, _propValue._propertyId,
-                                               _propValue._arrayIndex, 3, &_propValue._value);
-    if (ret <= 0) //something worng, check it
-        return -1;
-    actualPtr += ret;
+//    //get property identifier
+//    ret = bParser.parseNext();
+//    _propValue._propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
+//    if (ret <= 0 || !bParser.isContextTag(1) || !convOk) //not enough data, not context tag or not this tag
+//        return -1;
+//    actualPtr += ret;
 
-    ret = bParser.parseNext();
-    if (0 == ret) {//no priority passed
-        _propValue._priority = 0xff;
-    } else if (ret < 0) {
-        return -1;
-    } else {
-        _propValue._priority = bParser.toUInt(&convOk);
-        if (!convOk)
-            return -1;
-    }
+//    //get arra
+
+//    //we are supposed to parse Abstract type, which type depends on the object type and property Id
+//    _propValue._value.clear();
+//    ret = Bacnet::BacnetTagParser::parseStructuredData(bParser, _objectId.objectType, _propValue._propertyId,
+//                                               _propValue._arrayIndex, 3, _propValue._value);
+//    if (ret <= 0) //something worng, check it
+//        return -1;
+//    actualPtr += ret;
+
+//    ret = bParser.parseNext();
+//    if (0 == ret) {//no priority passed
+//        _propValue._priority = 0xff;
+//    } else if (ret < 0) {
+//        return -1;
+//    } else {
+//        _propValue._priority = bParser.toUInt(&convOk);
+//        if (!convOk)
+//            return -1;
+//    }
+
     //no more needed to be parsed. The property value is object specific and will be extracted when executed,
     return actualPtr - servicePtr;
 }
@@ -75,71 +85,79 @@ qint32 BacnetWritePropertyService::toRaw(quint8 *startPtr, quint8 buffLength)
 
     //! \todo There is some duplication between Request and Ack toRaw() functions. Unify it.
     //encode Object identifier
-    ret = BacnetCoder::objectIdentifierToRaw(actualPtr, leftLength, _objectId, true, 0);
+    ret = _objectId.toRaw(actualPtr, leftLength, 0);
     if (ret <= 0) {//something wrong?
         Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode objId");
         qDebug("BacnetWriteProperty::toRaw() : propertyencoding problem: objId : %d", ret);
-        return -1;
-    }
-    actualPtr += ret;
-    leftLength -= ret;
-    //encode proeprty identifier
-    ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._propertyId, true, 1);
-    if (ret <= 0) {//something wrong?
-        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode propId");
-        qDebug("BacnetWritePropertyAck::toRaw() : propertyencoding problem: propId : %d", ret);
-        return -2;
-    }
-    actualPtr += ret;
-    leftLength -= ret;
-    //encode array index if present - OPTIONAL
-    if (Bacnet::ArrayIndexNotPresent != _propValue._arrayIndex) {//present
-        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._arrayIndex, true, 2);
-        if (ret <= 0) {//something wrong?
-            Q_ASSERT_X(false, "BacnetWritePropertyAck::toRaw()", "Cannot encode arrayIndex");
-            qDebug("BacnetWritePropertyAck::toRaw() : propertyencoding problem: arrayIndex : %d", ret);
-            return -3;
-        }
-        actualPtr += ret;
-        leftLength -= ret;
-    }
-
-    ret = BacnetCoder::openingTagToRaw(actualPtr, leftLength, 3);
-    if (ret <= 0) {
-        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode opening tag");
-        qDebug("BacnetWriteProperty::toRaw() : cannot encode opening tag: : %d", ret);
-        return -4;
+        return ret;
     }
     actualPtr += ret;
     leftLength -= ret;
 
-    ret = _propValue._value->toRaw(actualPtr, leftLength);
-    if (ret < 0) {
-        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode value");
-        qDebug("BacnetWriteProperty::toRaw() : value problem: value: %d", ret);
-        return -4;
-    }
+    //encode PropertyValue
+    ret = _propValue.toRaw(actualPtr, leftLength, 1);
+    if (ret < 0)
+        return ret;
     actualPtr += ret;
     leftLength -= ret;
 
-    ret = BacnetCoder::closingTagToRaw(actualPtr, leftLength, 3);
-    if (ret <= 0) {
-        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode opening tag");
-        qDebug("BacnetWriteProperty::toRaw() : cannot encode opening tag: : %d", ret);
-        return -4;
-    }
-    actualPtr += ret;
-    leftLength -= ret;
+//    //encode proeprty identifier
+//    ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._propertyId, true, 1);
+//    if (ret <= 0) {//something wrong?
+//        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode propId");
+//        qDebug("BacnetWritePropertyAck::toRaw() : propertyencoding problem: propId : %d", ret);
+//        return -2;
+//    }
+//    actualPtr += ret;
+//    leftLength -= ret;
+//    //encode array index if present - OPTIONAL
+//    if (Bacnet::ArrayIndexNotPresent != _propValue._arrayIndex) {//present
+//        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._arrayIndex, true, 2);
+//        if (ret <= 0) {//something wrong?
+//            Q_ASSERT_X(false, "BacnetWritePropertyAck::toRaw()", "Cannot encode arrayIndex");
+//            qDebug("BacnetWritePropertyAck::toRaw() : propertyencoding problem: arrayIndex : %d", ret);
+//            return -3;
+//        }
+//        actualPtr += ret;
+//        leftLength -= ret;
+//    }
 
-    if (_propValue._priority != 16) {
-        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._priority, true, 4);
-        if (ret < 0) {
-            Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode priority");
-            qDebug("BacnetWriteProperty::toRaw() : value problem: priority: %d", ret);
-            return -5;
-        }
-        actualPtr += ret;
-    }
+//    ret = BacnetCoder::openingTagToRaw(actualPtr, leftLength, 3);
+//    if (ret <= 0) {
+//        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode opening tag");
+//        qDebug("BacnetWriteProperty::toRaw() : cannot encode opening tag: : %d", ret);
+//        return -4;
+//    }
+//    actualPtr += ret;
+//    leftLength -= ret;
+
+//    ret = _propValue._value->toRaw(actualPtr, leftLength);
+//    if (ret < 0) {
+//        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode value");
+//        qDebug("BacnetWriteProperty::toRaw() : value problem: value: %d", ret);
+//        return -4;
+//    }
+//    actualPtr += ret;
+//    leftLength -= ret;
+
+//    ret = BacnetCoder::closingTagToRaw(actualPtr, leftLength, 3);
+//    if (ret <= 0) {
+//        Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode opening tag");
+//        qDebug("BacnetWriteProperty::toRaw() : cannot encode opening tag: : %d", ret);
+//        return -4;
+//    }
+//    actualPtr += ret;
+//    leftLength -= ret;
+
+//    if (_propValue._priority != 16) {
+//        ret = BacnetCoder::uintToRaw(actualPtr, leftLength, _propValue._priority, true, 4);
+//        if (ret < 0) {
+//            Q_ASSERT_X(false, "BacnetWriteProperty::toRaw()", "Cannot encode priority");
+//            qDebug("BacnetWriteProperty::toRaw() : value problem: priority: %d", ret);
+//            return -5;
+//        }
+//        actualPtr += ret;
+//    }
 
     return actualPtr - startPtr;
 }
@@ -178,7 +196,7 @@ qint32 BacnetWritePropertyService::execute(BacnetDeviceObject *device)
     Q_CHECK_PTR(device);
     Q_ASSERT(BacnetError::ClassNoError == _error.errorClass);
 
-    BacnetObject *object = device->bacnetObject(_objectId.objectType << 22 | _objectId.instanceNum);
+    BacnetObject *object = device->bacnetObject(_objectId.objectIdNum());
     Q_CHECK_PTR(object);
     if (0 == object) {
         _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
@@ -225,7 +243,7 @@ bool BacnetWritePropertyService::asynchActionFinished(int asynchId, int result, 
     return false;
 }
 
-//#define WRITE_PROPERTY_TEST
+#define WRITE_PROPERTY_TEST
 #ifdef WRITE_PROPERTY_TEST
 int main()
 {
@@ -240,8 +258,21 @@ int main()
         0x3f
     };
 
+    const quint32 wpSize = sizeof wpService;
+
     BacnetWritePropertyService service;
-    qint16 ret = service.parseFromRaw(wpService, sizeof wpService);
+    qint16 ret = service.fromRaw(wpService, wpSize);
+    Q_ASSERT(ret == wpSize);
+
+    const quint32 writeWpSize(64);
+    quint8 writeWpService[writeWpSize];
+
+    ret = service.toRaw(writeWpService, writeWpSize);
+    qDebug("Size returned %d, should be %d", ret, wpSize);
+    HelperCoder::printArray(wpService, wpSize, "Original \t:");
+    HelperCoder::printArray(writeWpService, ret, "Written \t:");
+    Q_ASSERT(ret > 0);
+    Q_ASSERT(memcmp(wpService, writeWpService, wpSize) == 0);
 }
 
 #endif

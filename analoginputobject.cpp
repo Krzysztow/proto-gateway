@@ -203,36 +203,42 @@ void AnalogInputObject::propertyValueChanged(Property *property)
     Q_CHECK_PTR(property);
 
     BacnetProperty::Identifier propId = findPropertyIdentifier(property);
+    const quint32 propArrayIdx = ArrayIndexNotPresent;
 
     Q_ASSERT(propId != BacnetProperty::UndefinedProperty);
-    if (!covProperties().contains(propId))//this is not a property issuing COV notification.
+    //this is not a property issuing COV notification.
+    if (!covProperties().contains(propId))
         return;
 
-    //helper variable
-    enum {
-        NotChecked,
-        Inform,
-        DontInform } defaultIncrementState(NotChecked);
 
     QList<Bacnet::CovSubscription> &subscriptions = covSubscriptions();
     QList<Bacnet::CovSubscription>::Iterator it = subscriptions.begin();
     QList<Bacnet::CovSubscription>::Iterator itEnd = subscriptions.end();
 
-    typedef QSharedPointer<BacnetDataInterface> BacnetDataInterfaceShared;
-
-    Bacnet::Error error;
-    BacnetDataInterfaceShared propertyValue(propertyReadInstantly(propId, Bacnet::ArrayIndexNotPresent, &error));//create and set into shared pointer.
-    if (propertyValue.isNull()) {
-        qDebug("%s : error while reading instantly value that changed %d", __PRETTY_FUNCTION__, propId);
-        return;
-    }
+    BacnetDataInterfaceShared propertyValue;
     QList<BacnetDataInterfaceShared> covPropertiesValues;
+    //helper variable, to make covPropertiesValues lazy initialized.
+    enum {
+        NotChecked,
+        Inform,
+        DontInform } defaultIncrementState(NotChecked);
+    Bacnet::Error error;
 
     for (; it != itEnd; ++it) {
-        if (it->isCovObjectSubscription() || it->isCovPropertySubscription(propId, ArrayIndexNotPresent)) {
+        if (it->isCovObjectSubscription() || it->isCovPropertySubscription(propId, propArrayIdx)) {
+
+            //property value is lazy initialized; being here means we surely need it.
+            if (propertyValue.isNull()) {
+                propertyValue = BacnetDataInterfaceShared(propertyReadInstantly(propId, propArrayIdx, &error));
+                if (propertyValue.isNull()) {
+                    qDebug("%s : error while reading instantly value that changed %d", __PRETTY_FUNCTION__, propId);
+                    return;
+                }
+            }
+
             CovRealIcnrementHandler *covHandler = it->covHandler();
             if (0 != covHandler) {
-                //it has its own covIncrementHandler.
+                //subscription has its own covIncrementHandler.
                 Q_ASSERT(!it->isCovObjectSubscription()); //only property subscriptions are allowed to have their own covIncrements.
                 propertyValue->accept(covHandler);
                 if (!covHandler->isEqualWithinIncrement()) { //changed more than the increment. Notify subscriber!

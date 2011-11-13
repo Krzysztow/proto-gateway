@@ -5,10 +5,7 @@
 #include "bacnetcommon.h"
 #include "bacnetservicedata.h"
 #include "readpropertyservicedata.h"
-
-namespace Bacnet {
-    class BacnetDataInterface;
-}
+#include "bacnetdata.h"
 
 namespace Bacnet {
 
@@ -27,7 +24,7 @@ namespace Bacnet {
 
     public:
         ReadPropertyServiceData _readData;
-        BacnetDataInterface *_data;
+        BacnetDataInterfaceShared _data;
     };
 
 }

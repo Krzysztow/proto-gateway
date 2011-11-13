@@ -2,7 +2,6 @@
 
 #include <QtCore>
 
-#include "bacnetdata.h"
 #include "bacnetcoder.h"
 #include "bacnettagparser.h"
 
@@ -23,7 +22,7 @@ BacnetReadPropertyAck::BacnetReadPropertyAck(ReadPropertyServiceData &ackReadPrp
 
 BacnetReadPropertyAck::~BacnetReadPropertyAck()
 {
-    delete _data;
+    //delete _data;//no need to delete it anymore - it's a SharedPointer.
 }
 
 qint32 BacnetReadPropertyAck::toRaw(quint8 *startPtr, quint16 buffLength)
@@ -139,10 +138,10 @@ qint32 BacnetReadPropertyAck::fromRaw(quint8 *startPtr, quint16 buffLength)
     }
 
     //we are supposed to parse Abstract type, which type depends on the object type and property Id
-    Q_ASSERT(0 == _data);
-    _data = 0;//just in case
+    Q_ASSERT(_data.isNull());
+    _data.clear();//just in case
     ret = BacnetTagParser::parseStructuredData(bParser, _readData.objId.objectType, _readData.propertyId,
-                                               _readData.arrayIndex, 3, &_data);
+                                               _readData.arrayIndex, 3, _data);
 
 
     if (ret <= 0) //something worng, check it
@@ -167,6 +166,13 @@ int main()
     qDebug("Paresed %d bytes out of %d", ret, rpAckLength);
     Q_ASSERT(ret > 0);
     Q_ASSERT(rpAckLength == ret);
+
+    const quint32 writeSize(64);
+    quint8 writeRpAckData[writeSize];
+
+    ret = rpAck.toRaw(&writeRpAckData[0], writeSize);
+    Q_ASSERT(ret == rpAckLength);
+    HelperCoder::printArray(writeRpAckData, ret, "Written ack:");
 
     return 0;
 }

@@ -2,6 +2,7 @@
 #define BACNETDATA_H
 
 #include <QtCore>
+#include <QSharedPointer>
 #include "bacnetcommon.h"
 #include "datavisitor.h"
 
@@ -9,6 +10,9 @@ namespace Bacnet
 {
     class DataVisitor;
     class BacnetTagParser;
+
+    class BacnetDataInterface;
+    typedef QSharedPointer<BacnetDataInterface> BacnetDataInterfaceShared;
 
     class BacnetDataInterface
     {

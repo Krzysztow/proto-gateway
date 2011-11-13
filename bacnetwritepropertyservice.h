@@ -7,6 +7,7 @@
 #include "bacnetservice.h"
 #include "bacnetcommon.h"
 #include "propertyvalue.h"
+#include "bacnetprimitivedata.h"
 #include "error.h"
 
 class BacnetDeviceObject;
@@ -38,7 +39,7 @@ private:
     bool finishWriting_helper(BacnetDeviceObject *object, int resultCode = 0);
 
 private:
-    Bacnet::ObjectIdStruct _objectId;
+    Bacnet::ObjectIdentifier _objectId;
     Bacnet::PropertyValue _propValue;
 
     BacnetService *_response;

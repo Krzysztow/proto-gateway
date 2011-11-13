@@ -22,7 +22,7 @@ PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataIn
 
 PropertyValue::~PropertyValue()
 {
-    delete _value;
+//    delete _value; // no need to delete the SharedPointer - it will delete it's content, when destroyed and no one else is using it.
 }
 
 qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength, int sequenceShift)
@@ -92,44 +92,59 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
     //get property identifier
     ret = parser.parseNext();
     _propertyId = (BacnetProperty::Identifier)parser.toUInt(&convOkOrCtxt);
-    if (ret <= 0 || !parser.isContextTag(0  + sequenceShift) || !convOkOrCtxt) //not enough data, not context tag or not this tag
-        return -1;
+    if (ret <= 0 || !parser.isContextTag(0  + sequenceShift) || !convOkOrCtxt) {//not enough data, not context tag or not this tag
+        Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Cannot encode propId");
+        qDebug("%s : cannot parse property id: %d", __PRETTY_FUNCTION__, ret);
+        return BacnetError::CodeMissingRequiredParameter;
+    }
     total += ret;
 
     //get array index, if exists
     ret = parser.nextTagNumber(&convOkOrCtxt);
-    if (ret < 0)
-        return -1;
-    if ( ((1 + sequenceShift) == ret) && convOkOrCtxt) {
+    if (ret < 0) {
+        Q_ASSERT_X(false, __PRETTY_FUNCTION__, "finished to early.");
+        qDebug("%s : finished to early!", __PRETTY_FUNCTION__);
+        return BacnetError::CodeInconsistentParameters;//even if this is optional, there are other params to come.
+    } else if ( ((1 + sequenceShift) == ret) && convOkOrCtxt) {
         ret = parser.parseNext();
         _arrayIndex = parser.toUInt(&convOkOrCtxt);
-        if ( (ret < 0) || !convOkOrCtxt )
-            return -1;
+        if ( (ret < 0) || !convOkOrCtxt ) {
+            Q_ASSERT_X(false, __PRETTY_FUNCTION__, "array index couldn't be decoded!");
+            qDebug("%s : array index couldn't be decoded!", __PRETTY_FUNCTION__);
+            return BacnetError::CodeInvalidDataType;
+        }
         total += ret;
     } else {
         _arrayIndex = Bacnet::ArrayIndexNotPresent;
     }
 
     //we are supposed to parse Abstract type, which type depends on the object type and property Id
-    _value = 0;
+    Q_ASSERT(_value.isNull());
+    _value.clear();
     ret = BacnetTagParser::parseStructuredData(parser, objType, _propertyId, _arrayIndex,
-                                         2  + sequenceShift, &_value);
-    if (ret < 0 || (0 == _value) )
-        return -2;
-
-//    if (ret <= 0) //something worng, check it
-//        return -1;
+                                         2  + sequenceShift, _value);
+    Q_ASSERT(!_value.isNull());
+    if (ret < 0 || _value.isNull()) {
+        qDebug("%s : couldn't create abstract value.", __PRETTY_FUNCTION__);
+        Q_ASSERT(false);
+        return BacnetError::CodeOther;
+    }
     total += ret;
 
     ret = parser.nextTagNumber(&convOkOrCtxt);
     if ( ((3 + sequenceShift) == ret) && (convOkOrCtxt) ) {
         ret = parser.parseNext();
         if (ret < 0) {
-            return -1;
+            Q_ASSERT_X(false, __PRETTY_FUNCTION__, "finished to early.");
+            qDebug("%s : finished to early!", __PRETTY_FUNCTION__);
+            return BacnetError::CodeInconsistentParameters;//even if this is optional, there are other params to come.
         } else {
             _priority = parser.toUInt(&convOkOrCtxt);
-            if (!convOkOrCtxt)
-                return -1;
+            if (!convOkOrCtxt) {
+                qDebug("%s : priority couldn't be decoded!", __PRETTY_FUNCTION__);
+                Q_ASSERT(false);
+                return BacnetError::CodeInvalidDataType;
+            }
             total += ret;
         }
     } else {

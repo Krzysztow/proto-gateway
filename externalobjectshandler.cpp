@@ -197,7 +197,7 @@ void ExternalObjectsHandler::handleResponse(BacnetConfirmedServiceHandler *act,
         return;
     }
 
-    BacnetDataInterface *value = rp._data;
+    BacnetDataInterfaceShared value = rp._data;
     QVariant internalValue = value->toInternal();
     ri.concernedProperty->setValueSilent(internalValue);
     ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);

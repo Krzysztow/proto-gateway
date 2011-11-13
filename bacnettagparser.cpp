@@ -495,28 +495,27 @@ quint16 BacnetTagParser::valueLength()
 #include "bacnetdefaultobject.h"
 qint16 BacnetTagParser::parseStructuredData(BacnetTagParser &bParser,
                                             BacnetObjectType::ObjectType objType, BacnetProperty::Identifier propId, quint32 arrayIndex,
-                                            quint8 tagToParse, Bacnet::BacnetDataInterface **resultData)
+                                            quint8 tagToParse, Bacnet::BacnetDataInterfaceShared &resultData)
 {
-    Q_CHECK_PTR(resultData);//pointer pointer can't be zero
-    Q_ASSERT_X(0 == *resultData, "BacnetTagParser::parseStructuredData()", "Don't pass me data in resultData pointer. This is the output!");
+    Q_ASSERT_X(resultData.isNull(), "BacnetTagParser::parseStructuredData()", "Don't pass me data in resultData pointer. This is the output!");
     qint16 total(0);
     qint16 ret(0);
 
 
-    *resultData = BacnetDefaultObject::createDataForObjectProperty(objType, propId, arrayIndex);
-    Q_CHECK_PTR(*resultData);
-    if (0 == (*resultData)) {
+    resultData = BacnetDataInterfaceShared(BacnetDefaultObject::createDataForObjectProperty(objType, propId, arrayIndex));
+    Q_ASSERT(!resultData.isNull());
+    if (resultData.isNull()) {
         //unknown tag, can't create
         Q_ASSERT_X(false, "BacnetWritePropertyService::fromRaw()", "Run out of memory or not supported object type!");
         return -2;
     }
 
-    if ((*resultData)->typeId() <= DataType::BACnetObjectIdentifier) {//this is a simple data, wrapped into the opening and closing tag
+    if (resultData->typeId() <= DataType::BACnetObjectIdentifier) {//this is a simple data, wrapped into the opening and closing tag
         ret = bParser.parseNext();
         if ( (ret < 0) || !bParser.isOpeningTag(tagToParse))
             return -1;
         total += ret;
-        ret = (*resultData)->fromRaw(bParser);
+        ret = resultData->fromRaw(bParser);
         if (ret < 0)
             return -1;
         total += ret;
@@ -527,7 +526,7 @@ qint16 BacnetTagParser::parseStructuredData(BacnetTagParser &bParser,
         return total;
     }
 
-    return (*resultData)->fromRaw(bParser, tagToParse);
+    return resultData->fromRaw(bParser, tagToParse);
 }
 
 //Application data parsing checker!

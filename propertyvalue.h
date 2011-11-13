@@ -26,7 +26,7 @@ namespace Bacnet {
 //        Bacnet::PropertyValueStruct _value;
         BacnetProperty::Identifier _propertyId;
         quint32 _arrayIndex;
-        BacnetDataInterface *_value;
+        BacnetDataInterfaceShared _value;
         quint8 _priority;
     };
 }
