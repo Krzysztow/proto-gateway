@@ -39,6 +39,10 @@ public:
 
     bool isIssueConfirmedNotifications() {return _issueConfNotification;}
 
+    bool recipientHasAddress() {return _recipientProcess.recipientHasAddress();}
+    const Address *recipientAddress() const {return _recipientProcess.recipientAddress();}
+    const ObjectIdentifier *recipientObjId() const {return _recipientProcess.recipientObjId();}
+
 public:
     RecipientProcess _recipientProcess;
     ObjectPropertyReference _monitoredPropertyRef;

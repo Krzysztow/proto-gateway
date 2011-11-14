@@ -295,8 +295,8 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
     return (dataPtr - actualBytePtr);
 }
 
-void BacnetNetworkLayerHandler::sendApdu(Buffer *apduBuffer, bool dataExpectingReply, BacnetAddress *destAddr,
-                                         BacnetAddress *srcAddr, Bacnet::NetworkPriority prio)
+void BacnetNetworkLayerHandler::sendApdu(Buffer *apduBuffer, bool dataExpectingReply, const BacnetAddress *destAddr,
+                                         const BacnetAddress *srcAddr, Bacnet::NetworkPriority prio)
 {
 #warning "Communication with Application layer not implemented, yet!"
     //remember to include the network address of the source

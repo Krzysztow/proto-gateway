@@ -62,7 +62,7 @@ InternalAddress &BacnetTSM2::myAddress()
     return _myRequestAddress;
 }
 
-void BacnetTSM2::discoverDevice(ObjectIdStruct &deviceId)
+void BacnetTSM2::discoverDevice(const ObjectIdStruct &deviceId)
 {
     BacnetUnconfirmedRequestData reqData(BacnetServices::WhoIs);
     WhoIsServiceData serviceData(objIdToNum(deviceId));
@@ -99,7 +99,7 @@ void BacnetTSM2::discoverDevice(ObjectIdStruct &deviceId)
     _netHandler->sendApdu(&buffer, false, &globalAddr, &srcAddr);
 }
 
-bool BacnetTSM2::deviceAddress(ObjectIdStruct &deviceId, BacnetAddress *address)
+bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address)
 {
     Q_CHECK_PTR(address);
     if (!_routingTable.contains(deviceId))
@@ -113,7 +113,7 @@ bool BacnetTSM2::deviceAddress(ObjectIdStruct &deviceId, BacnetAddress *address)
     return false;
 }
 
-bool BacnetTSM2::send(BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //generate invoke id.
     int invokeId = _generator.generateId();
@@ -159,7 +159,7 @@ bool BacnetTSM2::send(BacnetAddress &destination, BacnetAddress &sourceAddress, 
     return true;
 }
 
-bool BacnetTSM2::send(ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //find bacnetadderss to send.
     BacnetAddress destAddr;
@@ -359,7 +359,20 @@ void BacnetTSM2::sendError(BacnetAddress &destination, BacnetAddress &source, qu
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending error message with:");
 }
 
-void BacnetTSM2::sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
+void BacnetTSM2::sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
+{
+    //find bacnetadderss to send.
+    BacnetAddress destAddr;
+    if (!deviceAddress(destinedObject, &destAddr)) {
+        discoverDevice(destinedObject);
+        qDebug("%s : unconfirmed request not sent, since no %d in entry table is preseny. Discovert started.", __PRETTY_FUNCTION__, objIdToNum(destinedObject));
+        return;
+    }
+
+    return sendUnconfirmed(destAddr, source, data, serviceChoice);
+}
+
+void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
 {
     BacnetUnconfirmedRequestData header(serviceChoice);
     //get buffer

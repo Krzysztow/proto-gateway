@@ -31,8 +31,8 @@ namespace Bacnet {
 
 //        bool sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend);
 
-        bool send(ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
-        bool send(BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+        bool send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+        bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 
         void receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data);
         void receive(BacnetAddress &source, BacnetAddress &destination, BacnetComplexAckData *data, quint8 *bodyPtr, quint16 bodyLength);
@@ -45,15 +45,17 @@ namespace Bacnet {
         void sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice);
         void sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetReject::RejectReason reason, quint8 invokeId);
         void sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId, BacnetServices::BacnetErrorChoice errorChoice, Error &error);
-        void sendUnconfirmed(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+
+        void sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+        void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
         void setAddress(InternalAddress &address);
         InternalAddress &myAddress();
 
 
     public:
-        bool deviceAddress(ObjectIdStruct &deviceId, BacnetAddress *address);
-        void discoverDevice(ObjectIdStruct &deviceId);
+        bool deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address);
+        void discoverDevice(const ObjectIdStruct &deviceId);
 
     private:
         struct ConfirmedRequestEntry

@@ -221,6 +221,8 @@ public:
     Address();
 
     bool operator == (const Address &other) const {return (_bacAddress == other._bacAddress);}
+//    BacnetAddress &opeartor();
+    const BacnetAddress &address() const;
 
 private:
     BacnetAddress _bacAddress;
@@ -251,6 +253,7 @@ public:
     bool hasAddress() const;
     const Address *address() const;
     const ObjectIdentifier *objId() const;
+    const ObjectIdStruct &objIdStruct() const;
 
 private:
     ObjectIdentifier *_objectId;
@@ -280,6 +283,10 @@ public:
     bool compare(ObjectIdStruct &objId, quint32 processId);
 
     bool operator == (const RecipientProcess &other) const;
+
+    bool recipientHasAddress();
+    const ObjectIdentifier *recipientObjId() const;
+    const Address *recipientAddress() const;
 
 private:
     Recipient _recipient;

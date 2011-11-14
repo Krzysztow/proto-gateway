@@ -11,16 +11,20 @@
 
 using namespace Bacnet;
 
-BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier):
-        BacnetObject(identifier, this)
+BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, InternalAddress address):
+    BacnetObject(identifier, this),
+    _address(address)
 {
     Q_ASSERT( identifier.type() == BacnetObjectType::Device);
+    Q_ASSERT(_address != BacnetInternalAddressHelper::InvalidInternalAddress);
 }
 
-BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber):
-        BacnetObject(BacnetObjectType::Device, instanceNumber, this)
+BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber, InternalAddress address):
+    BacnetObject(BacnetObjectType::Device, instanceNumber, this),
+    _address(address)
 {
     Q_ASSERT(instanceNumber <= 0x03fffff);
+    Q_ASSERT(_address != BacnetInternalAddressHelper::InvalidInternalAddress);
 }
 
 BacnetDeviceObject::~BacnetDeviceObject()
@@ -249,6 +253,11 @@ void BacnetDeviceObject::setHandler(InternalObjectsHandler *bHandler)
 const QMap<quint32, BacnetObject*> &BacnetDeviceObject::childObjects()
 {
     return _childObjects;
+}
+
+InternalAddress &BacnetDeviceObject::address()
+{
+    return _address;
 }
 
 //QVariant::Type BacnetDeviceObject::variantTypeForProperty_helper(BacnetProperty::Identifier propertyId)

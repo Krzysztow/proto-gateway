@@ -14,6 +14,10 @@ quint8 BacnetInternalAddressHelper::macAddressFromRaw(quint8 *addrRawPtr, Bacnet
     return InternalAddressLength;
 }
 
+InternalAddress BacnetInternalAddressHelper::internalAddress(quint32 hostOrderAddress)
+{
+    return hostOrderAddress;
+}
 
 InternalAddress BacnetInternalAddressHelper::internalAddress(const BacnetAddress &inAddress)
 {

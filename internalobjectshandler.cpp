@@ -21,6 +21,7 @@
 #include "subscribecovservicedata.h"
 #include "covnotificationrequestdata.h"
 #include "covconfnotificationservicehandler.h"
+#include "bacnetinternaladdresshelper.h"
 
 //void AsynchSetter::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
 void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
@@ -57,12 +58,29 @@ void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDe
         covData->_listOfValues.append(propertiesValues[i]);
     }
 
+    BacnetAddress devAddress = BacnetInternalAddressHelper::toBacnetAddress(device->address());
+
+    //! \todo Unify send interface!
     //send it
     if (subscription.isIssueConfirmedNotifications()) {
-        CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
-        _tsm->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
+        Bacnet::CovConfNotificationServiceHandler *hndlr = new Bacnet::CovConfNotificationServiceHandler(covData);//takes ownership
+        if (subscription.recipientHasAddress()) {
+            _tsm->send(subscription.recipientAddress()->address(), devAddress, BacnetServices::ConfirmedCOVNotification, hndlr);
+        } else {
+            Q_ASSERT(0 != subscription.recipientObjId());
+            _tsm->send(subscription.recipientObjId()->_value, device->address(), BacnetServices::ConfirmedCOVNotification, hndlr);
+        }
+#warning "Get rid of _value dependency (ObjIdStruct)"
     } else {
-        _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
+        if (subscription.recipientHasAddress()) {
+            _tsm->sendUnconfirmed(subscription.recipientAddress()->address(), devAddress, *covData, BacnetServices::UnconfirmedCOVNotification);
+        } else {
+            Q_ASSERT(0 != subscription.recipientObjId());
+            _tsm->sendUnconfirmed(subscription.recipientObjId()->_value, devAddress, *covData, BacnetServices::UnconfirmedCOVNotification);
+        }
+
+        //was sent, now has to be destroyed!
+        delete covData;
     }
 
 ////    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;

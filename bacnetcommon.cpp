@@ -1,6 +1,6 @@
 #include "bacnetcommon.h"
 
-quint32 Bacnet::objIdToNum(Bacnet::ObjectIdStruct &objId) {
+quint32 Bacnet::objIdToNum(const Bacnet::ObjectIdStruct &objId) {
     return ( (objId.objectType << 22) | (0x3fffff & objId.instanceNum) );
 }
 

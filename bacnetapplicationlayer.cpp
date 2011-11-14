@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
     subject->setValue(test);
     proto2->addProperty(subject);
 
-    BacnetDeviceObject *device = new BacnetDeviceObject(1);
+    BacnetDeviceObject *device = new BacnetDeviceObject(1, destAddrRaw);
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
     device->addInternalProperty(BacnetProperty::PresentValue, obs);
@@ -410,12 +410,12 @@ int main(int argc, char *argv[])
     aio->setObjectName("HW_Setpoint");
     aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
-    BacnetDeviceObject *device1 = new BacnetDeviceObject(8);
-    device1->setObjectName("BestDeviceEver");
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
     BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
+    BacnetDeviceObject *device1 = new BacnetDeviceObject(8, addr);
     intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
+    device1->setObjectName("BestDeviceEver");
 
     AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
     aio1->setObjectName("OATemp");

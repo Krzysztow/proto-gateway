@@ -16,6 +16,7 @@ namespace BacnetInternalAddressHelper
 
     quint8 macAddressFromRaw(quint8 *addrRawPtr, BacnetAddress *outAddress);
 
+    InternalAddress internalAddress(quint32 hostOrderAddress);
     InternalAddress internalAddress(const BacnetAddress &inAddress);
 
     quint16 internalAddrToRaw(InternalAddress address, quint8 *outData);

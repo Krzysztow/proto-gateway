@@ -349,6 +349,16 @@ Address::Address(BacnetAddress &address):
 {
 }
 
+//BacnetAddress &Address::opeartor()
+//{
+//    return _bacAddress;
+//}
+
+const BacnetAddress &Address::address() const
+{
+    return _bacAddress;
+}
+
 qint32 Address::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
     quint8 *actualPtr(ptrStart);
@@ -482,6 +492,12 @@ const ObjectIdentifier *Recipient::objId() const
 {
     return _objectId;
 }
+
+const ObjectIdStruct &Recipient::objIdStruct() const
+{
+    return _objectId->_value;
+}
+
 
 qint32 Recipient::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
@@ -724,6 +740,21 @@ bool RecipientProcess::compare(ObjectIdStruct &objId, quint32 processId)
     }
 
     return ( (processId == _procId.value()) && (*(_recipient.objId()) == objId) );
+}
+
+bool RecipientProcess::recipientHasAddress()
+{
+    return _recipient.hasAddress();
+}
+
+const ObjectIdentifier *RecipientProcess::recipientObjId() const
+{
+    return _recipient.objId();
+}
+
+const Address *RecipientProcess::recipientAddress() const
+{
+    return _recipient.address();
 }
 
 qint32 RecipientProcess::toRaw(quint8 *ptrStart, quint16 buffLength)

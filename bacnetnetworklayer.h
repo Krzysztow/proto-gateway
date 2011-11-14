@@ -38,8 +38,8 @@ public:
       */
     void readNpdu(quint8 *npdu, quint16 length, BacnetAddress &dlSrcAddress, BacnetTransportLayerHandler *port);
 
-    void sendApdu(Buffer *apduBuffer, bool dataExpectingReply, BacnetAddress *destAddr,
-                  BacnetAddress *srcAddr, Bacnet::NetworkPriority prio = Bacnet::PriorityNormal);
+    void sendApdu(Buffer *apduBuffer, bool dataExpectingReply, const BacnetAddress *destAddr,
+                  const BacnetAddress *srcAddr, Bacnet::NetworkPriority prio = Bacnet::PriorityNormal);
 
     /**
       Sets transport layer (or its proxy) that it communicates with, when wants to send data.
