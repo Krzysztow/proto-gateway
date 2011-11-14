@@ -4,6 +4,9 @@
 #include "subscribecovservicedata.h"
 #include "bacnetaddress.h"
 #include "covincrementhandlers.h"
+#include "propertyvalue.h"
+#include "bacnetobject.h"
+#include "bacnetdeviceobject.h"
 
 using namespace Bacnet;
 
@@ -114,25 +117,118 @@ void CovSupport::remvoeCovIncrementHandler(BacnetProperty::Identifier propId)
     addCovIncrementHandler(propId, 0);
 }
 
-bool Bacnet::CovSupport::valueChanged(BacnetProperty::Identifier propId, Bacnet::BacnetDataInterface *value)
-{
-    CovRealIcnrementHandler *propertyCovHandler = _incrementHandlers[propId];
-    if (0 == propertyCovHandler)//if there is no increment handler - assume, value has changed at least by increment.
-        return true;
+//bool CovSupport::valueChanged(BacnetProperty::Identifier propId, Bacnet::BacnetDataInterface *value)
+//{
+//    CovRealIcnrementHandler *propertyCovHandler = _incrementHandlers[propId];
+//    if (0 == propertyCovHandler)//if there is no increment handler - assume, value has changed at least by increment.
+//        return true;
 
-    value->accept(propertyCovHandler);
-    if (!propertyCovHandler->isEqualWithinIncrement())//are we changed more than increment specified?
-        return true;
+//    value->accept(propertyCovHandler);
+//    if (!propertyCovHandler->isEqualWithinIncrement())//are we changed more than increment specified?
+//        return true;
 
-    //don't notify subscribers.
-    return false;
-}
+//    //don't notify subscribers.
+//    return false;
+//}
 
-QList<Bacnet::CovSubscription> & Bacnet::CovSupport::covSubscriptions()
+QList<Bacnet::CovSubscription> & CovSupport::covSubscriptions()
 {
     return _subscriptions;
 }
 
+void CovSupport::propertyChanged(BacnetProperty::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify)
+{
+    Q_CHECK_PTR(notifyingObject);
+    Q_CHECK_PTR(deviceToNotify);
+
+    //this is not a property issuing COV notification.
+    if (!covProperties().contains(propId))
+        return;
+
+
+    QList<Bacnet::CovSubscription> &subscriptions = covSubscriptions();
+    QList<Bacnet::CovSubscription>::Iterator it = subscriptions.begin();
+    QList<Bacnet::CovSubscription>::Iterator itEnd = subscriptions.end();
+
+    int propertyValueIdx(-1);//index of changed property in covPropertiesValues list
+    QList<PropertyValueShared> covPropertiesValues;
+    //helper variable, to make covPropertiesValues lazy initialized.
+    enum {
+        NotChecked,
+        Inform,
+        DontInform } defaultIncrementState(NotChecked);
+    Bacnet::Error error;
+
+    for (; it != itEnd; ++it) {
+        if (it->isCovObjectSubscription() || it->isCovPropertySubscription(propId, propArrayIdx)) {
+
+            //property value is lazy initialized; being here means we surely need it.
+            if (-1 == propertyValueIdx) {
+                covPropertiesValues.append(PropertyValueShared(new PropertyValue(propId,
+                                                                                 BacnetDataInterfaceShared(notifyingObject->propertyReadInstantly(propId, propArrayIdx, &error)),
+                                                                                 propArrayIdx)));
+                propertyValueIdx = covPropertiesValues.count() - 1;
+                Q_ASSERT(propertyValueIdx >= 0);
+                if (covPropertiesValues[propertyValueIdx].isNull() || covPropertiesValues[propertyValueIdx]->_value.isNull()) {
+                    qDebug("%s : error while reading instantly value that changed %d", __PRETTY_FUNCTION__, propId);
+                    return;
+                }
+            }
+
+            CovRealIcnrementHandler *covHandler = it->covHandler();
+            if (0 != covHandler) {
+                //subscription has its own covIncrementHandler.
+                Q_ASSERT(!it->isCovObjectSubscription()); //only property subscriptions are allowed to have their own covIncrements.
+                covPropertiesValues[propertyValueIdx]->_value->accept(covHandler);
+                if (!covHandler->isEqualWithinIncrement()) { //changed more than the increment. Notify subscriber!
+                    deviceToNotify->propertyValueChanged(*it, notifyingObject, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
+                }
+            } else {
+                //subscription uses common/default increment handler.
+                if (NotChecked == defaultIncrementState) {
+                    //check only once, if the default COVIncrement was exceeded.
+                    covHandler = covIncrementHandler(propId);
+                    //if we have registered covIncrementHandler, check if notification is to be sent.
+                    if (0 != covHandler) {
+                        covPropertiesValues[propertyValueIdx]->_value->accept(covHandler);
+                        if (covHandler->isEqualWithinIncrement()) {//the value changed less than the increment, since last time. Don't inform all.
+                            defaultIncrementState = DontInform;
+                            continue;
+                        }
+                    }
+                    //being here means, either no covHandler was declared (send notification on every change) or increment was exceeded.
+                    defaultIncrementState = Inform;
+                }
+
+                if (it->isCovObjectSubscription()) {
+                    /**
+                        \note Here we lazy initialize the covPropertiesValues list. If there is no object-subscriber, there is no need to initialize it.
+                        However if there is, fill it only once!
+                        \note If the list is empty (and we know that covProperties() is not empty, since we are here), the list is uninitialized yet.
+                    */
+                    if (covPropertiesValues.isEmpty()) {
+                        foreach (BacnetProperty::Identifier id, covProperties()) {
+                            if (id != propId) {//the property with propId is already added.
+                                const quint32 arrayIdx = Bacnet::ArrayIndexNotPresent;
+                                BacnetDataInterfaceShared propertyValueData(notifyingObject->propertyReadInstantly(id, arrayIdx, &error));
+                                if (propertyValueData.isNull()) {
+                                    qDebug("%s : cannot read covPropertyValue for values list %d", __PRETTY_FUNCTION__, id);
+                                    return;//all the allocated data will be freed by shared pointers.
+                                }
+                                covPropertiesValues.append(PropertyValueShared(new PropertyValue(id, propertyValueData, arrayIdx)));
+                            }
+                        }
+                    }
+
+                    //covPropertiesValues is already initialized here.
+                    deviceToNotify->propertyValueChanged(*it, notifyingObject, covPropertiesValues);
+                } else {
+                    deviceToNotify->propertyValueChanged(*it, notifyingObject, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
+                }
+            }
+        }
+    }
+}
 
 /////////////////////////////////////////////////////////////
 //template <typename T, class T2>

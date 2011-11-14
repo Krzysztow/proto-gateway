@@ -3,8 +3,10 @@
 
 #include "bacnetcovsubscription.h"
 
-namespace Bacnet {
+class BacnetObject;
+class BacnetDeviceObject;
 
+namespace Bacnet {
 class Error;
 //class CovRealIcnrementHandler;
 
@@ -24,7 +26,7 @@ public:
 
     //! \note If the value is of real type, increment handler visits it to check if notification of subscribers is needed. Otherwise, notification is needed (because CDM invokes other functions
     //  only if change occured.
-    bool valueChanged(BacnetProperty::Identifier propId, BacnetDataInterface *value);
+//    bool valueChanged(BacnetProperty::Identifier propId, BacnetDataInterface *value);
 
     //! Adds new increment handler. The ownership is transferred to this class!
     void addCovIncrementHandler(BacnetProperty::Identifier propId, CovRealIcnrementHandler *incrementHandler);
@@ -34,6 +36,8 @@ public:
     CovRealIcnrementHandler *takeCovIncrementHandler(BacnetProperty::Identifier propId);
     //! Remove increment handler. Returns true, if the property had increment handler. Otherwise false.
     void remvoeCovIncrementHandler(BacnetProperty::Identifier propId);
+
+    void propertyChanged(BacnetProperty::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify);
 
 protected:
     QList<Bacnet::CovSubscription> _subscriptions;
