@@ -39,6 +39,15 @@ public:
 
     void propertyChanged(BacnetProperty::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify);
 
+    /** Method to execute time dependant operations, like unsubscription of unused elements. Returns true, if instance still needs time dependant invocations, otherwise false.
+        If returned false, then to be timely invoked again, instance has to subscribe with CovSupportTimeHandler using its addCovSupporter() method.
+      */
+    bool timeout(int timePassed_s);
+
+private:
+    void updateWithTimeHandlerHelper();
+    bool hasTimeVariantSubscription();
+
 protected:
     QList<Bacnet::CovSubscription> _subscriptions;
     QHash<BacnetProperty::Identifier, CovRealIcnrementHandler*> _incrementHandlers;

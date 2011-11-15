@@ -81,7 +81,8 @@ SOURCES += main.cpp \
     datavisitor.cpp \
     covincrementhandlers.cpp \
     internalsubscribecovservicehandler.cpp \
-    bacnetcovsubscription.cpp
+    bacnetcovsubscription.cpp \
+    covsubscriptionstimehandler.cpp
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
     bacnetbbmdhandler.h \
@@ -161,8 +162,11 @@ HEADERS += bacnetvirtuallinklayer.h \
     datavisitor.h \
     covincrementhandlers.h \
     internalsubscribecovservicehandler.h \
-    bacnetcovsubscription.h
+    bacnetcovsubscription.h \
+    covsubscriptionstimehandler.h
 OTHER_FILES +=
+
+
 
 
 

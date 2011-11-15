@@ -7,6 +7,7 @@
 #include "propertyvalue.h"
 #include "bacnetobject.h"
 #include "bacnetdeviceobject.h"
+#include "covsubscriptionstimehandler.h"
 
 using namespace Bacnet;
 
@@ -58,6 +59,9 @@ void CovSupport::addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &cov
     }
 
     subscription->update(covData._lifetime, covData.takeCovIncrement());
+
+    //! \todo some optimization would be useful here, so that isntance doesn't subscribe itself to timeHandler, if is already subscribed.
+    updateWithTimeHandlerHelper();
 }
 
 void CovSupport::rmCovSubscription(quint32 processId, BacnetAddress &requester, Bacnet::ObjectIdentifier &monitoredObjectId, Bacnet::PropertyReference &propReference, Bacnet::Error *error)
@@ -77,6 +81,9 @@ void CovSupport::rmCovSubscription(quint32 processId, BacnetAddress &requester, 
         //such subscription exists, indeed.
         qDebug("%s : subscription removed.", __PRETTY_FUNCTION__);
         _subscriptions.erase(it);
+
+        //update subscription with timer handler.
+        updateWithTimeHandlerHelper();
     }
 }
 
@@ -228,6 +235,56 @@ void CovSupport::propertyChanged(BacnetProperty::Identifier propId, quint32 prop
             }
         }
     }
+}
+
+bool CovSupport::timeout(int timePassed_s)
+{
+    QList<Bacnet::CovSubscription>::Iterator it = _subscriptions.begin();
+    QList<Bacnet::CovSubscription>::Iterator endIt = _subscriptions.end();
+
+    bool changeOccured(false);
+
+    while (it != endIt) {
+        if (it->isSubscriptionTimeVariant()) {
+            if (it->timeLeft() > timePassed_s)
+                it->updateTimeLeft(timePassed_s);
+            else {
+                it = _subscriptions.erase(it);
+                changeOccured = true;
+                continue;//to omit ++it
+            }
+        }
+        ++it;
+    }
+
+    //check if time dependency is still required
+    if (changeOccured) {
+        return hasTimeVariantSubscription();
+    }
+
+    return true;
+}
+
+bool CovSupport::hasTimeVariantSubscription()
+{
+    QList<Bacnet::CovSubscription>::Iterator it = _subscriptions.begin();
+    QList<Bacnet::CovSubscription>::Iterator endIt = _subscriptions.end();
+
+    for (; it != endIt; ++it) {
+        if (it->isSubscriptionTimeVariant()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void CovSupport::updateWithTimeHandlerHelper()
+{
+    if (hasTimeVariantSubscription())
+        CovSubscriptionsTimeHandler::instance()->addCovSupporter(this);
+    else
+        CovSubscriptionsTimeHandler::instance()->rmCovSupporter(this);
 }
 
 /////////////////////////////////////////////////////////////

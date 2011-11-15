@@ -22,6 +22,8 @@ public://overriden BacnetDataInterface methonds
 
     virtual DataType::DataType typeId();
 
+    static const quint32 SubscriptionNotTimeVariant = 0;
+
 public:
     CovSubscription(SubscribeCOVServiceData &data, BacnetAddress &address);
     ~CovSubscription();
@@ -42,6 +44,10 @@ public:
     bool recipientHasAddress() {return _recipientProcess.recipientHasAddress();}
     const Address *recipientAddress() const {return _recipientProcess.recipientAddress();}
     const ObjectIdentifier *recipientObjId() const {return _recipientProcess.recipientObjId();}
+
+    bool isSubscriptionTimeVariant() {return (_timeLeft != SubscriptionNotTimeVariant);}
+    quint32 timeLeft() {return _timeLeft;}
+    void updateTimeLeft(quint32 timePassed) {_timeLeft -= timePassed;}
 
 public:
     RecipientProcess _recipientProcess;
