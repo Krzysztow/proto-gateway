@@ -5,7 +5,6 @@
 #include <QVector>
 #include <QVariant>
 #include <QObject>
-#include <QTimer>
 #include <limits>
 
 class PropertyOwner;
@@ -45,8 +44,8 @@ public:
     PropertyObserver *asynchActionRequester(int asynchId);
     PropertySubject *asynchActionSubject(int asynchId);
 
-private slots:
-    void internalTimeout();
+protected:
+    void timerEvent(QTimerEvent *);
 
 private:
     DataModel(QObject *parent = 0);
@@ -79,11 +78,6 @@ private:
         PropertyObserver *requestingObserver;
     };
     QVector<AsynchIdEntry> _asynchIdStates;
-    QTimer *_transactionTimer;
-
-
-
-
 
     static const int UNUSED_TIME_VALUE;
     inline bool isAsynchIdUnused(int asynchId) {return (UNUSED_TIME_VALUE == _asynchIdStates[asynchId].timeLeft);}

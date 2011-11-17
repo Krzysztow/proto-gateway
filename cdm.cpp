@@ -8,19 +8,15 @@ const int DataModel::UNUSED_TIME_VALUE = std::numeric_limits<int>::min();
 
 DataModel::DataModel(QObject *parent):
         QObject(parent),
-        _internalTimeout100ms(DEFAULT_TIMEOUT),
-        _transactionTimer(new QTimer(this))
+        _internalTimeout100ms(DEFAULT_TIMEOUT)
 {
     initiateAsynchIds();
 
-    connect(_transactionTimer, SIGNAL(timeout()), this, SLOT(internalTimeout()));
-    _transactionTimer->start(100*_internalTimeout100ms);
+    startTimer(100*_internalTimeout100ms);
 }
 
 DataModel::~DataModel()
 {
-    delete _transactionTimer;
-
 }
 
 DataModel *DataModel::instance()
@@ -132,7 +128,8 @@ void DataModel::releaseAsynchId(int id)
     setAsynchIdUnused(id);
 }
 #include <QDebug>
-void DataModel::internalTimeout()
+//void internalTimeout()
+void DataModel::timerEvent(QTimerEvent *)
 {
     qDebug()<<"Cleaning is started!";
     for (int id = 0; id<MAX_ASYNCH_ID; ++id) {
@@ -143,15 +140,15 @@ void DataModel::internalTimeout()
                         _asynchIdStates[id].subjectProperty;//timeout INTERNAL_TIMEOUT
                     }
                     if (_asynchIdStates[id].requestingObserver != 0) {
-                        _asynchIdStates[id].requestingObserver;//timeout INTERNAL_TIMEO
+                        _asynchIdStates[id].requestingObserver->asynchActionFinished(id, Property::InternalTimeout);//timeout INTERNAL_TIMEOUT
                     }
                     setAsynchIdUnused(id);
                 } else {//clean it next time
                     _asynchIdStates[id].timeLeft = -1;//mark it to be cleaned next time
                 }
             }
-        } /*else {//transaction relatively new
+        } else {//transaction relatively new
             _asynchIdStates[id].timeLeft -= _internalTimeout100ms;
-        }*/
+        }
     }
 }
