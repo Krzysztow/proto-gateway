@@ -89,7 +89,7 @@ bool InternalRPRequestHandler::execute()
         return true;//am done, delete me
     }
 
-    int readyness = object->ensurePropertyReadyRead(_data.propertyId);
+    int readyness = object->isPropertyReadready(_data.propertyId);
     if (readyness < 0) {
         if (!_error.hasError())
             _error.setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);

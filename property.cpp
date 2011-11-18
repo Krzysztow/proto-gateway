@@ -94,7 +94,7 @@ int PropertySubject::getValueSafe(QVariant *outValue, PropertyObserver *requeste
 
     int ret(Property::ResultOk);
     if (0 != _owner) {
-        ret = _owner->getPropertyRequest(this);
+        ret = _owner->getPropertyRequested(this);
     }
 
     if (Property::ResultOk == ret) {
@@ -116,7 +116,7 @@ int PropertySubject::setValueSafe(QVariant &inValue, PropertyObserver *requester
 
     int ret(Property::ResultOk);
     if (0 != _owner)
-        ret = _owner->setPropertyRequest(this, inValue);
+        ret = _owner->setPropertyRequested(this, inValue);
 
     if (Property::ResultOk == ret) {
         if (_value != inValue) {//set and inform only if there is a difference in values.

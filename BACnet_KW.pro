@@ -29,7 +29,7 @@ SOURCES += main.cpp \
     property.cpp \
     asynchowner.cpp \
     bacnettsm2.cpp \
-    bacnetwritepropertyservice.cpp \
+#    bacnetwritepropertyservice.cpp \
     externalobjectshandler.cpp \
     cdm.cpp \
     bacnetwritepropertyservicehandler.cpp \
@@ -59,7 +59,6 @@ SOURCES += main.cpp \
     sequenceof.cpp \
     bacnetdata.cpp \
     bacnetserviceack.cpp \
-    propertyowner.cpp \
     propertyfactory.cpp \ # check.cpp \
     readpropertyservicedata.cpp \
     bacnetinternaladdresshelper.cpp \
@@ -82,7 +81,9 @@ SOURCES += main.cpp \
     covincrementhandlers.cpp \
     internalsubscribecovservicehandler.cpp \
     bacnetcovsubscription.cpp \
-    covsubscriptionstimehandler.cpp
+    covsubscriptionstimehandler.cpp \
+    internal/bacnetobject2.cpp \
+    internal/deviceobject.cpp
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
     bacnetbbmdhandler.h \
@@ -104,7 +105,7 @@ HEADERS += bacnetvirtuallinklayer.h \
     services/bacnetreadproperty.h \
     bacnettagparser.h \
     property.h \
-    bacnetwritepropertyservice.h \
+#    bacnetwritepropertyservice.h \
     bacnetwritepropertyservicehandler.h \
     externalobjectshandler.h \
     bacnettsm2.h \ # asynchronousconfirmedhandler.h \
@@ -163,8 +164,19 @@ HEADERS += bacnetvirtuallinklayer.h \
     covincrementhandlers.h \
     internalsubscribecovservicehandler.h \
     bacnetcovsubscription.h \
-    covsubscriptionstimehandler.h
+    covsubscriptionstimehandler.h \
+    internal/bacnetobject2.h \
+    internal/deviceobject.h
 OTHER_FILES +=
+
+
+
+
+
+
+
+
+
 
 
 

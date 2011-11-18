@@ -77,3 +77,10 @@ qint32 BacnetDataInterface::fromRawChoiceValue_helper(BacnetTagParser &parser, Q
 }
 
 DEFINE_VISITABLE_FUNCTION(BacnetDataInterface)
+
+BacnetDataInterface *BacnetDataInterface::getValue(qint32 arrayIndex)
+{
+    if (arrayIndex == ArrayIndexNotPresent)
+        return this;
+    return 0;
+}

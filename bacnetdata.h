@@ -33,6 +33,9 @@ namespace Bacnet
 
         virtual DataType::DataType typeId() = 0;
 
+        //! This is meant to support BacnetArrays and BacnetLists. When arrayIndex = ArrayIndexNotPresent, then this is returned.
+        virtual BacnetDataInterface *getValue(qint32 arrayIndex = ArrayIndexNotPresent);
+
     public://visitee interface
         DECLARE_VISITABLE_FUNCTION(BacnetDataInterface)
 

@@ -9,10 +9,10 @@
 
 struct WriteAccessSpecificationStruct;
 class BacnetDataBase;
-class BacnetDeviceObject;
 class BacnetAddress;
 
 namespace Bacnet{
+    class BacnetDeviceObject;
     class Error;
     class ReadPropertyServiceData;
     class PropertyValue;
@@ -22,17 +22,19 @@ namespace BacnetProperty{enum Identifier;}
 
 class Property;
 
+namespace Bacnet {
+
 class BacnetObject:
         public Bacnet::CovSupport
 {
 public:
-    BacnetObject(Bacnet::ObjectIdentifier &id, BacnetDeviceObject *parentDevice);
-    BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice);
+    BacnetObject(Bacnet::ObjectIdentifier &id, Bacnet::BacnetDeviceObject *parentDevice);
+    BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, Bacnet::BacnetDeviceObject *parentDevice);
     virtual ~BacnetObject();
 
 
     //! Used to check if we can read from the device. If not yet, the asynchronous id for read request should be returned or error status.
-    virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId) = 0;
+    virtual int isPropertyReadready(BacnetProperty::Identifier propertyId) = 0;
 
     //! Returns the data associated with the propertyId.
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error) = 0;
@@ -53,5 +55,7 @@ private:
 protected:
     BacnetDeviceObject *_parentDevice;
 };
+
+}
 
 #endif // BACNETOBJECT_H

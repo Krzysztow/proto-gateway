@@ -164,7 +164,7 @@ qint32 BacnetNetworkLayerHandler::processInitializeRoutingTable(quint8 *actualBy
         quint8 *numberOfPorst = buffPtr;
         ++buffPtr;
         quint8 portId = 1;
-        QHash<qint32, BacnetApplicationLayerHandler*>::Iterator portIt = _networks.begin();
+        QHash<qint32, Bacnet::BacnetApplicationLayerHandler*>::Iterator portIt = _networks.begin();
         for (; portIt != _networks.end(); ++portIt) {
             if (portIt.key() >= 0) {//this is our virtual network
                 if (buffLength - (buffPtr - buffer.bodyPtr()) < 3) return BufferToSmall;
@@ -244,7 +244,7 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
          that question could come only come from the only one port - thus we don't care, pass all the virtual
          networks.
          */
-        QHash<qint32, BacnetApplicationLayerHandler*>::iterator netIt = _networks.begin();
+        QHash<qint32, Bacnet::BacnetApplicationLayerHandler*>::iterator netIt = _networks.begin();
         for (; netIt != _networks.end(); ++netIt) {
             if (netIt.key() >= 0) {//this is a virtual network, not an applicaton layer
                 networksToReturn.append(netIt.key());
@@ -400,7 +400,7 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
             - for all application layers if this is a global broadcast
              Otherwise the message is to be dropped - it was not for us.
           */
-        BacnetApplicationLayerHandler *appHndlr = 0;
+        Bacnet::BacnetApplicationLayerHandler *appHndlr = 0;
         if (npci.destAddress().isAddrInitialized()) {
             //was to be remote message - check network numbers
             appHndlr = _networks.value(npci.destAddress().networkNumber());
@@ -427,17 +427,17 @@ void BacnetNetworkLayerHandler::setTransportLayer(BacnetTransportLayerHandler *t
     }
 }
 
-void BacnetNetworkLayerHandler::setApplicationLayer(BacnetApplicationLayerHandler *appHndlr)
+void BacnetNetworkLayerHandler::setApplicationLayer(Bacnet::BacnetApplicationLayerHandler *appHndlr)
 {
     //they all are stored in a same fashion
     setVirtualApplicationLayer(REAL_APP_LAYER_NUM, appHndlr);
 }
 
-void BacnetNetworkLayerHandler::setVirtualApplicationLayer(quint16 virtualNetworkNum, BacnetApplicationLayerHandler *appHndlr)
+void BacnetNetworkLayerHandler::setVirtualApplicationLayer(quint16 virtualNetworkNum, Bacnet::BacnetApplicationLayerHandler *appHndlr)
 {
     //we don't care if the application layer is null.
     if (_networks.contains(virtualNetworkNum)) {
-        BacnetApplicationLayerHandler *oldApp = _networks.value(virtualNetworkNum);
+        Bacnet::BacnetApplicationLayerHandler *oldApp = _networks.value(virtualNetworkNum);
         if (oldApp != appHndlr) {
             delete oldApp;
         }

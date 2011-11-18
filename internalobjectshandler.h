@@ -7,14 +7,14 @@
 #include "bacnetinternaladdresshelper.h"
 #include "externalobjectshandler.h"
 
-class BacnetDeviceObject;
-class BacnetObject;
 class BacnetService;
 class Property;
 class InternalRequestHandler;
 
 
 namespace Bacnet {
+    class BacnetDeviceObject;
+    class BacnetObject;
     class BacnetTSM2;
     class SubscribeCOVServiceData;
     class CovSubscription;
@@ -28,20 +28,20 @@ public:
     InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm);
 
 public://interface for BacnetObject-Internal interaction
-    void propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
+    void propertyIoFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device);
     void addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler);
 
-    void propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues);
+    void propertyValueChanged(Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues);
 
 public:
-    bool addDevice(InternalAddress address, BacnetDeviceObject *device);
-    QMap<quint32, BacnetDeviceObject*> &virtualDevices();
+    bool addDevice(InternalAddress address, Bacnet::BacnetDeviceObject *device);
+    QMap<quint32, Bacnet::BacnetDeviceObject*> &virtualDevices();
 
     //! \todo If performance here is bad, just return reference to QMap, as is stored.
-    QList<BacnetDeviceObject*> devices();
+    QList<Bacnet::BacnetDeviceObject*> devices();
 
 public:
-    QMap<InternalAddress, BacnetDeviceObject*> _devices;
+    QMap<InternalAddress, Bacnet::BacnetDeviceObject*> _devices;
     QHash<int, InternalRequestHandler*> _asynchRequests;
     Bacnet::BacnetTSM2 *_tsm;
 

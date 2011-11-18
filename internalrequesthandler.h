@@ -3,8 +3,11 @@
 
 #include <QList>
 
-class BacnetObject;
-class BacnetDeviceObject;
+namespace Bacnet {
+    class BacnetObject;
+    class BacnetDeviceObject;
+}
+
 class InternalRequestHandler
 {
 public:
@@ -12,7 +15,7 @@ public:
     virtual ~InternalRequestHandler() {}
 
 //    virtual QList<int> execute() = 0;
-    virtual bool asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device) = 0;
+    virtual bool asynchActionFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device) = 0;
     virtual bool isFinished() = 0;
     virtual void finalize(bool *deleteAfter) = 0;
     virtual bool execute() = 0;

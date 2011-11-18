@@ -18,7 +18,7 @@ AsynchOwner::~AsynchOwner()
 }
 
 #include "cdm.h"
-int AsynchOwner::getPropertyRequest(PropertySubject *toBeGotten)
+int AsynchOwner::getPropertyRequested(PropertySubject *toBeGotten)
 {
     qint8 asynchId = DataModel::instance()->generateAsynchId();
     AsynchData reqData = {toBeGotten, asynchId, PropertyOwner::RequestGet, QVariant()};
@@ -37,7 +37,7 @@ void AsynchOwner::propertyValueChanged(Property *property)
     Q_UNUSED(property);
 }
 
-int AsynchOwner::setPropertyRequest(PropertySubject *toBeSet, QVariant &value)
+int AsynchOwner::setPropertyRequested(PropertySubject *toBeSet, QVariant &value)
 {
     //here we can check, if the value is propert - for instance in allowable range
     Q_UNUSED(value);

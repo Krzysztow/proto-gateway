@@ -6,8 +6,10 @@
 #include "propertyowner.h"
 #include "bacnetcommon.h"
 
-class BacnetObject;
-class BacnetDeviceObject;
+
+//class BacnetObject;
+//namespace Bacnet {class BacnetDeviceObject;}
+
 class BacnetObjectInternalSupport:
         public PropertyOwner
 {
@@ -21,8 +23,8 @@ public://property owner methods.
     /** These two functions shouldn't be ever called when it comes to owners having only PropertyObservers! Here I override
     them with empty bodies.
       */
-    virtual int getPropertyRequest(PropertySubject *toBeGotten);
-    virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
+    virtual int getPropertyRequested(PropertySubject *toBeGotten);
+    virtual int setPropertyRequested(PropertySubject *toBeSet, QVariant &value);
 //    virtual void propertyValueChanged(Property *property) = 0;
 //    virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)  =  0;
 

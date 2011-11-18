@@ -9,7 +9,6 @@
 #include "bacnetcommon.h"
 #include "bacnetinternaladdresshelper.h"
 
-class BacnetDeviceObject;
 
 namespace Bacnet {
 
@@ -41,8 +40,8 @@ namespace Bacnet {
         void removeRegisteredAddress(InternalAddress &address);
 
     public://overridden from PropertyOwner
-        int getPropertyRequest(PropertySubject *toBeGotten);
-        virtual int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
+        int getPropertyRequested(PropertySubject *toBeGotten);
+        virtual int setPropertyRequested(PropertySubject *toBeSet, QVariant &value);
 
         /** This function shouldn't be ever called. This owner should contain only external objects, which are
           handled by themselves.

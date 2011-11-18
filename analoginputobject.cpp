@@ -12,7 +12,7 @@
 
 using namespace Bacnet;
 
-AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdentifier &identifier, BacnetDeviceObject *parent):
+AnalogInputObject::AnalogInputObject(Bacnet::ObjectIdentifier &identifier, Bacnet::BacnetDeviceObject *parent):
     BacnetObject(identifier, parent)
 {
     Q_ASSERT( identifier.type() == BacnetObjectType::AnalogInput);
@@ -34,7 +34,7 @@ AnalogInputObject::~AnalogInputObject()
 }
 
 //! Used to check if we can read from the device. If not yet, the asynchronous id for read request should be returned or error status.
-int AnalogInputObject::ensurePropertyReadyRead(BacnetProperty::Identifier propertyId)
+int AnalogInputObject::isPropertyReadready(BacnetProperty::Identifier propertyId)
 {
     //see if there are our cmd properties - this will be called the most often - thus first
     Property *propRequested = _cdmProperties[propertyId];

@@ -29,7 +29,7 @@ BacnetProperty::Identifier BacnetObjectInternalSupport::findPropertyIdentifier(P
     return BacnetProperty::UndefinedProperty;
 }
 
-int BacnetObjectInternalSupport::getPropertyRequest(PropertySubject *toBeGotten)
+int BacnetObjectInternalSupport::getPropertyRequested(PropertySubject *toBeGotten)
 {
     Q_CHECK_PTR(toBeGotten);
     Q_UNUSED(toBeGotten);
@@ -37,7 +37,7 @@ int BacnetObjectInternalSupport::getPropertyRequest(PropertySubject *toBeGotten)
     return Property::UnknownError;
 }
 
-int BacnetObjectInternalSupport::setPropertyRequest(PropertySubject *toBeSet, QVariant &value)
+int BacnetObjectInternalSupport::setPropertyRequested(PropertySubject *toBeSet, QVariant &value)
 {
     Q_CHECK_PTR(toBeSet);
     Q_UNUSED(value);

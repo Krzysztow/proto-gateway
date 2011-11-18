@@ -8,21 +8,24 @@
 #include "bacnetobjectinternalsupport.h"
 #include "covsupport.h"
 
-class BacnetDeviceObject;
 class Property;
-namespace Bacnet {class PropertyValue;}
+namespace Bacnet {
+
+class BacnetDeviceObject;
+class PropertyValue;
+
 class AnalogInputObject:
         public BacnetObject,
         public BacnetObjectInternalSupport
 {
 public:
-    AnalogInputObject(Bacnet::ObjectIdentifier &identifier, BacnetDeviceObject *parent);
-    AnalogInputObject(quint32 instanceNumber, BacnetDeviceObject *parent);
+    AnalogInputObject(Bacnet::ObjectIdentifier &identifier, Bacnet::BacnetDeviceObject *parent);
+    AnalogInputObject(quint32 instanceNumber, Bacnet::BacnetDeviceObject *parent);
     ~AnalogInputObject();
 
 public://functions overridden from BacnetObject
     //! Used to check if we can read from the device. If not yet, the asynchronous id for read request should be returned or error status.
-    virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
+    virtual int isPropertyReadready(BacnetProperty::Identifier propertyId);
     //! Returns the data associated with the propertyId.
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
@@ -48,5 +51,7 @@ public:
     Bacnet::ObjectIdStruct _id;
     QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> _specializedProperties;
 };
+
+}
 
 #endif // ANALOGINPUTOBJECT_H

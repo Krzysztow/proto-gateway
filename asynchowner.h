@@ -21,8 +21,8 @@ public:
 
 public://overriden from PropertyOwner
     void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult);
-    int getPropertyRequest(PropertySubject *toBeGotten);
-    int setPropertyRequest(PropertySubject *toBeSet, QVariant &value);
+    int getPropertyRequested(PropertySubject *toBeGotten);
+    int setPropertyRequested(PropertySubject *toBeSet, QVariant &value);
     void propertyValueChanged(Property *property);
 
     void addProperty(Property *property);

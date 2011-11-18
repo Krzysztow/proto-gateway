@@ -7,7 +7,7 @@
 #include "bacnetnpci.h"
 
 
-class BacnetApplicationLayerHandler;
+namespace Bacnet {class BacnetApplicationLayerHandler;}
 class BacnetTransportLayerHandler;
 class Buffer;
 class BacnetNetworkLayerHandler
@@ -49,8 +49,8 @@ public:
       */
     void setTransportLayer(BacnetTransportLayerHandler *transportHndlr);
 
-    void setApplicationLayer(BacnetApplicationLayerHandler *appHndlr);
-    void setVirtualApplicationLayer(quint16 virtualNetworkNum, BacnetApplicationLayerHandler *appHndlr);
+    void setApplicationLayer(Bacnet::BacnetApplicationLayerHandler *appHndlr);
+    void setVirtualApplicationLayer(quint16 virtualNetworkNum, Bacnet::BacnetApplicationLayerHandler *appHndlr);
 
 private:
     /**
@@ -85,7 +85,7 @@ private:
       Assumes, that the real application layer has -1 key, whereas virtual ones are positive and the
       key is same as it's network number.
       */
-    QHash<qint32, BacnetApplicationLayerHandler*> _networks;
+    QHash<qint32, Bacnet::BacnetApplicationLayerHandler*> _networks;
     /**
       This hash stores information about routers that are connected to local network and are on the path to
       the concrete network. The information is colleted wiht BacnetNpci::IAmRouterToNetwork network message.

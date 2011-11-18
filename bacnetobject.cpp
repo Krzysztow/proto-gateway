@@ -6,13 +6,15 @@
 #include "subscribecovservicedata.h"
 #include "error.h"
 
-BacnetObject::BacnetObject(Bacnet::ObjectIdentifier &id, BacnetDeviceObject *parentDevice):
+using namespace Bacnet;
+
+BacnetObject::BacnetObject(Bacnet::ObjectIdentifier &id, Bacnet::BacnetDeviceObject *parentDevice):
     _id(id),
     _parentDevice(parentDevice)
 {
 }
 
-BacnetObject::BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice):
+BacnetObject::BacnetObject(BacnetObjectType::ObjectType objectType, quint32 instanceNumber, Bacnet::BacnetDeviceObject *parentDevice):
     _id(objectType, instanceNumber),
     _parentDevice(parentDevice)
 {

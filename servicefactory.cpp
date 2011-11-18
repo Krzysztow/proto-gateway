@@ -7,7 +7,7 @@
 #include "bacnetpci.h"
 
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(::BacnetConfirmedRequestData *pciData,
-                                                      Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                      Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
                                                       InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler)
 {
     Q_CHECK_PTR(pciData);
@@ -36,7 +36,7 @@
 }
 
 ::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHandler(BacnetUnconfirmedRequestData *pciData,
-                                                                                    Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                                                    Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
                                                                                     InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler)
 {
     Q_CHECK_PTR(pciData);

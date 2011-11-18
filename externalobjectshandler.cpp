@@ -86,7 +86,7 @@ void ExternalObjectsHandler::propertyValueChanged(Property *property)
 }
 
 
-int ExternalObjectsHandler::getPropertyRequest(::PropertySubject *toBeGotten)
+int ExternalObjectsHandler::getPropertyRequested(::PropertySubject *toBeGotten)
 {
     Q_CHECK_PTR(toBeGotten);
     if (0 == toBeGotten)
@@ -272,7 +272,7 @@ void ExternalObjectsHandler::handleAbort(BacnetConfirmedServiceHandler *act,  qu
            rElem._deviceIdentifier, rElem._objectIdentifier);
 }
 
-int ExternalObjectsHandler::setPropertyRequest(::PropertySubject *toBeSet, QVariant &value)
+int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVariant &value)
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {

@@ -33,7 +33,7 @@ BacnetDeviceObject::~BacnetDeviceObject()
     qDeleteAll(_childObjects);
 }
 
-int BacnetDeviceObject::ensurePropertyReadyRead(BacnetProperty::Identifier propertyId)
+int BacnetDeviceObject::isPropertyReadready(BacnetProperty::Identifier propertyId)
 {
     //see if there are our cmd properties - this will be called the most often - thus first
     Property *propRequested = _cdmProperties[propertyId];
@@ -190,7 +190,7 @@ Bacnet::BacnetDataInterface *BacnetDeviceObject::createBacnetTypeForProperty_hel
     }
 }
 
-BacnetObject *BacnetDeviceObject::bacnetObject(quint32 instanceNumber)
+Bacnet::BacnetObject *BacnetDeviceObject::bacnetObject(quint32 instanceNumber)
 {
     //first check if this is us
     //otherwise check children or return default value 0
@@ -250,7 +250,7 @@ void BacnetDeviceObject::setHandler(InternalObjectsHandler *bHandler)
     _handler = bHandler;
 }
 
-const QMap<quint32, BacnetObject*> &BacnetDeviceObject::childObjects()
+const QMap<quint32, Bacnet::BacnetObject*> &BacnetDeviceObject::childObjects()
 {
     return _childObjects;
 }

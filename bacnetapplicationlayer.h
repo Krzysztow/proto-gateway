@@ -8,10 +8,12 @@
 class BacnetAddress;
 class BacnetNetworkLayerHandler;
 class InternalObjectsHandler;
+
 namespace Bacnet {
+
 class ExternalObjectsHandler;
 class BacnetTSM2;
-}
+
 class BacnetApplicationLayerHandler
 {
 public:
@@ -43,5 +45,7 @@ public:
     Bacnet::ExternalObjectsHandler *_externalHandler;
     Bacnet::BacnetTSM2 *_tsm;
 };
+
+}
 
 #endif // BACNETAPPLICATIONLAYERHANDLER_H

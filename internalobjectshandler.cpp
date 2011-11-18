@@ -10,7 +10,6 @@
 
 #include "bacnetreadpropertyack.h"
 #include "helpercoder.h"
-#include "bacnetwritepropertyservice.h"
 #include "bacnetdeviceobject.h"
 #include "bacnetservice.h"
 #include "bacnettsm2.h"
@@ -22,9 +21,10 @@
 #include "covnotificationrequestdata.h"
 #include "covconfnotificationservicehandler.h"
 #include "bacnetinternaladdresshelper.h"
+#include "internalrequesthandler.h"
 
 //void AsynchSetter::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
-void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
+void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device)
 {
     Q_ASSERT(_asynchRequests.contains(asynchId));
 
@@ -43,7 +43,7 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
     }
 }
 
-void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues)
+void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues)
 {
     Q_CHECK_PTR(device);
     Q_CHECK_PTR(object);
@@ -135,7 +135,7 @@ void InternalObjectsHandler::addAsynchronousHandler(QList<int> asynchIds, Intern
     }
 }
 
-bool InternalObjectsHandler::addDevice(InternalAddress address, BacnetDeviceObject *device)
+bool InternalObjectsHandler::addDevice(InternalAddress address, Bacnet::BacnetDeviceObject *device)
 {
     Q_ASSERT(!_devices.contains(address));
     if ( (BacnetInternalAddressHelper::InvalidInternalAddress == address) || _devices.contains(address))
@@ -146,12 +146,12 @@ bool InternalObjectsHandler::addDevice(InternalAddress address, BacnetDeviceObje
     return true;
 }
 
-QMap<quint32, BacnetDeviceObject*> &InternalObjectsHandler::virtualDevices()
+QMap<quint32, Bacnet::BacnetDeviceObject*> &InternalObjectsHandler::virtualDevices()
 {
     return _devices;
 }
 
-QList<BacnetDeviceObject*> InternalObjectsHandler::devices()
+QList<Bacnet::BacnetDeviceObject*> InternalObjectsHandler::devices()
 {
     return _devices.values();
 }

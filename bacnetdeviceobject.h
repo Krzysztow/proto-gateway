@@ -12,6 +12,8 @@
 
 class InternalObjectsHandler;
 
+namespace Bacnet {
+
 class BacnetDeviceObject:
         public BacnetObject,
         public BacnetObjectInternalSupport
@@ -22,7 +24,7 @@ public:
     ~BacnetDeviceObject();
 
 public://overridden from BacnetObject
-    virtual int ensurePropertyReadyRead(BacnetProperty::Identifier propertyId);
+    virtual int isPropertyReadready(BacnetProperty::Identifier propertyId);
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
     virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
     virtual int ensurePropertyReadySet(Bacnet::PropertyValue &writeData, Bacnet::Error *error);
@@ -58,11 +60,13 @@ public:
     Bacnet::ObjectIdStruct _id;
     typedef QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> TPropertiesMap;
     TPropertiesMap _specializedProperties;
-//    QMap<BacnetProperty::Identifier, Property *> _cdmProperties;
+    //    QMap<BacnetProperty::Identifier, Property *> _cdmProperties;
 
     QMap<quint32, BacnetObject*> _childObjects;
     InternalAddress _address;
     InternalObjectsHandler *_handler;
 };
+
+}
 
 #endif // BACNETDEVICEOBJECT_H

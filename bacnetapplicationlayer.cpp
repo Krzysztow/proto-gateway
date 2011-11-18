@@ -10,6 +10,8 @@
 #include "internalconfirmedrequesthandler.h"
 #include "servicefactory.h"
 
+using namespace Bacnet;
+
 BacnetApplicationLayerHandler::BacnetApplicationLayerHandler(BacnetNetworkLayerHandler *networkHndlr):
         _networkHndlr(networkHndlr)
 {
@@ -68,7 +70,7 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
 void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr)
 {
     //looking for a destination device.
-    BacnetDeviceObject *device(0);
+    Bacnet::BacnetDeviceObject *device(0);
     if (destAddr.isGlobalBroadcast() || destAddr.isGlobalBroadcast()){
         device = 0;
     } else {
@@ -395,7 +397,7 @@ int main(int argc, char *argv[])
     subject->setValue(test);
     proto2->addProperty(subject);
 
-    BacnetDeviceObject *device = new BacnetDeviceObject(1, destAddrRaw);
+    Bacnet::BacnetDeviceObject *device = new Bacnet::BacnetDeviceObject(1, destAddrRaw);
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
     device->addInternalProperty(BacnetProperty::PresentValue, obs);
@@ -413,7 +415,7 @@ int main(int argc, char *argv[])
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
     BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
-    BacnetDeviceObject *device1 = new BacnetDeviceObject(8, addr);
+    Bacnet::BacnetDeviceObject *device1 = new Bacnet::BacnetDeviceObject(8, addr);
     intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
     device1->setObjectName("BestDeviceEver");
 

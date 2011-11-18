@@ -3,12 +3,11 @@
 
 #include "bacnetcovsubscription.h"
 
-class BacnetObject;
-class BacnetDeviceObject;
 
 namespace Bacnet {
-class Error;
-//class CovRealIcnrementHandler;
+    class BacnetObject;
+    class BacnetDeviceObject;
+    class Error;
 
 class CovSupport
 {
