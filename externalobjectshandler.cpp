@@ -19,7 +19,7 @@ ExternalObjectsHandler::ExternalObjectsHandler(BacnetTSM2 *tsm):
 }
 
 void ExternalObjectsHandler::addMappedProperty(Property *property, quint32 objectId,
-                                               BacnetProperty::Identifier propertyId, quint32 propertyArrayIdx,
+                                               BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
                                                quint32 deviceId,
                                                BacnetExternalObjects::ReadAccessType type)
 {
@@ -61,8 +61,8 @@ BacnetExternalObjects::ExternalRoutingElement &ExternalObjectsHandler::routingEn
 
     if (0 != found) *found = false;
     static BacnetExternalObjects::ExternalRoutingElement wrongEntry = {
-        0, 0, BacnetObjectType::Undefined,
-        BacnetProperty::UndefinedProperty, Bacnet::ArrayIndexNotPresent,
+        0, 0, BacnetObjectTypeNS::Undefined,
+        BacnetPropertyNS::UndefinedProperty, Bacnet::ArrayIndexNotPresent,
         BacnetExternalObjects::Access_COV
     };
     return wrongEntry;
@@ -148,7 +148,7 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
     _bacnetPendingRequests.insert(serviceHandler, ri);
     ObjectIdStruct objId = numToObjId(readElement._deviceIdentifier);
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _tsm->send(objId, _registeredAddresses.first(), BacnetServices::ReadProperty, serviceHandler, 1000);
+    _tsm->send(objId, _registeredAddresses.first(), BacnetServicesNS::ReadProperty, serviceHandler, 1000);
 
     return asynchId;
 }
@@ -327,7 +327,7 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
     _bacnetPendingRequests.insert(serviceHandler, ri);
     ObjectIdStruct objId = numToObjId(rEntry._deviceIdentifier);
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _tsm->send(objId, _registeredAddresses.first(), BacnetServices::WriteProperty, serviceHandler, 1000);
+    _tsm->send(objId, _registeredAddresses.first(), BacnetServicesNS::WriteProperty, serviceHandler, 1000);
 
     return asynchId;
 }

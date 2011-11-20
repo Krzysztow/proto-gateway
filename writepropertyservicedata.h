@@ -13,7 +13,7 @@ namespace Bacnet {
     {
     public:
         WritePropertyServiceData();
-        WritePropertyServiceData(ObjectIdentifier &objId, BacnetProperty::Identifier propertyId,
+        WritePropertyServiceData(ObjectIdentifier &objId, BacnetPropertyNS::Identifier propertyId,
                                  BacnetDataInterface *writeValue, quint32 arrayIndex);
         virtual ~WritePropertyServiceData();
 

@@ -75,15 +75,15 @@ qint32 WhoHasServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         ret = bParser.parseNext();
         _rangeLowLimit = bParser.toUInt(&convOkOrCtxt);
         if (!convOkOrCtxt)
-            return -BacnetReject::ReasonInvalidParameterDataType;
+            return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
         buffLength -= ret;
         ret = bParser.parseNext();
         if (ret < 0)
-            return -BacnetReject::ReasonMissingRequiredParameter;
+            return -BacnetRejectNS::ReasonMissingRequiredParameter;
         _rangeHighLimit = bParser.toUInt(&convOkOrCtxt);
         if (!convOkOrCtxt)
-            return -BacnetReject::ReasonInvalidParameterDataType;
+            return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
     } else {
         _rangeLowLimit = Bacnet::InvalidInstanceNumber;
@@ -94,24 +94,24 @@ qint32 WhoHasServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     //get object identifier or name - there must be one of them!
     ret = bParser.parseNext();
     if (ret < 0)
-        return -BacnetReject::ReasonInvalidTag;
+        return -BacnetRejectNS::ReasonInvalidTag;
     if (bParser.isContextTag(2)) {//we have an object ID
         _objidentifier = new ObjectIdStruct;
         *(_objidentifier) = bParser.toObjectId(&convOkOrCtxt);
         if (!convOkOrCtxt)
-            return -BacnetReject::ReasonInvalidParameterDataType;
+            return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
     } else if (bParser.isContextTag(3)){ //we have an object name
         _objName = new QString();
         *_objName = bParser.toString(&convOkOrCtxt);
         if (!convOkOrCtxt)
-            return -BacnetReject::ReasonInvalidParameterDataType;
+            return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
     } else
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
 
     if (bParser.hasNext())
-        return -BacnetReject::ReasonTooManyArguments;
+        return -BacnetRejectNS::ReasonTooManyArguments;
 
     return consumedBytes;
 }

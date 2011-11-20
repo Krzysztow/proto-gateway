@@ -64,7 +64,7 @@ InternalAddress &BacnetTSM2::myAddress()
 
 void BacnetTSM2::discoverDevice(const ObjectIdStruct &deviceId)
 {
-    BacnetUnconfirmedRequestData reqData(BacnetServices::WhoIs);
+    BacnetUnconfirmedRequestData reqData(BacnetServicesNS::WhoIs);
     WhoIsServiceData serviceData(objIdToNum(deviceId));
 
     //get buffer
@@ -113,7 +113,7 @@ bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *ad
     return false;
 }
 
-bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //generate invoke id.
     int invokeId = _generator.generateId();
@@ -159,7 +159,7 @@ bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAdd
     return true;
 }
 
-bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServices::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //find bacnetadderss to send.
     BacnetAddress destAddr;
@@ -210,7 +210,7 @@ bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sou
 
 //}
 
-void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetReject::RejectReason reason, quint8 invokeId)
+void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetRejectNS::RejectReason reason, quint8 invokeId)
 {
     BacnetRejectData rejectData(invokeId, reason);
 
@@ -331,7 +331,7 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
 }
 
 void BacnetTSM2::sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId,
-                           BacnetServices::BacnetErrorChoice errorChoice, Error &error)
+                           BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error)
 {
     BacnetErrorData errorData(invokeId, errorChoice);
 

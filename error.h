@@ -7,13 +7,13 @@ namespace Bacnet {
     class Error {
     public:
         Error();
-        Error(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode);
+        Error(BacnetErrorNS::ErrorClass errorClass, BacnetErrorNS::ErrorCode errorCode);
 
         bool hasError();
-        void setError(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode);
+        void setError(BacnetErrorNS::ErrorClass errorClass, BacnetErrorNS::ErrorCode errorCode);
     public:
-        BacnetError::ErrorClass errorClass;
-        BacnetError::ErrorCode errorCode;
+        BacnetErrorNS::ErrorClass errorClass;
+        BacnetErrorNS::ErrorCode errorCode;
     };
 
 }

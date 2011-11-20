@@ -38,21 +38,21 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(quint8 *dataPtr, qui
 
     //configure it dynamically
     switch (serviceData.service()) {
-    case (BacnetServices::ConfirmedCOVNotification): {
+    case (BacnetServicesNS::ConfirmedCOVNotification): {
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
-    case (BacnetServices::SubscribeCOV): {
+    case (BacnetServicesNS::SubscribeCOV): {
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
-    case (BacnetServices::ReadProperty): {
+    case (BacnetServicesNS::ReadProperty): {
             //            BacnetReadProperty readPrpty;
             //            readPrpty.setFromRaw()
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
-    case (BacnetServices::WriteProperty): {
+    case (BacnetServicesNS::WriteProperty): {
             Q_ASSERT_X(false, "processConfirmedRequest();", "Unimplemented handler!");
             break;
         }
@@ -115,7 +115,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
             InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(crData, _tsm, device, _internalHandler, _externalHandler);
             Q_CHECK_PTR(handler);
             if (0 == handler) {
-                _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonUnrecognizedService, crData->invokedId());
+                _tsm->sendReject(srcAddr, destAddr, BacnetRejectNS::ReasonUnrecognizedService, crData->invokedId());
                 delete crData;
                 return;
             }
@@ -124,7 +124,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
             Q_ASSERT(ret > 0);
             if (ret <= 0) {
                 //! \todo send reject - parsing should return the reject reason!
-                _tsm->sendReject(srcAddr, destAddr, BacnetReject::ReasonMissingRequiredParameter, crData->invokedId());
+                _tsm->sendReject(srcAddr, destAddr, BacnetRejectNS::ReasonMissingRequiredParameter, crData->invokedId());
                 delete handler;
                 return;
             }
@@ -400,7 +400,7 @@ int main(int argc, char *argv[])
     Bacnet::BacnetDeviceObject *device = new Bacnet::BacnetDeviceObject(1, destAddrRaw);
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
-    device->addInternalProperty(BacnetProperty::PresentValue, obs);
+    device->addInternalProperty(BacnetPropertyNS::PresentValue, obs);
     intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(destAddr), device);
 
     PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);
@@ -408,9 +408,9 @@ int main(int argc, char *argv[])
     proto2->addProperty(subject2);
 
     PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
-    AnalogInputObject *aio = new AnalogInputObject(5, device);
-    aio->setObjectName("HW_Setpoint");
-    aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
+//    AnalogInputObject *aio = new AnalogInputObject(5, device);
+//    aio->setObjectName("HW_Setpoint");
+//    aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
 
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
@@ -419,14 +419,14 @@ int main(int argc, char *argv[])
     intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
     device1->setObjectName("BestDeviceEver");
 
-    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
-    aio1->setObjectName("OATemp");
+//    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
+//    aio1->setObjectName("OATemp");
 
-    PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
-    extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
-                                  BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
-                                  0x00000001,
-                                  Bacnet::BacnetExternalObjects::Access_ReadRequest);
+//    PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
+//    extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
+//                                  BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
+//                                  0x00000001,
+//                                  Bacnet::BacnetExternalObjects::Access_ReadRequest);
 
     PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
     proto2->addProperty(extObserver);

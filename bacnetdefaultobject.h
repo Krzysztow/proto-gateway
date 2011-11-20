@@ -5,27 +5,33 @@
 #include "bacnetcommon.h"
 
 namespace Bacnet {
-    class BacnetDefaultObject
-    {
-    public:
-        static BacnetDefaultObject *instance();
 
-        static quint32 proeprtyType(BacnetObjectType::ObjectType type, BacnetProperty::Identifier propertyId);
+class BacnetProperty;
 
-        static Bacnet::BacnetDataInterface *createDataForObjectProperty(BacnetObjectType::ObjectType type,
-                                                                                   BacnetProperty::Identifier propertyId, quint32 arrayIndex);
+class BacnetDefaultObject
+{
+public:
+    static BacnetDefaultObject *instance();
 
-        static Bacnet::BacnetDataInterface *createDataType(DataType::DataType type);
+    static quint32 proeprtyType(BacnetObjectTypeNS::ObjectType type, BacnetPropertyNS::Identifier propertyId, quint32 arrayIdx = ArrayIndexNotPresent);
 
-    public:
-        Bacnet::BacnetDataInterface *getProperty(BacnetObjectType::ObjectType objType, BacnetProperty::Identifier propId);
-        const QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> &defaultProperties(BacnetObjectType::ObjectType objType);
+    static Bacnet::BacnetDataInterface *createDataProperty(AppTags::BacnetTags propertyType, QVariant *value = 0, bool *ok = 0);
 
-    private:
-        BacnetDefaultObject();
-        static BacnetDefaultObject *_instance;
 
-        QMap<BacnetObjectType::ObjectType, QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> > _properties;
-    };
+    static Bacnet::BacnetDataInterface *createDataForObjectProperty(BacnetObjectTypeNS::ObjectType type,
+                                                                    BacnetPropertyNS::Identifier propertyId, quint32 arrayIndex);
+
+    static Bacnet::BacnetDataInterface *createDataType(DataType::DataType type);
+
+public:
+    BacnetProperty *defaultProperty(BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId);
+    QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &defaultProperties(BacnetObjectTypeNS::ObjectType objType);
+
+private:
+    BacnetDefaultObject();
+    static BacnetDefaultObject *_instance;
+
+    QMap<BacnetObjectTypeNS::ObjectType, QMap<BacnetPropertyNS::Identifier, BacnetProperty*> > _properties;
+};
 }
 #endif // BACNETDEFAULTOBJECT_H

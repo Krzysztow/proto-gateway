@@ -116,16 +116,16 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     //parse process identifier
     ret = bParser.parseNext();
     if (ret < 0 || !bParser.isContextTag(0))
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     _subscriberProcId = bParser.toUInt(&convOkOrCtxt);
     if (!convOkOrCtxt)
-        return -BacnetReject::ReasonInvalidParameterDataType;
+        return -BacnetRejectNS::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     //monitored object id
     ret = _monitoredObjectId.fromRaw(bParser, 1);
     if (ret < 0)
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     consumedBytes += ret;
 
     //confirmed notifications flag OPTIONAL
@@ -134,7 +134,7 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         ret = bParser.parseNext();
         _issueConfNotification = bParser.toBoolean(&convOkOrCtxt);
         if (!convOkOrCtxt)
-            return -BacnetReject::ReasonInvalidParameterDataType;
+            return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
         ret = bParser.nextTagNumber(&convOkOrCtxt);
         setConfirmedNotificationPresent();
@@ -146,7 +146,7 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         ret = bParser.parseNext();
         _lifetime = bParser.toUInt(&convOkOrCtxt);
         if (!convOkOrCtxt)
-            return -BacnetReject::ReasonInvalidParameterDataType;
+            return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
         setLifetimePresent();
     } else {
@@ -159,7 +159,7 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         if (0 == _propReference) _propReference = new Bacnet::PropertyReference();
         ret = _propReference->fromRaw(bParser, 4);
         if (ret < 0)
-            return -BacnetReject::ReasonInconsistentParameters;
+            return -BacnetRejectNS::ReasonInconsistentParameters;
         consumedBytes += ret;
 
         ret = bParser.nextTagNumber(&convOkOrCtxt);
@@ -167,7 +167,7 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         if ( (5 == ret) && convOkOrCtxt){
             Q_ASSERT(_propReference != 0);
             if (0 == _propReference)
-                return -BacnetReject::ReasonInconsistentParameters;//whene COVIncrement is  provided, then this could happen only for subscribeCOV-Request
+                return -BacnetRejectNS::ReasonInconsistentParameters;//whene COVIncrement is  provided, then this could happen only for subscribeCOV-Request
 
             if (0 == _covIncrement)  {
                 _covIncrement = new CovRealIcnrementHandler();
@@ -175,7 +175,7 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
 
             ret = _covIncrement->fromRaw(bParser, 5);
             if (ret <= 0) //something worng, check it
-                return -BacnetReject::ReasonInconsistentParameters;
+                return -BacnetRejectNS::ReasonInconsistentParameters;
             consumedBytes += ret;
         }
     } else {//if this was not
@@ -184,7 +184,7 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     }
 
     if (bParser.hasNext())
-        return -BacnetReject::ReasonTooManyArguments;
+        return -BacnetRejectNS::ReasonTooManyArguments;
 
     return consumedBytes;
 }

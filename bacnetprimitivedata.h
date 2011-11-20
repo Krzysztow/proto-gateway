@@ -298,18 +298,18 @@ namespace Bacnet
         virtual DataType::DataType typeId();
 
     public:
-        ObjectIdentifier(BacnetObjectType::ObjectType type = BacnetObjectType::Undefined,
+        ObjectIdentifier(BacnetObjectTypeNS::ObjectType type = BacnetObjectTypeNS::Undefined,
                 quint32 instanceNum = Bacnet::InvalidInstanceNumber);
         ObjectIdentifier(Bacnet::ObjectIdStruct &objId);
         ObjectIdentifier(quint32 objectIdNum);
 
-        quint32 instanceNumber() {return _value.instanceNum;}
+        quint32 instanceNumber() const {return _value.instanceNum;}
 
         void setObjectIdNum(quint32 objIdNum);
         void setObjectId(ObjectIdStruct &value);
-        quint32 objectIdNum();
+        quint32 objectIdNum() const;
 
-        BacnetObjectType::ObjectType type() {return _value.objectType;}
+        BacnetObjectTypeNS::ObjectType type() const {return _value.objectType;}
         bool operator==(const ObjectIdentifier &other) const {return ( (_value.instanceNum == other._value.instanceNum) &&
                                                                         (_value.objectType == other._value.objectType) );}
         bool operator==(const ObjectIdStruct &other) const { return ( (_value.instanceNum == other.instanceNum) &&
@@ -345,7 +345,8 @@ namespace Bacnet
     class BacnetList: public BacnetDataInterface
     {
     public:
-        BacnetList(DataType::DataType type = DataType::InvalidType);
+        BacnetList();
+        BacnetList(QList<BacnetDataInterfaceShared> &value);
         virtual ~BacnetList();
 
         virtual qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
@@ -360,27 +361,27 @@ namespace Bacnet
         virtual DataType::DataType typeId();
 
     public:
+        int count() {return _value.count();}
         void setStoredType(DataType::DataType type);
         DataType::DataType storedType();
-
-    public:
         bool addElement(BacnetDataInterface *value);
 
     protected:
-        QList<BacnetDataInterface*> _value;
         DataType::DataType _storedType;
+        QList<BacnetDataInterfaceShared> _value;
     };
 
     class BacnetArray:
             public BacnetList
     {
     public:
-        BacnetArray(DataType::DataType type = DataType::InvalidType);
+        BacnetArray();
+        BacnetArray(QList<BacnetDataInterfaceShared> &value);
 
         virtual DataType::DataType typeId();
 
     public:
-        BacnetDataInterface *createElementAt(quint8 position);
+//        BacnetDataInterface *createElementAt(quint8 position);
     };
 }
 

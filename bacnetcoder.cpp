@@ -91,7 +91,7 @@ qint32 BacnetCoder::objectIdentifierToRaw(quint8 *ptrStart, quint16 buffLength, 
     if (ret <= 0)
         return ret;
     Q_ASSERT(ret > 0);
-    Q_ASSERT(objIdentifier.objectType != BacnetObjectType::Undefined);
+    Q_ASSERT(objIdentifier.objectType != BacnetObjectTypeNS::Undefined);
     Q_ASSERT(objIdentifier.objectType <= 0x03ff);
     Q_ASSERT(objIdentifier.instanceNum <= 0x3FFFFF);
     buffLength -= ret;

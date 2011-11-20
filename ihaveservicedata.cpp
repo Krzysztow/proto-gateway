@@ -58,25 +58,25 @@ qint32 IHaveServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     //parse object identifier
     ret = _devId.fromRaw(bParser);
     if (ret < 0)
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     consumedBytes += ret;
 
     //parse object identifier
     ret = _objId.fromRaw(bParser);
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     consumedBytes += ret;
 
     //parse object name
     ret = bParser.parseNext();
     if (ret < 0 || !bParser.isContextTag(AppTags::CharacterString))
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     _objName = bParser.toString(&convOk);
     if (!convOk)
-        return -BacnetReject::ReasonInvalidParameterDataType;
+        return -BacnetRejectNS::ReasonInvalidParameterDataType;
 
     //if something is left - wrong!
     if (bParser.hasNext())
-        return -BacnetReject::ReasonTooManyArguments;
+        return -BacnetRejectNS::ReasonTooManyArguments;
 
     return consumedBytes;
 }

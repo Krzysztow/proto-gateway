@@ -13,9 +13,9 @@ typedef QSharedPointer<PropertyValue> PropertyValueShared;
     {
     public:
         PropertyValue();
-        PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterface *value,
+        PropertyValue(BacnetPropertyNS::Identifier propertyId, BacnetDataInterface *value,
                       quint32 arrayIndex = ArrayIndexNotPresent, quint8 priority = PriorityValueNotPresent);
-        PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterfaceShared value,
+        PropertyValue(BacnetPropertyNS::Identifier propertyId, BacnetDataInterfaceShared value,
                       quint32 arrayIndex = ArrayIndexNotPresent, quint8 priority = PriorityValueNotPresent);
 
         virtual ~PropertyValue();
@@ -23,15 +23,15 @@ typedef QSharedPointer<PropertyValue> PropertyValueShared;
         qint32 toRaw(quint8 *ptrStart, quint16 buffLength, int sequenceShift = 0);
 
     public:
-        qint32 fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objType, int sequenceShift = 0);
-        qint32 fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objType);
+        qint32 fromRawSpecific(BacnetTagParser &parser, BacnetObjectTypeNS::ObjectType objType, int sequenceShift = 0);
+        qint32 fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectTypeNS::ObjectType objType);
 
     public:
 
 
     public:
 //        Bacnet::PropertyValueStruct _value;
-        BacnetProperty::Identifier _propertyId;
+        BacnetPropertyNS::Identifier _propertyId;
         quint32 _arrayIndex;
         BacnetDataInterfaceShared _value;
         quint8 _priority;

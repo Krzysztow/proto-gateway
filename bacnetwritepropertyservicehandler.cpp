@@ -60,7 +60,7 @@ void BacnetWritePropertyServiceHandler::handleError(quint8 *errorPtr, quint16 le
 {
     //! \todo parse Error message.
     Error error;
-    error.setError(BacnetError::ClassDevice, BacnetError::CodeUnknownObject);
+    error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeUnknownObject);
     _responseHandler->handleError(this, error);
     *action = DeleteServiceHandler;
 }

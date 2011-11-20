@@ -8,7 +8,7 @@
   This header is meant to provide some common data for all BACnet classes within the project.
   */
 
-namespace BacnetObjectType {
+namespace BacnetObjectTypeNS {
     enum ObjectType {
         Accumulator 	= 23,
         AnalogInput 	= 0,
@@ -46,7 +46,7 @@ namespace BacnetObjectType {
                 };
 }
 
-namespace BacnetAbort {
+namespace BacnetAbortNS {
     enum AbortReason {
         ReasonOther                            = 0,
         ReasonBufferOverflow                   = 1,
@@ -56,7 +56,7 @@ namespace BacnetAbort {
                                               };
 }
 
-namespace BacnetReject {
+namespace BacnetRejectNS {
     enum RejectReason {
         ReasonOther                     = 0,
         ReasonBufferOverflow            = 1,
@@ -73,7 +73,7 @@ namespace BacnetReject {
     };
 }
 
-namespace BacnetError {
+namespace BacnetErrorNS {
     enum ErrorClass {
         ClassDevice 	= 0,
         ClassObject 	= 1,
@@ -152,7 +152,7 @@ namespace BacnetError {
 
 }
 
-namespace BacnetProperty
+namespace BacnetPropertyNS
 {
     enum Identifier {
         AcceptedModes                              	= 175,
@@ -451,7 +451,7 @@ namespace Bacnet
     };
 
     struct ObjectIdStruct {
-        BacnetObjectType::ObjectType objectType;
+        BacnetObjectTypeNS::ObjectType objectType;
         quint32 instanceNum;
     };
 
@@ -475,7 +475,7 @@ namespace Bacnet
 
     class BacnetDataInterface;
     struct PropertyValueStruct {
-//        BacnetProperty::Identifier propertyId;
+//        BacnetPropertyNS::Identifier propertyId;
 //        quint32 arrayIndex;
 //        BacnetDataInterface *value;
 //        quint8 priority;
@@ -491,7 +491,7 @@ namespace Bacnet
 
 };
 
-namespace BacnetServices
+namespace BacnetServicesNS
 {
     enum BacnetConfirmedServiceRequest {
         // Alarm and Event Services

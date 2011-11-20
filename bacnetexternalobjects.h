@@ -21,7 +21,7 @@ namespace Bacnet {
             Property *_property;
             quint32 _deviceIdentifier;
             quint32 _objectIdentifier;
-            BacnetProperty::Identifier _propertyId;
+            BacnetPropertyNS::Identifier _propertyId;
             quint32 _propertyArrayIdx;
             ReadAccessType _read;
         };

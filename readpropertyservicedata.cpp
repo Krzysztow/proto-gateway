@@ -5,7 +5,7 @@
 
 using namespace Bacnet;
 
-ReadPropertyServiceData::ReadPropertyServiceData(ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
+ReadPropertyServiceData::ReadPropertyServiceData(ObjectIdStruct objId, BacnetPropertyNS::Identifier propertyId,
                           quint32 arrayIndex)
 {
     this->objId = objId;
@@ -34,7 +34,7 @@ qint32 ReadPropertyServiceData::fromRaw(quint8 *serviceData, quint16 bufferLengt
 
     //parse property identifier
     ret = bParser.parseNext();
-    propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
+    propertyId = (BacnetPropertyNS::Identifier)bParser.toUInt(&convOk);
     if (ret < 0 || !bParser.isContextTag(1))
         return -2;
     consumedBytes += ret;
@@ -52,7 +52,7 @@ qint32 ReadPropertyServiceData::fromRaw(quint8 *serviceData, quint16 bufferLengt
 
     Q_ASSERT(consumedBytes == bufferLength);
     if (consumedBytes != bufferLength) {
-        return -BacnetReject::ReasonTooManyArguments;
+        return -BacnetRejectNS::ReasonTooManyArguments;
     }
 
     return consumedBytes;

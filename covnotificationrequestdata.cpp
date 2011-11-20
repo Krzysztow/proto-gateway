@@ -6,7 +6,7 @@ CovNotificationRequestData::CovNotificationRequestData()
 {
 }
 
-CovNotificationRequestData::CovNotificationRequestData(quint8 subscrProcId, Bacnet::ObjectIdentifier &initiatingObjectId, Bacnet::ObjectIdentifier &monitoredObjectId, quint32 timeLeft):
+CovNotificationRequestData::CovNotificationRequestData(quint8 subscrProcId, const Bacnet::ObjectIdentifier &initiatingObjectId, const Bacnet::ObjectIdentifier &monitoredObjectId, quint32 timeLeft):
 _subscribProcess(subscrProcId),
 _initiatingObjectId(initiatingObjectId),
 _monitoredObjectId(monitoredObjectId),
@@ -32,13 +32,13 @@ qint32 CovNotificationRequestData::fromRaw(quint8 *serviceData, quint16 buffLeng
     //get object identifier
     ret = _initiatingObjectId.fromRaw(bParser, 1);
     if (ret <= 0) //not enough data, not context tag or not this tag
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     actualPtr += ret;
 
     //get object identifier
     ret = _monitoredObjectId.fromRaw(bParser, 2);
     if (ret <= 0) //not enough data, not context tag or not this tag
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     actualPtr += ret;
 
     //get time remaining

@@ -15,8 +15,8 @@ public:
     qint32 toRaw(quint8 *ptrStart, quint16 buffLength);
     qint32 toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber);
 
-    qint32 fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objectType);
-    qint32 fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objectType);
+    qint32 fromRawSpecific(BacnetTagParser &parser, BacnetObjectTypeNS::ObjectType objectType);
+    qint32 fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectTypeNS::ObjectType objectType);
 
     bool setInternal(QVariant &value);
     QVariant toInternal();
@@ -76,14 +76,14 @@ qint32 SequenceOf<T>::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumb
 }
 
 template <class T>
-qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objectType)
+qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, BacnetObjectTypeNS::ObjectType objectType)
 {
     Q_ASSERT_X(false, "", "Not implemented yet!");
     return -1;
 }
 
 template <class T>
-qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objectType)
+qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectTypeNS::ObjectType objectType)
 {
     bool okOrContext;
     quint32 total(0);

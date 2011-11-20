@@ -24,12 +24,11 @@ public:
     ~BacnetDeviceObject();
 
 public://overridden from BacnetObject
-    virtual int isPropertyReadready(BacnetProperty::Identifier propertyId);
-    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(BacnetProperty::Identifier propId, quint32 arrayIdx, Bacnet::Error *error);
-    virtual Bacnet::BacnetDataInterface *propertyReadInstantly(Bacnet::ReadPropertyServiceData *rpStruct, Bacnet::Error *error);
-    virtual int ensurePropertyReadySet(Bacnet::PropertyValue &writeData, Bacnet::Error *error);
+    virtual int propertyReadTry(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, BacnetDataInterfaceShared &data, Bacnet::Error *error = 0);
+    virtual BacnetDataInterfaceShared propertyReadInstantly(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, Bacnet::Error *error = 0);
+    virtual int propertySet(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, BacnetDataInterfaceShared &data, Bacnet::Error *error = 0);
 
-    virtual const QList<BacnetProperty::Identifier> &covProperties();
+    virtual const QList<BacnetPropertyNS::Identifier> &covProperties();
 
 public://functions specific to BACnet device
     BacnetObject *bacnetObject(quint32 instanceNumber);
@@ -39,7 +38,7 @@ public://functions specific to BACnet device
     void propertyIoFinished(int asynchId, int result, BacnetObject *object);
     void setHandler(InternalObjectsHandler *bHandler);
     const QMap<quint32, BacnetObject*> &childObjects();
-    Bacnet::BacnetDataInterface *constProperty(BacnetProperty::Identifier propertyId);
+    Bacnet::BacnetDataInterface *constProperty(BacnetPropertyNS::Identifier propertyId);
     void propertyValueChanged(Bacnet::CovSubscription &subscriprion, BacnetObject *object, QList<Bacnet::PropertyValueShared> &propertiesValues);
 
 public://functions overridden from PropertyOwner
@@ -51,16 +50,16 @@ public://functions overridden from PropertyOwner
     virtual void propertyValueChanged(Property *property);
 
 private:
-    QVariant::Type variantTypeForProperty_helper(BacnetProperty::Identifier propertyId);
-    Bacnet::BacnetDataInterface *createBacnetTypeForProperty_helper(BacnetProperty::Identifier propertyId, quint32 arrayIdx);
+    QVariant::Type variantTypeForProperty_helper(BacnetPropertyNS::Identifier propertyId);
+    Bacnet::BacnetDataInterface *createBacnetTypeForProperty_helper(BacnetPropertyNS::Identifier propertyId, quint32 arrayIdx);
 
     /*public for a while
 private:*/
 public:
     Bacnet::ObjectIdStruct _id;
-    typedef QMap<BacnetProperty::Identifier, Bacnet::BacnetDataInterface*> TPropertiesMap;
+    typedef QMap<BacnetPropertyNS::Identifier, Bacnet::BacnetDataInterface*> TPropertiesMap;
     TPropertiesMap _specializedProperties;
-    //    QMap<BacnetProperty::Identifier, Property *> _cdmProperties;
+    //    QMap<BacnetPropertyNS::Identifier, Property *> _cdmProperties;
 
     QMap<quint32, BacnetObject*> _childObjects;
     InternalAddress _address;

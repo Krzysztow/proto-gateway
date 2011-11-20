@@ -74,9 +74,9 @@ void ObjectTypesSupported::clearObjectsSupported()
     _value.clear();
 }
 
-void ObjectTypesSupported::addObjectsSupported(QList<BacnetObjectType::ObjectType> objSupported)
+void ObjectTypesSupported::addObjectsSupported(QList<BacnetObjectTypeNS::ObjectType> objSupported)
 {
-    foreach (BacnetObjectType::ObjectType supType, objSupported) {
+    foreach (BacnetObjectTypeNS::ObjectType supType, objSupported) {
         _value.setBit(supType);
     }
 }
@@ -242,7 +242,7 @@ DataType::DataType TimeStamp::typeId()
 
 ////////////// PropertyReference /////////////
 PropertyReference::PropertyReference():
-        _identifier(BacnetProperty::UndefinedProperty),
+        _identifier(BacnetPropertyNS::UndefinedProperty),
         _arrayIdx(ArrayIndexNotPresent)
 {
 }
@@ -284,7 +284,7 @@ qint32 PropertyReference::fromRaw(BacnetTagParser &parser)
     ret = parser.parseNext();
     if (!parser.isContextTag(0))
         return -1;
-    _identifier = (BacnetProperty::Identifier)parser.toUInt(&okOrCtxt);
+    _identifier = (BacnetPropertyNS::Identifier)parser.toUInt(&okOrCtxt);
     if (ret < 0 || !okOrCtxt)
         return -1;
     total += ret;
@@ -326,7 +326,7 @@ DataType::DataType PropertyReference::typeId()
     return DataType::BACnetPropertyRefernce;
 }
 
-BacnetProperty::Identifier PropertyReference::propIdentifier()
+BacnetPropertyNS::Identifier PropertyReference::propIdentifier()
 {
     return _identifier;
 }
@@ -400,7 +400,7 @@ qint32 Address::fromRaw(BacnetTagParser &parser)
     ret = parser.parseNext();
     quint32 netNum = parser.toUInt(&convOk);
     if (ret < 0 || !parser.isApplicationTag(AppTags::UnsignedInteger) || !convOk) {
-        return -BacnetError::CodeMissingRequiredParameter;
+        return -BacnetErrorNS::CodeMissingRequiredParameter;
     }
     total += ret;
 
@@ -408,7 +408,7 @@ qint32 Address::fromRaw(BacnetTagParser &parser)
     ret = parser.parseNext();
     QByteArray octetAddress = parser.toByteArray(&convOk);
     if (ret < 0 || !parser.isApplicationTag(AppTags::OctetString) || !convOk) {
-        return -BacnetError::CodeMissingRequiredParameter;
+        return -BacnetErrorNS::CodeMissingRequiredParameter;
     }
     total += ret;
 
@@ -541,10 +541,10 @@ qint32 Recipient::fromRaw(BacnetTagParser &parser)
         }
     } else {
         //nothing matches requirements
-        return -BacnetError::CodeMissingRequiredParameter;
+        return -BacnetErrorNS::CodeMissingRequiredParameter;
     }
 
-    return -BacnetError::CodeInconsistentParameters;
+    return -BacnetErrorNS::CodeInconsistentParameters;
 }
 
 qint32 Recipient::fromRaw(BacnetTagParser &parser, quint8 tagNum)
@@ -623,11 +623,11 @@ qint32 ObjectPropertyReference::fromRaw(BacnetTagParser &parser)
 
     //decode property identifier
     ret = parser.parseNext();
-    _propId = (BacnetProperty::Identifier)parser.toUInt(&convOkOrCtxt);
+    _propId = (BacnetPropertyNS::Identifier)parser.toUInt(&convOkOrCtxt);
     if (ret < 0 || !parser.isContextTag(1))
-        return -BacnetError::CodeMissingRequiredParameter;
+        return -BacnetErrorNS::CodeMissingRequiredParameter;
     else if (!convOkOrCtxt)
-        return -BacnetError::CodeInvalidDataType;
+        return -BacnetErrorNS::CodeInvalidDataType;
     total += ret;
 
     //decode proeprty array index, if present
@@ -635,7 +635,7 @@ qint32 ObjectPropertyReference::fromRaw(BacnetTagParser &parser)
         ret = parser.parseNext();
         _arrayIdx = parser.toUInt(&convOkOrCtxt);
         if (ret < 0 || !convOkOrCtxt)
-            return -BacnetError::CodeInconsistentParameters;
+            return -BacnetErrorNS::CodeInconsistentParameters;
 
         total += ret;
     } else
@@ -672,7 +672,7 @@ ObjectIdentifier &ObjectPropertyReference::objId()
     return _objId;
 }
 
-BacnetProperty::Identifier ObjectPropertyReference::propId()
+BacnetPropertyNS::Identifier ObjectPropertyReference::propId()
 {
     return _propId;
 }
@@ -682,14 +682,14 @@ quint32 ObjectPropertyReference::arrayIdx()
     return _arrayIdx;
 }
 
-ObjectPropertyReference::ObjectPropertyReference(ObjectIdentifier &objId, BacnetProperty::Identifier propId, quint32 arrayIdx):
+ObjectPropertyReference::ObjectPropertyReference(ObjectIdentifier &objId, BacnetPropertyNS::Identifier propId, quint32 arrayIdx):
     _objId(objId),
     _propId(propId),
     _arrayIdx(arrayIdx)
 {
 }
 
-bool ObjectPropertyReference::compareParameters(ObjectIdentifier &objId, BacnetProperty::Identifier propId, quint32 arrayIdx) const
+bool ObjectPropertyReference::compareParameters(ObjectIdentifier &objId, BacnetPropertyNS::Identifier propId, quint32 arrayIdx) const
 {
     return ( (objId == _objId) && (propId == _propId) && (arrayIdx == _arrayIdx) );
 }
@@ -796,7 +796,7 @@ qint32 RecipientProcess::fromRaw(BacnetTagParser &parser)
     ret = _recipient.fromRaw(parser, 0);
     if (ret < 0) {
         qDebug("%s : Can't parse recipient", __PRETTY_FUNCTION__);
-        return BacnetError::CodeMissingRequiredParameter;
+        return BacnetErrorNS::CodeMissingRequiredParameter;
     }
     total += ret;
 
@@ -804,7 +804,7 @@ qint32 RecipientProcess::fromRaw(BacnetTagParser &parser)
     ret = _procId.fromRaw(parser, 1);
     if (ret < 0) {
         qDebug("%s : Can't parse process Id", __PRETTY_FUNCTION__);
-        return BacnetError::CodeMissingRequiredParameter;
+        return BacnetErrorNS::CodeMissingRequiredParameter;
     }
     total += ret;
 

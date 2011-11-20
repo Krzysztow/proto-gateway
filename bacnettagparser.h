@@ -48,7 +48,7 @@ public:
 
     //
     static qint16 parseStructuredData(BacnetTagParser &bParser,
-                                      BacnetObjectType::ObjectType objType, BacnetProperty::Identifier propId, quint32 arrayIndex,
+                                      BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId, quint32 arrayIndex,
                                       quint8 tagToParse, Bacnet::BacnetDataInterfaceShared &resultData);
 
     //default copy constructor is ok, when we need to have our own copy of data, call copyData()

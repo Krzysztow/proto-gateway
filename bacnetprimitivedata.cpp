@@ -1079,7 +1079,7 @@ DataType::DataType Time::typeId()
 }
 
 //OBJECT IDENTIFIER
-ObjectIdentifier::ObjectIdentifier(BacnetObjectType::ObjectType type, quint32 instanceNum)
+ObjectIdentifier::ObjectIdentifier(BacnetObjectTypeNS::ObjectType type, quint32 instanceNum)
 {
     _value.instanceNum = instanceNum;
     _value.objectType = type;
@@ -1095,7 +1095,7 @@ ObjectIdentifier::ObjectIdentifier(quint32 objectIdNum):
 {
 }
 
-quint32 ObjectIdentifier::objectIdNum()
+quint32 ObjectIdentifier::objectIdNum() const
 {
     return objIdToNum(_value);
 }
@@ -1223,21 +1223,25 @@ DataType::DataType BacnetDataBaseDeletable::typeId()
 }
 
 //BACNET List
-BacnetList::BacnetList(DataType::DataType type):
-        _storedType(type)
+BacnetList::BacnetList()
+{
+
+}
+
+BacnetList::BacnetList(QList<BacnetDataInterfaceShared> &value):
+    _value(value)
 {
 }
 
 BacnetList::~BacnetList()
 {
-    qDeleteAll(_value);
 }
 
 qint32 BacnetList::toRaw(quint8 *ptrStart, quint16 buffLength)
 {
     quint8 *actualStartPtr = ptrStart;
     qint16 ret(0);
-    foreach (BacnetDataInterface *bIt, _value) {
+    foreach (BacnetDataInterfaceShared bIt, _value) {
         Q_CHECK_PTR(bIt);
         ret = bIt->toRaw(actualStartPtr, buffLength);
         if (ret < 0)
@@ -1254,7 +1258,7 @@ qint32 BacnetList::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 {
     quint8 *actualStartPtr = ptrStart;
     qint16 ret(0);
-    foreach (BacnetDataInterface *bIt, _value) {
+    foreach (BacnetDataInterfaceShared bIt, _value) {
         Q_CHECK_PTR(bIt);
         ret = bIt->toRaw(actualStartPtr, buffLength, tagNumber);
         if (ret < 0)
@@ -1291,7 +1295,7 @@ bool BacnetList::addElement(BacnetDataInterface *value)
     } else
         _storedType = value->typeId();
 
-    _value.append(value);
+    _value.append(BacnetDataInterfaceShared(value));
     return true;
 }
 
@@ -1305,7 +1309,7 @@ bool BacnetList::setInternal(QVariant &value)
 QVariant BacnetList::toInternal()
 {
     QList<QVariant> _list;
-    foreach (Bacnet::BacnetDataInterface *data, _value) {
+    foreach (Bacnet::BacnetDataInterfaceShared data, _value) {
         _list.append(data->toInternal());
     }
 
@@ -1328,22 +1332,27 @@ DataType::DataType BacnetList::storedType()
 }
 
 //BACNET ARRAY
-BacnetArray::BacnetArray(DataType::DataType type):
-        BacnetList(type)
+BacnetArray::BacnetArray():
+        BacnetList()
 {
 }
 
-BacnetDataInterface *BacnetArray::createElementAt(quint8 position)
+BacnetArray::BacnetArray(QList<BacnetDataInterfaceShared> &value):
+        BacnetList(value)
 {
-    if (0 == position)
-        return new UnsignedInteger(_value.size());
-
-    if (position >= _value.size()) {
-        return 0;
-    }
-
-    return new BacnetDataBaseDeletable(_value.at(position-1));
 }
+
+//BacnetDataInterface *BacnetArray::createElementAt(quint8 position)
+//{
+//    if (0 == position)
+//        return new UnsignedInteger(_value.size());
+
+//    if (position >= _value.size()) {
+//        return 0;
+//    }
+
+//    return new BacnetDataBaseDeletable(_value.at(position-1));
+//}
 
 DataType::DataType BacnetArray::typeId()
 {

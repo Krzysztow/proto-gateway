@@ -50,7 +50,7 @@
 //    BacnetObject *object = _device->bacnetObject(_data._monitoredObjectId.instanceNumber());
 //    Q_CHECK_PTR(object);
 //    if (0 == object) {
-//        _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+//        _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
 //    } else {//we have that object
 //        object->addOrUpdateCov(_data, _requester, &_error);
 //    }

@@ -14,7 +14,7 @@ namespace Bacnet {
     {
     public:
         BacnetReadPropertyAck();
-        BacnetReadPropertyAck(ReadPropertyServiceData &ackReadPrptyData, BacnetDataInterface *data);
+        BacnetReadPropertyAck(ReadPropertyServiceData &ackReadPrptyData, BacnetDataInterfaceShared &data);
         ~BacnetReadPropertyAck();
 
 

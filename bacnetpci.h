@@ -67,11 +67,11 @@ public:
 public:
     BacnetConfirmedRequestData();
     BacnetConfirmedRequestData(bool segmented, bool moreFollows, bool segmentedAccepted, MaxSegmentsAccepted maxSegments, MaxLengthAccepted maxLengthAccepted,
-                               quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service, quint8 sequenceNumber = 0, quint8 windowSize = 0);
-    BacnetConfirmedRequestData(MaxLengthAccepted maxLengthAccepted, quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service);
+                               quint8 invokeId, BacnetServicesNS::BacnetConfirmedServiceChoice service, quint8 sequenceNumber = 0, quint8 windowSize = 0);
+    BacnetConfirmedRequestData(MaxLengthAccepted maxLengthAccepted, quint8 invokeId, BacnetServicesNS::BacnetConfirmedServiceChoice service);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
 
-    inline BacnetServices::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
+    inline BacnetServicesNS::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
     inline quint8 invokedId() {return _invokeId;}
 
 public://overridden from BacnetPciData
@@ -87,7 +87,7 @@ private:
     quint8 _invokeId;
     quint8 _sequenceNum;
     quint8 _propWindowSize;
-    BacnetServices::BacnetConfirmedServiceChoice _serviceChoice;
+    BacnetServicesNS::BacnetConfirmedServiceChoice _serviceChoice;
 
 };
 
@@ -98,7 +98,7 @@ public:
     BacnetUnconfirmedRequestData() {}
     BacnetUnconfirmedRequestData(quint8 serviceChoice);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
-    inline BacnetServices::BacnetUnconfirmedServiceChoice service() {return (BacnetServices::BacnetUnconfirmedServiceChoice)_serviceChoice;}
+    inline BacnetServicesNS::BacnetUnconfirmedServiceChoice service() {return (BacnetServicesNS::BacnetUnconfirmedServiceChoice)_serviceChoice;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();

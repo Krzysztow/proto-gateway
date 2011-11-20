@@ -430,14 +430,14 @@ Bacnet::ObjectIdStruct BacnetTagParser::toObjectId(bool *ok)
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
     //here we return by value, maybe should change it?
-    Bacnet::ObjectIdStruct ret = {BacnetObjectType::Undefined, 0};
+    Bacnet::ObjectIdStruct ret = {BacnetObjectTypeNS::Undefined, 0};
     if (checkCorrectAppOrCtxTagHelper(AppTags::BacnetObjectIdentifier) &&
         checkCorrectLengthHelper(4)) {
         quint32 objType = *(quint32*)_valuePtr;
         objType = qFromBigEndian(objType);
         ret.instanceNum = objType & 0x3fffff;//get rid of the part of object type
         objType >>= 22;//get rid of the part from the instance number
-        ret.objectType = (BacnetObjectType::ObjectType)objType;
+        ret.objectType = (BacnetObjectTypeNS::ObjectType)objType;
         if (ok) *ok = true;
         return ret;
     }
@@ -494,7 +494,7 @@ quint16 BacnetTagParser::valueLength()
 
 #include "bacnetdefaultobject.h"
 qint16 BacnetTagParser::parseStructuredData(BacnetTagParser &bParser,
-                                            BacnetObjectType::ObjectType objType, BacnetProperty::Identifier propId, quint32 arrayIndex,
+                                            BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId, quint32 arrayIndex,
                                             quint8 tagToParse, Bacnet::BacnetDataInterfaceShared &resultData)
 {
     Q_ASSERT_X(resultData.isNull(), "BacnetTagParser::parseStructuredData()", "Don't pass me data in resultData pointer. This is the output!");

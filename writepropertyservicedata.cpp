@@ -8,7 +8,7 @@ WritePropertyServiceData::WritePropertyServiceData()
 {
 }
 
-WritePropertyServiceData::WritePropertyServiceData(ObjectIdentifier &objId, BacnetProperty::Identifier propertyId,
+WritePropertyServiceData::WritePropertyServiceData(ObjectIdentifier &objId, BacnetPropertyNS::Identifier propertyId,
                                                    BacnetDataInterface *writeValue, quint32 arrayIndex):
     _objectId(objId),
     _propValue(propertyId, writeValue, arrayIndex)
@@ -129,7 +129,7 @@ qint32 WritePropertyServiceData::fromRaw(quint8 *serviceData, quint16 buffLength
 
 //    //get property identifier
 //    ret = bParser.parseNext();
-//    _propValue.propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOk);
+//    _propValue.propertyId = (BacnetPropertyNS::Identifier)bParser.toUInt(&convOk);
 //    if (ret <= 0 || !bParser.isContextTag(1) || !convOk) //not enough data, not context tag or not this tag
 //        return -1;
 //    actualPtr += ret;

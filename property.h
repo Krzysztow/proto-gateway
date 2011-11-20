@@ -20,6 +20,7 @@ public:
         IvalidRange     = -3,
         TypeMismatch    = -2,
         NotSetYet       = -1,
+
         ResultOk        =  0
     };
 

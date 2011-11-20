@@ -10,7 +10,7 @@ PropertyValue::PropertyValue():
 {
 }
 
-PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterface *value,
+PropertyValue::PropertyValue(BacnetPropertyNS::Identifier propertyId, BacnetDataInterface *value,
                              quint32 arrayIndex, quint8 priority):
     _propertyId(propertyId),
     _arrayIndex(arrayIndex),
@@ -20,7 +20,7 @@ PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataIn
     Q_CHECK_PTR(_value.data());
 }
 
-PropertyValue::PropertyValue(BacnetProperty::Identifier propertyId, BacnetDataInterfaceShared value,
+PropertyValue::PropertyValue(BacnetPropertyNS::Identifier propertyId, BacnetDataInterfaceShared value,
                              quint32 arrayIndex, quint8 priority):
     _propertyId(propertyId),
     _arrayIndex(arrayIndex),
@@ -93,7 +93,7 @@ qint32 PropertyValue::toRaw(quint8 *ptrStart, quint16 buffLength, int sequenceSh
     return (actualPtr - ptrStart);
 }
 
-qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType::ObjectType objType, int sequenceShift)
+qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectTypeNS::ObjectType objType, int sequenceShift)
 {
     qint32 ret(0);
     qint32 total(0);
@@ -101,11 +101,11 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
 
     //get property identifier
     ret = parser.parseNext();
-    _propertyId = (BacnetProperty::Identifier)parser.toUInt(&convOkOrCtxt);
+    _propertyId = (BacnetPropertyNS::Identifier)parser.toUInt(&convOkOrCtxt);
     if (ret <= 0 || !parser.isContextTag(0  + sequenceShift) || !convOkOrCtxt) {//not enough data, not context tag or not this tag
         Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Cannot encode propId");
         qDebug("%s : cannot parse property id: %d", __PRETTY_FUNCTION__, ret);
-        return BacnetError::CodeMissingRequiredParameter;
+        return BacnetErrorNS::CodeMissingRequiredParameter;
     }
     total += ret;
 
@@ -114,14 +114,14 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
     if (ret < 0) {
         Q_ASSERT_X(false, __PRETTY_FUNCTION__, "finished to early.");
         qDebug("%s : finished to early!", __PRETTY_FUNCTION__);
-        return BacnetError::CodeInconsistentParameters;//even if this is optional, there are other params to come.
+        return BacnetErrorNS::CodeInconsistentParameters;//even if this is optional, there are other params to come.
     } else if ( ((1 + sequenceShift) == ret) && convOkOrCtxt) {
         ret = parser.parseNext();
         _arrayIndex = parser.toUInt(&convOkOrCtxt);
         if ( (ret < 0) || !convOkOrCtxt ) {
             Q_ASSERT_X(false, __PRETTY_FUNCTION__, "array index couldn't be decoded!");
             qDebug("%s : array index couldn't be decoded!", __PRETTY_FUNCTION__);
-            return BacnetError::CodeInvalidDataType;
+            return BacnetErrorNS::CodeInvalidDataType;
         }
         total += ret;
     } else {
@@ -137,7 +137,7 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
     if (ret < 0 || _value.isNull()) {
         qDebug("%s : couldn't create abstract value.", __PRETTY_FUNCTION__);
         Q_ASSERT(false);
-        return BacnetError::CodeOther;
+        return BacnetErrorNS::CodeOther;
     }
     total += ret;
 
@@ -147,13 +147,13 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
         if (ret < 0) {
             Q_ASSERT_X(false, __PRETTY_FUNCTION__, "finished to early.");
             qDebug("%s : finished to early!", __PRETTY_FUNCTION__);
-            return BacnetError::CodeInconsistentParameters;//even if this is optional, there are other params to come.
+            return BacnetErrorNS::CodeInconsistentParameters;//even if this is optional, there are other params to come.
         } else {
             _priority = parser.toUInt(&convOkOrCtxt);
             if (!convOkOrCtxt) {
                 qDebug("%s : priority couldn't be decoded!", __PRETTY_FUNCTION__);
                 Q_ASSERT(false);
-                return BacnetError::CodeInvalidDataType;
+                return BacnetErrorNS::CodeInvalidDataType;
             }
             total += ret;
         }
@@ -164,7 +164,7 @@ qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, BacnetObjectType:
     return total;
 }
 
-qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectType::ObjectType objType)
+qint32 PropertyValue::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, BacnetObjectTypeNS::ObjectType objType)
 {
     qint32 total(0);
     qint32 ret;

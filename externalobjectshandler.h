@@ -24,8 +24,8 @@ namespace Bacnet {
         ExternalObjectsHandler(BacnetTSM2 *tsm);
 
         void addMappedProperty(Property *property, quint32 objectId,
-                               BacnetProperty::Identifier propertyId, quint32 propertyArrayIdx,
-                               quint32 deviceId = BacnetObjectType::Undefined,
+                               BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
+                               quint32 deviceId = BacnetObjectTypeNS::Undefined,
                                BacnetExternalObjects::ReadAccessType type = BacnetExternalObjects::Access_COV_Uninitialized);
 
         BacnetExternalObjects::ExternalRoutingElement &routingEntry(::Property *property, bool *found = 0);

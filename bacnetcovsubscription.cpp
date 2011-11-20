@@ -27,7 +27,7 @@ bool CovSubscription::compareSubscriptions(CovSubscription &subscription)
 }
 
 bool CovSubscription::compareParametrs(BacnetAddress &recipientAddress, quint32 recipientProcessId,
-                                       ObjectIdentifier &objectId, BacnetProperty::Identifier propertyId, quint32 propertyArrayIdx)
+                                       ObjectIdentifier &objectId, BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx)
 {
     return ( (_recipientProcess.compare(recipientAddress, recipientProcessId) &&
               (_monitoredPropertyRef.compareParameters(objectId, propertyId, propertyArrayIdx))) );
@@ -130,14 +130,14 @@ qint32 CovSubscription::fromRaw(BacnetTagParser &parser)
     ret = parser.parseNext();
     _issueConfNotification = parser.toBoolean(&okOrCtxt);
     if ((ret < 0) || !okOrCtxt || !parser.isContextTag(2) )
-        return BacnetError::CodeMissingRequiredParameter;
+        return BacnetErrorNS::CodeMissingRequiredParameter;
     total += ret;
 
     //decode time remaining
     ret = parser.parseNext();
     _timeLeft = parser.toUInt(&okOrCtxt);
     if ( (ret < 0) || !okOrCtxt || !parser.isContextTag(3) )
-        return BacnetError::CodeMissingRequiredParameter;
+        return BacnetErrorNS::CodeMissingRequiredParameter;
     total += ret;
 
     //cov increment?
@@ -184,7 +184,7 @@ BacnetCovSupport::BacnetCovSupport()
 {
 }
 
-bool CovSubscription::isCovPropertySubscription(BacnetProperty::Identifier propId, quint32 propertyArrayIdx)
+bool CovSubscription::isCovPropertySubscription(BacnetPropertyNS::Identifier propId, quint32 propertyArrayIdx)
 {
     return _monitoredPropertyRef.compareParameters(_monitoredPropertyRef.objId(), propId, propertyArrayIdx);
 }

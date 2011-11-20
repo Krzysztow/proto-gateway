@@ -64,38 +64,38 @@ qint32 IAmServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     //parse object identifier
     ret = _objId.fromRaw(bParser);
     if (ret < 0)
-        return -BacnetReject::ReasonInvalidParameterDataType;
+        return -BacnetRejectNS::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     //parse max APDU length accepted
     ret = bParser.parseNext();
     if (ret < 0 || !bParser.isApplicationTag(AppTags::UnsignedInteger))
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     _maxApduLength = bParser.toUInt(&convOkOrCtxt);
     if (!convOkOrCtxt)
-        return -BacnetReject::ReasonInvalidParameterDataType;
+        return -BacnetRejectNS::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     //parse segmentation supported
     ret = bParser.parseNext();
     if (ret < 0 || !bParser.isApplicationTag(AppTags::Enumerated))
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     _segmentationSupported = (Bacnet::BacnetSegmentation)bParser.toEumerated(&convOkOrCtxt);
     if (!convOkOrCtxt)
-        return -BacnetReject::ReasonInvalidParameterDataType;
+        return -BacnetRejectNS::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     //vendor Identifier
     ret = bParser.parseNext();
     if (ret < 0 || !bParser.isApplicationTag(AppTags::UnsignedInteger))
-        return -BacnetReject::ReasonMissingRequiredParameter;
+        return -BacnetRejectNS::ReasonMissingRequiredParameter;
     _vendorId = bParser.toUInt(&convOkOrCtxt);
     if (!convOkOrCtxt)
-        return -BacnetReject::ReasonInvalidParameterDataType;
+        return -BacnetRejectNS::ReasonInvalidParameterDataType;
     consumedBytes += ret;
 
     if (bParser.hasNext())
-        return -BacnetReject::ReasonTooManyArguments;
+        return -BacnetRejectNS::ReasonTooManyArguments;
 
     return consumedBytes;
 }

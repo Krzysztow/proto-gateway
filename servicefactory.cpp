@@ -17,13 +17,13 @@
 
     switch (pciData->service())
     {
-    case (BacnetServices::WriteProperty) :
+    case (BacnetServicesNS::WriteProperty) :
         {
             Bacnet::InternalWPRequestHandler *wpService = new Bacnet::InternalWPRequestHandler(tsm, device, internalHandler, externalHandler);
             wpService->setConfirmedData(pciData);
             return wpService;
         }
-    case (BacnetServices::ReadProperty) :
+    case (BacnetServicesNS::ReadProperty) :
         {
             Bacnet::InternalRPRequestHandler *rpService = new Bacnet::InternalRPRequestHandler(tsm, device, internalHandler, externalHandler);
             rpService->setConfirmedData(pciData);
@@ -42,11 +42,11 @@
     Q_CHECK_PTR(pciData);
     switch (pciData->service())
     {
-    case (BacnetServices::WhoIs):
+    case (BacnetServicesNS::WhoIs):
         {
             return new Bacnet::InternalWhoIsRequestHandler(tsm, device, internalHandler, externalHandler);
         }
-    case (BacnetServices::WhoHas):
+    case (BacnetServicesNS::WhoHas):
         {
             return new Bacnet::InternalWhoHasRequestHandler(tsm, device, internalHandler, externalHandler);
         }

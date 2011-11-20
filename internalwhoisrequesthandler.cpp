@@ -47,8 +47,8 @@ void InternalWhoIsRequestHandler::finalize(bool *deleteAfter)
 bool InternalWhoIsRequestHandler::execute()
 {
     //! \todo Hange the way it calculates limits - there should be function for that.
-    quint32 lowLimit = _data._rangeLowLimit | (BacnetObjectType::Device << 22);
-    quint32 highLimit = _data._rangeHighLimit | (BacnetObjectType::Device << 22);
+    quint32 lowLimit = _data._rangeLowLimit | (BacnetObjectTypeNS::Device << 22);
+    quint32 highLimit = _data._rangeHighLimit | (BacnetObjectTypeNS::Device << 22);
 
     QList<BacnetDeviceObject*> devs = _internalHandler->devices();
     QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
@@ -56,7 +56,7 @@ bool InternalWhoIsRequestHandler::execute()
 
     //! \todo If not all the responses fit in the buffer divide it in some chunks and get asynchIds
     quint32 objIdNum;
-    ObjectIdentifier tmp(BacnetObjectType::Undefined, 0);
+    ObjectIdentifier tmp(BacnetObjectTypeNS::Undefined, 0);
     IAmServiceData iAmData(tmp, Bacnet::ApduMaxSize, SegmentedNOT, SNGVendorIdentifier);
 
     for (; devIt != devListEnd; ++devIt) {
@@ -64,7 +64,7 @@ bool InternalWhoIsRequestHandler::execute()
         if ( (lowLimit <= objIdNum) &&
              (objIdNum <= highLimit) ) {
             iAmData._objId = (*devIt)->objectIdNum();
-            _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServices::I_Am);
+            _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServicesNS::I_Am);
         }
     }
 

@@ -59,10 +59,10 @@ public://owerwritten from BitString
 
 public:
     void clearObjectsSupported();
-    void addObjectsSupported(QList<BacnetObjectType::ObjectType> objSupported);
+    void addObjectsSupported(QList<BacnetObjectTypeNS::ObjectType> objSupported);
 
 private:
-    static const int REQ_BITS_NUM = BacnetObjectType::MaximumEnumType + 1;
+    static const int REQ_BITS_NUM = BacnetObjectTypeNS::MaximumEnumType + 1;
 };
 
 class Unsigned16:
@@ -156,11 +156,11 @@ public://iverridden BacnetDataInterface methods.
     virtual DataType::DataType typeId();
 
 public:
-    BacnetProperty::Identifier propIdentifier();
+    BacnetPropertyNS::Identifier propIdentifier();
     quint32 propArrayIndex();
 
 private:
-    BacnetProperty::Identifier _identifier;
+    BacnetPropertyNS::Identifier _identifier;
     quint32 _arrayIdx;
 };
 
@@ -181,14 +181,14 @@ public:
 
 public:
     ObjectPropertyReference(ObjectIdentifier &objId,
-                            BacnetProperty::Identifier propId = BacnetProperty::UndefinedProperty,
+                            BacnetPropertyNS::Identifier propId = BacnetPropertyNS::UndefinedProperty,
                             quint32 arrayIdx = ArrayIndexNotPresent);
 
-    bool compareParameters(ObjectIdentifier &objId, BacnetProperty::Identifier propId = BacnetProperty::UndefinedProperty,
+    bool compareParameters(ObjectIdentifier &objId, BacnetPropertyNS::Identifier propId = BacnetPropertyNS::UndefinedProperty,
                            quint32 arrayIdx = ArrayIndexNotPresent) const;
 
     ObjectIdentifier &objId();
-    BacnetProperty::Identifier propId();
+    BacnetPropertyNS::Identifier propId();
     quint32 arrayIdx();
     bool operator==(const ObjectPropertyReference &other) const {return ( (_objId == other._objId) &&
                                                                           (_propId == other._propId) &&
@@ -196,7 +196,7 @@ public:
 
 private:
     ObjectIdentifier _objId;
-    BacnetProperty::Identifier _propId;
+    BacnetPropertyNS::Identifier _propId;
     quint32 _arrayIdx;
 };
 

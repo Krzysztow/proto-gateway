@@ -17,7 +17,7 @@ public:
     virtual ~BacnetObjectInternalSupport();
 
 public:
-    bool addInternalProperty(BacnetProperty::Identifier propertyType, Property *property);
+    bool addInternalProperty(BacnetPropertyNS::Identifier propertyType, Property *property);
 
 public://property owner methods.
     /** These two functions shouldn't be ever called when it comes to owners having only PropertyObservers! Here I override
@@ -29,10 +29,10 @@ public://property owner methods.
 //    virtual void asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)  =  0;
 
 protected://helper functions
-    BacnetProperty::Identifier findPropertyIdentifier(Property *toBeGotten);
+    BacnetPropertyNS::Identifier findPropertyIdentifier(Property *toBeGotten);
 
 protected:
-    QMap<BacnetProperty::Identifier, Property *> _cdmProperties;
+    QMap<BacnetPropertyNS::Identifier, Property *> _cdmProperties;
 };
 
 #endif // BACNETOBJECTINTERNALSUPPORT_H

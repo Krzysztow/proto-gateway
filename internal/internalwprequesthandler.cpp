@@ -41,7 +41,7 @@ bool InternalWPRequestHandler::finishWriting_helper(BacnetDeviceObject *object, 
 
     if (resultCode < 0) {
         //! \todo translate error to bacnet error
-        _error.setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
+        _error.setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeUnknownProperty);
     } else {
         //nothing to do - response 0 will result in the simple ACK sent.
     }
@@ -70,15 +70,16 @@ bool InternalWPRequestHandler::execute()
     BacnetObject *object = _device->bacnetObject(_data._objectId.objectIdNum());
     Q_CHECK_PTR(object);
     if (0 == object) {
-        _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+        _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
         finalizeInstant(_tsm);
         return true;
     }
 
-    int readyness = object->ensurePropertyReadySet(_data._propValue, &_error);
+    int readyness = object->propertySet(_data._propValue._propertyId, _data._propValue._arrayIndex,
+                                        _data._propValue._value, &_error);
     if (readyness < 0) {
         if (!_error.hasError())
-            _error.setError(BacnetError::ClassProperty, BacnetError::CodeUnknownProperty);
+            _error.setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeUnknownProperty);
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
         finishWriting_helper(_device, readyness);

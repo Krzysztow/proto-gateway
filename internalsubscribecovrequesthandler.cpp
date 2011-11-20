@@ -52,7 +52,7 @@ bool InternalSubscribeCOVRequestHandler::execute()
     Q_CHECK_PTR(object);
 
     if (0 == object) {
-        _error.setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+        _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
     } else {
         if (_data.isCancellation()) {
             object->rmCovSubscription(_data._subscriberProcId, _requester, _data._monitoredObjectId, (*_data._propReference), &_error);

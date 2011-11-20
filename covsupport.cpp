@@ -28,7 +28,7 @@ void CovSupport::addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &cov
     //is property supported?
     if (!covProperties().contains(covData._propReference->propIdentifier())) {
         qDebug("%s : Property is not cov supported", __PRETTY_FUNCTION__);
-        error->setError(BacnetError::ClassObject, BacnetError::CodeNotCovProperty);
+        error->setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeNotCovProperty);
         return;
     }
 
@@ -54,7 +54,7 @@ void CovSupport::addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &cov
 
     Q_ASSERT(0 != subscription);
     if (subscription == 0) {
-        error->setError(BacnetError::ClassResources, BacnetError::CodeOther);
+        error->setError(BacnetErrorNS::ClassResources, BacnetErrorNS::CodeOther);
         return;
     }
 
@@ -87,9 +87,9 @@ void CovSupport::rmCovSubscription(quint32 processId, BacnetAddress &requester, 
     }
 }
 
-void CovSupport::addCovIncrementHandler(BacnetProperty::Identifier propId, CovRealIcnrementHandler *incrementHandler)
+void CovSupport::addCovIncrementHandler(BacnetPropertyNS::Identifier propId, CovRealIcnrementHandler *incrementHandler)
 {
-    QHash<BacnetProperty::Identifier, CovRealIcnrementHandler*>::Iterator it = _incrementHandlers.find(propId);
+    QHash<BacnetPropertyNS::Identifier, CovRealIcnrementHandler*>::Iterator it = _incrementHandlers.find(propId);
     if (it != _incrementHandlers.end()) {
         //delete old property
         delete it.value();
@@ -108,23 +108,23 @@ void CovSupport::addCovIncrementHandler(BacnetProperty::Identifier propId, CovRe
     }
 }
 
-CovRealIcnrementHandler *CovSupport::covIncrementHandler(BacnetProperty::Identifier propId)
+CovRealIcnrementHandler *CovSupport::covIncrementHandler(BacnetPropertyNS::Identifier propId)
 {
     return _incrementHandlers[propId];
 }
 
-CovRealIcnrementHandler *CovSupport::takeCovIncrementHandler(BacnetProperty::Identifier propId)
+CovRealIcnrementHandler *CovSupport::takeCovIncrementHandler(BacnetPropertyNS::Identifier propId)
 {
     return _incrementHandlers.take(propId);
 }
 
-void CovSupport::remvoeCovIncrementHandler(BacnetProperty::Identifier propId)
+void CovSupport::remvoeCovIncrementHandler(BacnetPropertyNS::Identifier propId)
 {
     //this will delete increment handler and remove the item
     addCovIncrementHandler(propId, 0);
 }
 
-//bool CovSupport::valueChanged(BacnetProperty::Identifier propId, Bacnet::BacnetDataInterface *value)
+//bool CovSupport::valueChanged(BacnetPropertyNS::Identifier propId, Bacnet::BacnetDataInterface *value)
 //{
 //    CovRealIcnrementHandler *propertyCovHandler = _incrementHandlers[propId];
 //    if (0 == propertyCovHandler)//if there is no increment handler - assume, value has changed at least by increment.
@@ -143,7 +143,7 @@ QList<Bacnet::CovSubscription> & CovSupport::covSubscriptions()
     return _subscriptions;
 }
 
-void CovSupport::propertyChanged(BacnetProperty::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify)
+void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify)
 {
     Q_CHECK_PTR(notifyingObject);
     Q_CHECK_PTR(deviceToNotify);
@@ -214,7 +214,7 @@ void CovSupport::propertyChanged(BacnetProperty::Identifier propId, quint32 prop
                         \note If the list is empty (and we know that covProperties() is not empty, since we are here), the list is uninitialized yet.
                     */
                     if (covPropertiesValues.isEmpty()) {
-                        foreach (BacnetProperty::Identifier id, covProperties()) {
+                        foreach (BacnetPropertyNS::Identifier id, covProperties()) {
                             if (id != propId) {//the property with propId is already added.
                                 const quint32 arrayIdx = Bacnet::ArrayIndexNotPresent;
                                 BacnetDataInterfaceShared propertyValueData(notifyingObject->propertyReadInstantly(id, arrayIdx, &error));

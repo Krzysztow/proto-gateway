@@ -17,7 +17,7 @@ namespace Bacnet {
     public:
         CovNotificationRequestData();
 
-        CovNotificationRequestData(quint8 subscrProcId, Bacnet::ObjectIdentifier &initiatingObjectId, Bacnet::ObjectIdentifier &monitoredObjectId,
+        CovNotificationRequestData(quint8 subscrProcId, const Bacnet::ObjectIdentifier &initiatingObjectId, const Bacnet::ObjectIdentifier &monitoredObjectId,
                                    quint32 timeLeft = 0x00);
 
     public://implementations of BacnetServiceData interface.

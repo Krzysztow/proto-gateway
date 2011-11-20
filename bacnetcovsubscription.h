@@ -30,13 +30,13 @@ public:
 
     bool compareSubscriptions(CovSubscription &other);
     bool compareParametrs(BacnetAddress &recipientAddress, quint32 recipientProcessId,
-                          ObjectIdentifier &objectId, BacnetProperty::Identifier propertyId, quint32 propertyArrayIdx = ArrayIndexNotPresent);
+                          ObjectIdentifier &objectId, BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx = ArrayIndexNotPresent);
     //! \note updates values such as _timeLeft and _covIncrement. It takes ownership over covRealIncrementHandler. By doing so it deletes it's own one.
     void update(quint32 lifetime, CovRealIcnrementHandler *covIncrement);
 
     //! Returns true, if the subscription is of object (not property) type.
-    bool isCovObjectSubscription() { return (_monitoredPropertyRef.propId() == BacnetProperty::UndefinedProperty); }
-    bool isCovPropertySubscription(BacnetProperty::Identifier propId, quint32 propertyArrayIdx = ArrayIndexNotPresent);
+    bool isCovObjectSubscription() { return (_monitoredPropertyRef.propId() == BacnetPropertyNS::UndefinedProperty); }
+    bool isCovPropertySubscription(BacnetPropertyNS::Identifier propId, quint32 propertyArrayIdx = ArrayIndexNotPresent);
     CovRealIcnrementHandler *covHandler() {return _covIncrement;}
 
     bool isIssueConfirmedNotifications() {return _issueConfNotification;}

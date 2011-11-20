@@ -8,6 +8,10 @@ TARGET = BACnet_KW
 CONFIG += console
 CONFIG -= app_bundle
 TEMPLATE = app
+
+INCLUDEPATH += internal \
+    external
+
 SOURCES += main.cpp \
     bacnetvirtuallinklayer.cpp \
     bacnetnetworklayer.cpp \
@@ -71,9 +75,8 @@ SOURCES += main.cpp \
     ihaveservicedata.cpp \
     subscribecovservicedata.cpp \
     internalsubscribecovrequesthandler.cpp \
-    internalwprequesthandler.cpp \
+    internal/internalwprequesthandler.cpp \
     writepropertyservicedata.cpp \
-    internalrprequesthandler.cpp \
     covsupport.cpp \
     covnotificationrequestdata.cpp \
     covconfnotificationservicehandler.cpp \
@@ -82,8 +85,12 @@ SOURCES += main.cpp \
     internalsubscribecovservicehandler.cpp \
     bacnetcovsubscription.cpp \
     covsubscriptionstimehandler.cpp \
+    internal/internalrprequesthandler.cpp \
     internal/bacnetobject2.cpp \
-    internal/deviceobject.cpp
+    internal/deviceobject.cpp \
+    internal/bacnetproperty.cpp \
+    internal/multipleasynchhelper.cpp
+
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
     bacnetbbmdhandler.h \
@@ -154,9 +161,8 @@ HEADERS += bacnetvirtuallinklayer.h \
     ihaveservicedata.h \
     subscribecovservicedata.h \
     internalsubscribecovrequesthandler.h \
-    internalwprequesthandler.h \
+    internal/internalwprequesthandler.h \
     writepropertyservicedata.h \
-    internalrprequesthandler.h \
     covsupport.h \
     covnotificationrequestdata.h \
     covconfnotificationservicehandler.h \
@@ -165,9 +171,18 @@ HEADERS += bacnetvirtuallinklayer.h \
     internalsubscribecovservicehandler.h \
     bacnetcovsubscription.h \
     covsubscriptionstimehandler.h \
+    internal/internalrprequesthandler.h \
     internal/bacnetobject2.h \
-    internal/deviceobject.h
+    internal/deviceobject.h \
+    internal/bacnetproperty.h \
+    internal/multipleasynchhelper.h \
+    internal/internalpropertycontainersupport.h
 OTHER_FILES +=
+
+
+
+
+
 
 
 

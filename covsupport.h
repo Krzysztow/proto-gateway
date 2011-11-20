@@ -13,7 +13,7 @@ class CovSupport
 {
 public:
     //so far this is not compulsory. Function returns 0 on default, if not supported.
-    virtual const QList<BacnetProperty::Identifier> &covProperties() = 0;
+    virtual const QList<BacnetPropertyNS::Identifier> &covProperties() = 0;
 
 public:
     CovSupport();
@@ -25,18 +25,18 @@ public:
 
     //! \note If the value is of real type, increment handler visits it to check if notification of subscribers is needed. Otherwise, notification is needed (because CDM invokes other functions
     //  only if change occured.
-//    bool valueChanged(BacnetProperty::Identifier propId, BacnetDataInterface *value);
+//    bool valueChanged(BacnetPropertyNS::Identifier propId, BacnetDataInterface *value);
 
     //! Adds new increment handler. The ownership is transferred to this class!
-    void addCovIncrementHandler(BacnetProperty::Identifier propId, CovRealIcnrementHandler *incrementHandler);
+    void addCovIncrementHandler(BacnetPropertyNS::Identifier propId, CovRealIcnrementHandler *incrementHandler);
     //! Returns increment handler for given property. If not present - returns 0. This class still owns the increment handler.
-    CovRealIcnrementHandler *covIncrementHandler(BacnetProperty::Identifier propId);
+    CovRealIcnrementHandler *covIncrementHandler(BacnetPropertyNS::Identifier propId);
     //! Returns increment handler for given property. If not present - returns 0. This method transfers ownership to the caller!
-    CovRealIcnrementHandler *takeCovIncrementHandler(BacnetProperty::Identifier propId);
+    CovRealIcnrementHandler *takeCovIncrementHandler(BacnetPropertyNS::Identifier propId);
     //! Remove increment handler. Returns true, if the property had increment handler. Otherwise false.
-    void remvoeCovIncrementHandler(BacnetProperty::Identifier propId);
+    void remvoeCovIncrementHandler(BacnetPropertyNS::Identifier propId);
 
-    void propertyChanged(BacnetProperty::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify);
+    void propertyChanged(BacnetPropertyNS::Identifier propId, quint32 propArrayIdx, BacnetObject *notifyingObject, BacnetDeviceObject *deviceToNotify);
 
     /** Method to execute time dependant operations, like unsubscription of unused elements. Returns true, if instance still needs time dependant invocations, otherwise false.
         If returned false, then to be timely invoked again, instance has to subscribe with CovSupportTimeHandler using its addCovSupporter() method.
@@ -49,7 +49,7 @@ private:
 
 protected:
     QList<Bacnet::CovSubscription> _subscriptions;
-    QHash<BacnetProperty::Identifier, CovRealIcnrementHandler*> _incrementHandlers;
+    QHash<BacnetPropertyNS::Identifier, CovRealIcnrementHandler*> _incrementHandlers;
 };
 
 

@@ -65,18 +65,18 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
     if (subscription.isIssueConfirmedNotifications()) {
         Bacnet::CovConfNotificationServiceHandler *hndlr = new Bacnet::CovConfNotificationServiceHandler(covData);//takes ownership
         if (subscription.recipientHasAddress()) {
-            _tsm->send(subscription.recipientAddress()->address(), devAddress, BacnetServices::ConfirmedCOVNotification, hndlr);
+            _tsm->send(subscription.recipientAddress()->address(), devAddress, BacnetServicesNS::ConfirmedCOVNotification, hndlr);
         } else {
             Q_ASSERT(0 != subscription.recipientObjId());
-            _tsm->send(subscription.recipientObjId()->_value, device->address(), BacnetServices::ConfirmedCOVNotification, hndlr);
+            _tsm->send(subscription.recipientObjId()->_value, device->address(), BacnetServicesNS::ConfirmedCOVNotification, hndlr);
         }
 #warning "Get rid of _value dependency (ObjIdStruct)"
     } else {
         if (subscription.recipientHasAddress()) {
-            _tsm->sendUnconfirmed(subscription.recipientAddress()->address(), devAddress, *covData, BacnetServices::UnconfirmedCOVNotification);
+            _tsm->sendUnconfirmed(subscription.recipientAddress()->address(), devAddress, *covData, BacnetServicesNS::UnconfirmedCOVNotification);
         } else {
             Q_ASSERT(0 != subscription.recipientObjId());
-            _tsm->sendUnconfirmed(subscription.recipientObjId()->_value, devAddress, *covData, BacnetServices::UnconfirmedCOVNotification);
+            _tsm->sendUnconfirmed(subscription.recipientObjId()->_value, devAddress, *covData, BacnetServicesNS::UnconfirmedCOVNotification);
         }
 
         //was sent, now has to be destroyed!
@@ -170,7 +170,7 @@ InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
 //    BacnetObject *object = device->bacnetObject(objIdToNum(covData._monitoredObjectId));
 //    Q_CHECK_PTR(object);//this is not a software error, but a requester mistake. Leave it just for now.
 //    if (0 == object) {
-//        error->setError(BacnetError::ClassObject, BacnetError::CodeUnknownObject);
+//        error->setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
 //        return;
 //    }
 
@@ -210,7 +210,7 @@ InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
 //        return;//all done
 //    }
 //    if (!covData.isLifetimePresent() || !covData.isConfirmedNotificationPresent()) {
-//        error->setError(BacnetError::ClassServices, BacnetError::CodeInconsistentParameters);
+//        error->setError(BacnetErrorNS::ClassServices, BacnetErrorNS::CodeInconsistentParameters);
 //        return;
 //    }
 
@@ -231,7 +231,7 @@ InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
 //    }
 //    if (objSubscriptionListIt != (*objSubscriptionHashIt).end()) {//was not found, we have to add it.
 //        if (MAX_TOTAL_COV_SUBSCRIPTIONS == _totalCOVsubscriptionsNum) {//haven't we exceeded a maximum number of subscriptions possible?
-//            error->setError(BacnetError::ClassServices, BacnetError::CodeCovSubscriptionFailed);
+//            error->setError(BacnetErrorNS::ClassServices, BacnetErrorNS::CodeCovSubscriptionFailed);
 //            return;
 //        }
 //        (*objSubscriptionHashIt).append(CovSubscription(covData, requester));

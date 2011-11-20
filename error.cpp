@@ -3,12 +3,12 @@
 using namespace Bacnet;
 
 Error::Error():
-        errorClass(BacnetError::ClassNoError),
-        errorCode(BacnetError::CodeNoError)
+        errorClass(BacnetErrorNS::ClassNoError),
+        errorCode(BacnetErrorNS::CodeNoError)
 {
 }
 
-Error::Error(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode):
+Error::Error(BacnetErrorNS::ErrorClass errorClass, BacnetErrorNS::ErrorCode errorCode):
         errorClass(errorClass),
         errorCode(errorCode)
 {
@@ -16,10 +16,10 @@ Error::Error(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCod
 
 bool Error::hasError()
 {
-    return (errorClass != BacnetError::ClassNoError);
+    return (errorClass != BacnetErrorNS::ClassNoError);
 }
 
-void Error::setError(BacnetError::ErrorClass errorClass, BacnetError::ErrorCode errorCode)
+void Error::setError(BacnetErrorNS::ErrorClass errorClass, BacnetErrorNS::ErrorCode errorCode)
 {
     this->errorClass = errorClass;
     this->errorCode = errorCode;

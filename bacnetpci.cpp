@@ -7,7 +7,7 @@ BacnetConfirmedRequestData::BacnetConfirmedRequestData()
 }
 
 BacnetConfirmedRequestData::BacnetConfirmedRequestData(bool segmented, bool moreFollows, bool segmentedAccepted, MaxSegmentsAccepted maxSegments, MaxLengthAccepted maxLengthAccepted,
-                                                       quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service, quint8 sequenceNumber, quint8 windowSize):
+                                                       quint8 invokeId, BacnetServicesNS::BacnetConfirmedServiceChoice service, quint8 sequenceNumber, quint8 windowSize):
 _segmented(segmented),
 _moreFollows(moreFollows),
 _segmentedRespAccepted(segmentedAccepted),
@@ -21,7 +21,7 @@ _serviceChoice(service)
 
 }
 
-BacnetConfirmedRequestData::BacnetConfirmedRequestData(MaxLengthAccepted maxLengthAccepted, quint8 invokeId, BacnetServices::BacnetConfirmedServiceChoice service):
+BacnetConfirmedRequestData::BacnetConfirmedRequestData(MaxLengthAccepted maxLengthAccepted, quint8 invokeId, BacnetServicesNS::BacnetConfirmedServiceChoice service):
         _segmented(false),
         _moreFollows(false),
         _segmentedRespAccepted(false),
@@ -66,7 +66,7 @@ qint16 BacnetConfirmedRequestData::fromRaw(quint8 *dataPtr, quint16 length)
         _sequenceNum = _propWindowSize = 0;
     }
 
-    _serviceChoice = (BacnetServices::BacnetConfirmedServiceChoice)(*ptr);
+    _serviceChoice = (BacnetServicesNS::BacnetConfirmedServiceChoice)(*ptr);
     ++ptr;
 
     return (ptr - dataPtr);

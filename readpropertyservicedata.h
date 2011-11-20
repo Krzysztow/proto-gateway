@@ -11,7 +11,7 @@ namespace Bacnet {
     {
     public:
         ReadPropertyServiceData();
-        ReadPropertyServiceData(ObjectIdStruct objId, BacnetProperty::Identifier propertyId,
+        ReadPropertyServiceData(ObjectIdStruct objId, BacnetPropertyNS::Identifier propertyId,
                                   quint32 arrayIndex = Bacnet::ArrayIndexNotPresent);
 
     public://overridden BacnetServiceData metho
@@ -20,7 +20,7 @@ namespace Bacnet {
 
     public:
         Bacnet::ObjectIdStruct objId;
-        BacnetProperty::Identifier propertyId;
+        BacnetPropertyNS::Identifier propertyId;
         quint32 arrayIndex;
     };
 

@@ -13,7 +13,7 @@ BacnetReadPropertyAck::BacnetReadPropertyAck():
 
 }
 
-BacnetReadPropertyAck::BacnetReadPropertyAck(ReadPropertyServiceData &ackReadPrptyData, BacnetDataInterface *data):
+BacnetReadPropertyAck::BacnetReadPropertyAck(ReadPropertyServiceData &ackReadPrptyData, BacnetDataInterfaceShared &data):
         _readData(ackReadPrptyData),
         _data(data)
 {
@@ -120,7 +120,7 @@ qint32 BacnetReadPropertyAck::fromRaw(quint8 *startPtr, quint16 buffLength)
 
     //parse property identifier
     ret = bParser.parseNext();
-    _readData.propertyId = (BacnetProperty::Identifier)bParser.toUInt(&convOkOrCtxt);
+    _readData.propertyId = (BacnetPropertyNS::Identifier)bParser.toUInt(&convOkOrCtxt);
     if (ret < 0 || !bParser.isContextTag(1))
         return -2;
     consumedBytes += ret;

@@ -6,7 +6,7 @@ quint32 Bacnet::objIdToNum(const Bacnet::ObjectIdStruct &objId) {
 
 Bacnet::ObjectIdStruct Bacnet::numToObjId(unsigned int numObjId) {
     Bacnet::ObjectIdStruct objIdStr = {
-        (BacnetObjectType::ObjectType)(numObjId >> 22),
+        (BacnetObjectTypeNS::ObjectType)(numObjId >> 22),
         numObjId & 0x3fffff
     };
 
