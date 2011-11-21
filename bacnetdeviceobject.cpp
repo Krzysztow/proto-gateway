@@ -10,12 +10,18 @@
 #include "propertyvalue.h"
 #include "bacnetproperty.h"
 
+#define WORKAROUND
+
 using namespace Bacnet;
 
 BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, InternalAddress address):
     BacnetObject(identifier, this),
     _address(address)
 {
+#ifdef WORKAROUND
+    _childObjects.insert(objectIdNum(), this);
+#endif
+
     Q_ASSERT( identifier.type() == BacnetObjectTypeNS::Device);
     Q_ASSERT(_address != BacnetInternalAddressHelper::InvalidInternalAddress);
 }
@@ -24,6 +30,10 @@ BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber, InternalAddress a
     BacnetObject(BacnetObjectTypeNS::Device, instanceNumber, this),
     _address(address)
 {
+#ifdef WORKAROUND
+    _childObjects.insert(objectIdNum(), this);
+#endif
+
     Q_ASSERT(instanceNumber <= 0x03fffff);
     Q_ASSERT(_address != BacnetInternalAddressHelper::InvalidInternalAddress);
 }
@@ -36,7 +46,9 @@ BacnetDeviceObject::~BacnetDeviceObject()
 
 bool BacnetDeviceObject::readClassDataHelper(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, Bacnet::BacnetDataInterfaceShared &data, Bacnet::Error *error)
 {
-    if (BacnetPropertyNS::ActiveCovSubscriptions == propertyId) {
+    switch (propertyId)
+    {
+    case (BacnetPropertyNS::ActiveCovSubscriptions): {
         if (propertyArrayIdx != ArrayIndexNotPresent) {
             if (0 != error)
                 error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodePropertyIsNotAnArray);
@@ -55,8 +67,12 @@ bool BacnetDeviceObject::readClassDataHelper(BacnetPropertyNS::Identifier proper
         }
         return true;
     }
-
-    return false;
+    case (BacnetPropertyNS::ObjectList) :
+#warning "Not implemented yet!";
+        Q_ASSERT(false);
+    default:
+        return false;
+    }
 }
 
 //int BacnetDeviceObject::propertyReadTry(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx)
@@ -242,6 +258,12 @@ Bacnet::BacnetObject *BacnetDeviceObject::bacnetObject(quint32 instanceNumber)
 bool BacnetDeviceObject::addBacnetObject(BacnetObject *object)
 {
     Q_CHECK_PTR(object);
+
+#ifdef WORKAROUND
+    if (object == this)
+        return true;//will be added later, in initialization.
+#endif
+
     Q_ASSERT(!_childObjects.contains(object->objectIdNum()));
     if (!_childObjects.contains(object->objectIdNum())) {
         _childObjects.insert(object->objectIdNum(), object);

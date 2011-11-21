@@ -14,12 +14,14 @@ BacnetObject::BacnetObject(ObjectIdentifier &id, BacnetDeviceObject *parentDevic
     _id(id),
     _parentDevice(parentDevice)
 {
+    _parentDevice->addBacnetObject(this);
 }
 
 BacnetObject::BacnetObject(BacnetObjectTypeNS::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice):
     _id(objectType, instanceNumber),
     _parentDevice(parentDevice)
 {
+    _parentDevice->addBacnetObject(this);
 }
 
 BacnetObject::~BacnetObject()

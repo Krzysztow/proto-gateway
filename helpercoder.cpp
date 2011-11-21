@@ -147,7 +147,7 @@ QDebug HelperCoder::operator<<(QDebug dbg, const QBitArray& z)
     return dbg;
 }
 
-void HelperCoder::printArray(quint8 *ptr, int size, const char *pretext = "")
+void HelperCoder::printArray(const quint8 *ptr, int size, const char *pretext = "")
 {
     printf("%s 0x", pretext);
     for (int i=0; i<size; i++) {

@@ -83,7 +83,8 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
         if (_externalHandler->isRegisteredAddress(destination)) {
             device = 0;
         } else {
-            device = _internalHandler->virtualDevices()[destination];
+
+            device = _internalHandler->virtualDevices().value(destination);
             if (0 == device) {//device not found, drop request!
                 qDebug("Device %d is not found!", destination);
                 return;
@@ -361,7 +362,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
 #include "bacnetinternaladdresshelper.h"
 #include "bacnetnetworklayer.h"
 #include "cdm.h"
-
+#include "bacnetproperty.h"
 
 int main(int argc, char *argv[])
 {
@@ -387,39 +388,42 @@ int main(int argc, char *argv[])
     test.setValue((double)72.3);
 
     BacnetAddress srcAddr;
-
-    BacnetAddress destAddr;
-    quint32 destAddrRaw(0x00000001);
-    BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&destAddrRaw, &destAddr);
+    quint32 destAddrInt(0x00000001);
+    BacnetAddress destAddr = BacnetInternalAddressHelper::toBacnetAddress(destAddrInt);
 
     AsynchOwner *proto2 = new AsynchOwner();
     PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Double);
     subject->setValue(test);
     proto2->addProperty(subject);
 
-    Bacnet::BacnetDeviceObject *device = new Bacnet::BacnetDeviceObject(1, destAddrRaw);
+    Bacnet::BacnetDeviceObject *device = new Bacnet::BacnetDeviceObject(1, destAddrInt);
+    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Device 1 address");
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
-//    device->addInternalProperty(BacnetPropertyNS::PresentValue, obs);
-    intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(destAddr), device);
+    Bacnet::ProxyInternalProperty propProxy(obs, AppTags::Real, QVariant::Double, device);
+    device->addProperty(BacnetPropertyNS::PresentValue, &propProxy);
+    intHandler->addDevice(device->address(), device);
 
     PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);
     subject2->setValue(test);
     proto2->addProperty(subject2);
 
     PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
+    BacnetObject *aio = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 5, device);
 //    AnalogInputObject *aio = new AnalogInputObject(5, device);
-//    aio->setObjectName("HW_Setpoint");
-//    aio->addInternalProperty(BacnetProperty::PresentValue, obs2);
+    aio->setObjectName("HW_Setpoint");
+    Bacnet::ProxyInternalProperty propProxy2(obs2, AppTags::Real, QVariant::Double, aio);
+    aio->addProperty(BacnetPropertyNS::PresentValue, &propProxy2);
 
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
     BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
     Bacnet::BacnetDeviceObject *device1 = new Bacnet::BacnetDeviceObject(8, addr);
-    intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(bAddr), device1);
+    intHandler->addDevice(device1->address(), device1);
     device1->setObjectName("BestDeviceEver");
 
-//    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
+//    BacnetObject *aio1 = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 3, device1);
+////    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
 //    aio1->setObjectName("OATemp");
 
 //    PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
@@ -428,8 +432,8 @@ int main(int argc, char *argv[])
 //                                  0x00000001,
 //                                  Bacnet::BacnetExternalObjects::Access_ReadRequest);
 
-    PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
-    proto2->addProperty(extObserver);
+//    PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
+//    proto2->addProperty(extObserver);
 
     //READ PROPERTY ENCODED
     quint8 readPropertyService[] = {
@@ -442,6 +446,8 @@ int main(int argc, char *argv[])
         0x19,
         0x55
     };
+
+    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Addressed device:");
     appHandler->indication(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
 
     //    //WRITE PROEPRTY ENCODED

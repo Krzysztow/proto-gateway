@@ -65,6 +65,9 @@ ProxyInternalProperty::ProxyInternalProperty(::Property *data, AppTags::BacnetTa
 
     Q_ASSERT(_internalType != QVariant::Invalid);
 
+    if (0 != data)
+        data->setOwner(this);
+
     Q_CHECK_PTR(_parentSupporter);
 }
 
@@ -155,7 +158,7 @@ void ProxyInternalProperty::asynchActionFinished(int asynchId, Property *propert
     Q_UNUSED(property);
 
     if (0 != _parentSupporter)
-        _parentSupporter->propertyAsynchActionFinished(asynchId, actionResult);
+        _parentSupporter->propertyAsynchActionFinished(asynchId, actionResult, this);
 }
 
 void ProxyInternalProperty::propertyValueChanged(Property *property)

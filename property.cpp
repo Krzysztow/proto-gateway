@@ -162,7 +162,9 @@ void PropertySubject::asynchActionFinished(int asynchId, Property::ActiontResult
 
     int index = _observers.indexOf(requester);
     if (index >= 0) {//this was one of my observers requesting, so tell him we are done
-        _observers.at(index)->asynchActionFinished(asynchId, actionResult);
+        PropertyObserver *obs = _observers.at(index);
+        obs->asynchActionFinished(asynchId, actionResult);
+//        _observers.at(index)->asynchActionFinished(asynchId, actionResult);
     }
 
     //if the value is changed with success - tell other observers that it has changed
