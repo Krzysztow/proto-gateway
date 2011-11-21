@@ -8,6 +8,7 @@
 #include "bacnetobject.h"
 #include "bacnetdeviceobject.h"
 #include "covsubscriptionstimehandler.h"
+#include "bacnetdefaultobject.h"
 
 using namespace Bacnet;
 
@@ -19,6 +20,10 @@ CovSupport::~CovSupport()
 {
     qDeleteAll(_incrementHandlers);
     _incrementHandlers.clear();
+
+    //QSharedPointer used, deletion not necessary anymore
+//    qDeleteAll(_subscriptions);
+//    _subscriptions.clear();
 }
 
 void CovSupport::addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &covData, BacnetAddress &requester, Bacnet::Error *error)
@@ -34,26 +39,27 @@ void CovSupport::addOrUpdateCovSubscription(Bacnet::SubscribeCOVServiceData &cov
 
     //first try to find such an existing subscription
     Bacnet::CovSubscription *subscription(0);
-    foreach (Bacnet::CovSubscription subscr, _subscriptions) {
+    QList<CovSubscriptionShared>::Iterator it = _subscriptions.begin();
+    QList<CovSubscriptionShared>::Iterator itEnd = _subscriptions.end();
+//    foreach (Bacnet::CovSubscription *subscr, _subscriptions) {
+    for (; it != itEnd; ++it) {
         //! \warning Comparison is only done by requester address, not requester deviceIdentifier. It could be dangerous, when we make subscriptions with configuration files
         // Then most probably we want to use device identifier, not address.
-        if (subscr.compareParametrs(requester, covData._subscriberProcId,
+        if ((*it)->compareParametrs(requester, covData._subscriberProcId,
                                     covData._monitoredObjectId, covData._propReference->propIdentifier(), covData._propReference->propArrayIndex())) {
-            //such subscription already exists, we take reference to it and will update values later.
-            subscription = &subscr;
+            //such subscription already exists, we return so that it points to this subscription
             break;
         }
     }
 
-    if (0 == subscription) {
-        // \warning Let's see how QList handles this case - if temporarily creted CovSubscription is deleted - it will delete it's handler as well, so that copied and appended to list handler points to deallocated memory.
-        qDebug("%s : Warning - we have double copy & destruction here, it could delete increment handler!", __PRETTY_FUNCTION__);
-        _subscriptions.append(Bacnet::CovSubscription(covData, requester));
-        subscription = &(_subscriptions.last());
+    if (itEnd == it) {//no subscription has been found.
+        qDebug("%s : Insertion of new subscription!", __PRETTY_FUNCTION__);
+        it = _subscriptions.insert(itEnd, CovSubscriptionShared(new Bacnet::CovSubscription(covData, requester)));//insert at end. From now on it points to this new element
+        itEnd = _subscriptions.end();//DOES END() CHANGE AFTER INSERTION?
     }
 
-    Q_ASSERT(0 != subscription);
-    if (subscription == 0) {
+    Q_ASSERT(itEnd != it);
+    if (itEnd == it) {
         error->setError(BacnetErrorNS::ClassResources, BacnetErrorNS::CodeOther);
         return;
     }
@@ -68,20 +74,20 @@ void CovSupport::rmCovSubscription(quint32 processId, BacnetAddress &requester, 
 {
     Q_CHECK_PTR(error);
 
-    QList<Bacnet::CovSubscription>::Iterator it = _subscriptions.begin();
-    QList<Bacnet::CovSubscription>::Iterator end = _subscriptions.end();
+    QList<CovSubscriptionShared>::Iterator it = _subscriptions.begin();
+    QList<CovSubscriptionShared>::Iterator end = _subscriptions.end();
     for (; it != end; ++it) {
         //! \warning Comparison is only done by requester address, not requester deviceIdentifier. It could be dangerous, when we make subscriptions with configuration files
         // Then most probably we want to use device identifier, not address.
-        if (it->compareParametrs(requester, processId, monitoredObjectId, propReference.propIdentifier(), propReference.propArrayIndex()))
+        if ((*it)->compareParametrs(requester, processId, monitoredObjectId, propReference.propIdentifier(), propReference.propArrayIndex()))
             break;
     }
 
     if (it != end) {
         //such subscription exists, indeed.
         qDebug("%s : subscription removed.", __PRETTY_FUNCTION__);
-        _subscriptions.erase(it);
-
+        it = _subscriptions.erase(it);
+        //delete (*it);//automatically will be destroyed, when ref count drops to 0
         //update subscription with timer handler.
         updateWithTimeHandlerHelper();
     }
@@ -138,7 +144,7 @@ void CovSupport::remvoeCovIncrementHandler(BacnetPropertyNS::Identifier propId)
 //    return false;
 //}
 
-QList<Bacnet::CovSubscription> & CovSupport::covSubscriptions()
+QList<CovSubscriptionShared> & CovSupport::covSubscriptions()
 {
     return _subscriptions;
 }
@@ -153,9 +159,9 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
         return;
 
 
-    QList<Bacnet::CovSubscription> &subscriptions = covSubscriptions();
-    QList<Bacnet::CovSubscription>::Iterator it = subscriptions.begin();
-    QList<Bacnet::CovSubscription>::Iterator itEnd = subscriptions.end();
+    QList<CovSubscriptionShared> &subscriptions = covSubscriptions();
+    QList<CovSubscriptionShared>::Iterator it = subscriptions.begin();
+    QList<CovSubscriptionShared>::Iterator itEnd = subscriptions.end();
 
     int propertyValueIdx(-1);//index of changed property in covPropertiesValues list
     QList<PropertyValueShared> covPropertiesValues;
@@ -167,7 +173,7 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
     Bacnet::Error error;
 
     for (; it != itEnd; ++it) {
-        if (it->isCovObjectSubscription() || it->isCovPropertySubscription(propId, propArrayIdx)) {
+        if ((*it)->isCovObjectSubscription() || (*it)->isCovPropertySubscription(propId, propArrayIdx)) {
 
             //property value is lazy initialized; being here means we surely need it.
             if (-1 == propertyValueIdx) {
@@ -182,13 +188,13 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
                 }
             }
 
-            CovRealIcnrementHandler *covHandler = it->covHandler();
+            CovRealIcnrementHandler *covHandler = (*it)->covHandler();
             if (0 != covHandler) {
                 //subscription has its own covIncrementHandler.
-                Q_ASSERT(!it->isCovObjectSubscription()); //only property subscriptions are allowed to have their own covIncrements.
+                Q_ASSERT(!(*it)->isCovObjectSubscription()); //only property subscriptions are allowed to have their own covIncrements.
                 covPropertiesValues[propertyValueIdx]->_value->accept(covHandler);
                 if (!covHandler->isEqualWithinIncrement()) { //changed more than the increment. Notify subscriber!
-                    deviceToNotify->propertyValueChanged(*it, notifyingObject, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
+                    deviceToNotify->propertyValueChanged(*(*it), notifyingObject, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
                 }
             } else {
                 //subscription uses common/default increment handler.
@@ -207,7 +213,7 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
                     defaultIncrementState = Inform;
                 }
 
-                if (it->isCovObjectSubscription()) {
+                if ((*it)->isCovObjectSubscription()) {
                     /**
                         \note Here we lazy initialize the covPropertiesValues list. If there is no object-subscriber, there is no need to initialize it.
                         However if there is, fill it only once!
@@ -228,9 +234,9 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
                     }
 
                     //covPropertiesValues is already initialized here.
-                    deviceToNotify->propertyValueChanged(*it, notifyingObject, covPropertiesValues);
+                    deviceToNotify->propertyValueChanged(*(*it), notifyingObject, covPropertiesValues);
                 } else {
-                    deviceToNotify->propertyValueChanged(*it, notifyingObject, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
+                    deviceToNotify->propertyValueChanged(*(*it), notifyingObject, QList<PropertyValueShared>() << covPropertiesValues[propertyValueIdx]);
                 }
             }
         }
@@ -239,18 +245,20 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
 
 bool CovSupport::timeout(int timePassed_s)
 {
-    QList<Bacnet::CovSubscription>::Iterator it = _subscriptions.begin();
-    QList<Bacnet::CovSubscription>::Iterator endIt = _subscriptions.end();
+    QList<CovSubscriptionShared>::Iterator it = _subscriptions.begin();
+    QList<CovSubscriptionShared>::Iterator endIt = _subscriptions.end();
 
     bool changeOccured(false);
 
     while (it != endIt) {
-        if (it->isSubscriptionTimeVariant()) {
-            if (it->timeLeft() > timePassed_s)
-                it->updateTimeLeft(timePassed_s);
+        if ((*it)->isSubscriptionTimeVariant()) {
+            if ((*it)->timeLeft() > timePassed_s)
+                (*it)->updateTimeLeft(timePassed_s);
             else {
                 it = _subscriptions.erase(it);
                 changeOccured = true;
+                qDebug("%s : removing subscription!", __PRETTY_FUNCTION__);
+                //delete (*it);//will be automatically deleted when ref count is 0
                 continue;//to omit ++it
             }
         }
@@ -267,11 +275,11 @@ bool CovSupport::timeout(int timePassed_s)
 
 bool CovSupport::hasTimeVariantSubscription()
 {
-    QList<Bacnet::CovSubscription>::Iterator it = _subscriptions.begin();
-    QList<Bacnet::CovSubscription>::Iterator endIt = _subscriptions.end();
+    QList<CovSubscriptionShared>::Iterator it = _subscriptions.begin();
+    QList<CovSubscriptionShared>::Iterator endIt = _subscriptions.end();
 
     for (; it != endIt; ++it) {
-        if (it->isSubscriptionTimeVariant()) {
+        if ((*it)->isSubscriptionTimeVariant()) {
             return true;
         }
     }

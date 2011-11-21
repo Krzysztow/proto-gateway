@@ -400,7 +400,7 @@ int main(int argc, char *argv[])
     Bacnet::BacnetDeviceObject *device = new Bacnet::BacnetDeviceObject(1, destAddrRaw);
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
-    device->addInternalProperty(BacnetPropertyNS::PresentValue, obs);
+//    device->addInternalProperty(BacnetPropertyNS::PresentValue, obs);
     intHandler->addDevice(BacnetInternalAddressHelper::internalAddress(destAddr), device);
 
     PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);

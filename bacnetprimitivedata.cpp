@@ -696,6 +696,11 @@ DataType::DataType CharacterString::typeId()
     return DataType::CharacterString;
 }
 
+CharacterString::CharacterString(QString &value):
+    _value(value)
+{
+}
+
 QString &CharacterString::value()
 {
     return _value;
@@ -1298,6 +1303,12 @@ bool BacnetList::addElement(BacnetDataInterface *value)
     _value.append(BacnetDataInterfaceShared(value));
     return true;
 }
+
+QList<Bacnet::BacnetDataInterfaceShared> &BacnetList::value()
+{
+    return _value;
+}
+
 
 bool BacnetList::setInternal(QVariant &value)
 {

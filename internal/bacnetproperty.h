@@ -111,14 +111,19 @@ public:
     ArrayProperty(QList<BacnetProperty*> &data, InternalPropertyContainerSupport *parentSupporter);
     virtual ~ArrayProperty();
 
+    int indexOfProperty(BacnetProperty *property) const;
+
 public://overriden from Bacnet::Property
     virtual int getValue(BacnetDataInterfaceShared &data, quint32 BacnetPropertyArrayIdx = ArrayIndexNotPresent, Error *error = 0, bool tryInstantly = true);
     virtual int setValue(BacnetDataInterfaceShared &data, quint32 BacnetPropertyArrayIdx = ArrayIndexNotPresent, Error *error = 0);
 
-public://overriden from
+public://overriden from InternalPropertyContainerSupport
     virtual void propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result,
                                               BacnetProperty *subProperty = 0, BacnetProperty *mainProperty = 0,
                                               BacnetObject *parentObject = 0, BacnetDeviceObject *deviceObject = 0);
+
+    virtual void propertyValueChanged(BacnetProperty *property = 0, ArrayProperty *arrayProperty = 0,
+                                      BacnetObject *parentObject = 0, BacnetDeviceObject *deviceObject = 0);
 
 private:
     //! \todo We know that we use only BacnetPropertyListener here.

@@ -100,6 +100,12 @@ qint32 CovIncrementHandler<T, V>::fromRaw(BacnetTagParser &parser, quint8 tagNum
 
 namespace Bacnet {//otherwise compilator complains there are specializations in a differenet namespace
 
+template <class T, class V>
+BacnetDataInterface *CovIncrementHandler<T, V>::createValue()
+{
+    return new T(_covIncrement);
+}
+
 template <>
 void CovIncrementHandler<Real, float>::visit(BacnetDataInterface &data)
 {

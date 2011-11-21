@@ -160,7 +160,11 @@ void ProxyInternalProperty::asynchActionFinished(int asynchId, Property *propert
 
 void ProxyInternalProperty::propertyValueChanged(Property *property)
 {
-#warning "Not implemeneted yet"
+    Q_ASSERT(property == _data);
+    Q_UNUSED(property);
+
+    if (0 != _parentSupporter)
+        _parentSupporter->propertyValueChanged(this);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -186,6 +190,15 @@ ArrayProperty::~ArrayProperty()
 {
     delete _asynchHelper;
     _asynchHelper = 0;
+}
+
+int ArrayProperty::indexOfProperty(BacnetProperty *property) const
+{
+    int idx = _data.indexOf(property);
+    if (idx < 0)
+        return ArrayIndexNotPresent;
+    else
+        return idx;
 }
 
 #warning "Remember to read object identifier separately!"
@@ -327,3 +340,20 @@ void ArrayProperty::propertyAsynchActionFinished(int asynchId, ::Property::Actio
         _parentSupporter->propertyAsynchActionFinished(asynchId, result, subProperty, this);
     }
 }
+
+void Bacnet::ArrayProperty::propertyValueChanged(BacnetProperty *property, ArrayProperty *arrayProperty, BacnetObject *parentObject, BacnetDeviceObject *deviceObject)
+{
+    Q_CHECK_PTR(property);
+    Q_ASSERT(0 == arrayProperty);
+    Q_UNUSED(arrayProperty);
+    Q_ASSERT(0 == parentObject);
+    Q_UNUSED(parentObject);
+    Q_ASSERT(0 == deviceObject);
+    Q_UNUSED(deviceObject);
+    Q_ASSERT(_data.contains(property));
+
+    if (0 != _parentSupporter) {
+        _parentSupporter->propertyValueChanged(property, this);
+    }
+}
+

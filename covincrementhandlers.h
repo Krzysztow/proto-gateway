@@ -49,6 +49,8 @@ public://functions used to parse and write cov increment
     qint32 fromRaw(BacnetTagParser &parser);
     qint32 fromRaw(BacnetTagParser &parser, quint8 tagNum);
 
+    BacnetDataInterface *createValue();
+
 private:
     void comparison_helper(V dataValue);
 

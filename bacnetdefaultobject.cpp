@@ -262,6 +262,8 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataForObjectProperty(Ba
     }
 }
 
+
+
 quint32 BacnetDefaultObject::proeprtyType(BacnetObjectTypeNS::ObjectType type, BacnetPropertyNS::Identifier propertyId, quint32 arrayIdx)
 {
     switch (type)
@@ -376,5 +378,17 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataType(DataType::DataT
     case (DataType::BACnetObjectIdentifier):return new Bacnet::ObjectIdentifier();
     default:
         return new Bacnet::DataAbstract();
+    }
+}
+
+QList<BacnetPropertyNS::Identifier> Bacnet::BacnetDefaultObject::covProperties(BacnetObjectTypeNS::ObjectType type)
+{
+    switch (type)
+    {
+    case (BacnetObjectTypeNS::Device):      return QList<BacnetPropertyNS::Identifier>() << BacnetPropertyNS::StatusFlags;
+    default:
+        qDebug("%s : CovProperties not set for the object type %d", __PRETTY_FUNCTION__, type);
+        Q_ASSERT(false);
+        return QList<BacnetPropertyNS::Identifier>();
     }
 }

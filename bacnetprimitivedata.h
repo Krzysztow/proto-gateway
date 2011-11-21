@@ -191,6 +191,8 @@ namespace Bacnet
         qint32 toRaw_helper(quint8 *ptrStart, quint16 buffLength, bool isContext, quint8 tagNumber);
 
     public:
+        CharacterString(){}
+        CharacterString(QString &value);
         QString &value();
         void setValue(QString &value);
 
@@ -365,6 +367,8 @@ namespace Bacnet
         void setStoredType(DataType::DataType type);
         DataType::DataType storedType();
         bool addElement(BacnetDataInterface *value);
+
+        QList<BacnetDataInterfaceShared> &value();
 
     protected:
         DataType::DataType _storedType;

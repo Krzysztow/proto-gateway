@@ -6,6 +6,7 @@
 #include "bacnetcommon.h"
 #include "bacnetprimitivedata.h"
 #include "covsupport.h"
+#include "internalpropertycontainersupport.h"
 
 struct WriteAccessSpecificationStruct;
 class BacnetDataBase;
@@ -25,7 +26,8 @@ class Property;
 namespace Bacnet {
 
 class BacnetObject:
-        public CovSupport
+        public CovSupport,
+        public InternalPropertyContainerSupport
 {
 public:
     BacnetObject(ObjectIdentifier &id, BacnetDeviceObject *parentDevice);
@@ -40,6 +42,8 @@ public:
     virtual BacnetDataInterfaceShared propertyReadInstantly(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, Error *error = 0);
 
     virtual int propertySet(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, BacnetDataInterfaceShared &data, Error *error = 0);
+
+    bool readClassDataHelper(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, BacnetDataInterfaceShared &data, Error *error = 0);
 
     const ObjectIdentifier &objectId() const;
     quint32 objectIdNum() const;
@@ -58,6 +62,19 @@ public:
     BacnetProperty *takeProperty(BacnetPropertyNS::Identifier identifier);
 
     const QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &objProperties() const;
+    BacnetPropertyNS::Identifier propertyIdendifier(BacnetProperty *property) const;
+
+public://method overriden from InternalPropertyContainerSupport
+    virtual void propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result,
+                                              BacnetProperty *property, ArrayProperty *arrayProperty,
+                                              BacnetObject *parentObject, BacnetDeviceObject *deviceObject);
+
+
+    virtual void propertyValueChanged(BacnetProperty *property = 0, ArrayProperty *arrayProperty = 0,
+                                      BacnetObject *parentObject = 0, BacnetDeviceObject *deviceObject = 0);
+
+public://methods for CovSupport
+    virtual const QList<BacnetPropertyNS::Identifier> covProperties();
 
 private:
     ObjectIdentifier _id;

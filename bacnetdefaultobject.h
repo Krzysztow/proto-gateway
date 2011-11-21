@@ -23,6 +23,8 @@ public:
 
     static Bacnet::BacnetDataInterface *createDataType(DataType::DataType type);
 
+    static QList<BacnetPropertyNS::Identifier> covProperties(BacnetObjectTypeNS::ObjectType type);
+
 public:
     BacnetProperty *defaultProperty(BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId);
     QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &defaultProperties(BacnetObjectTypeNS::ObjectType objType);
