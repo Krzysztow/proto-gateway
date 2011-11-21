@@ -71,8 +71,10 @@ void AsynchOwner::timeout() {
             }
             aData.prop->setValueSilent(genValue);
             aData.prop->asynchActionFinished(aData.id, Property::ResultOk);
+            DataModel::instance()->releaseAsynchId(aData.id);
         } else if (PropertyOwner::RequestSet == aData.reqType) {
             aData.prop->asynchActionFinished(aData.id, Property::ResultOk);
+            DataModel::instance()->releaseAsynchId(aData.id);
         } else {
             Q_ASSERT_X(false, "cdm.cpp - test", "No other request is supported!");
         }

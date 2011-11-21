@@ -436,37 +436,37 @@ int main(int argc, char *argv[])
 //    proto2->addProperty(extObserver);
 
     //READ PROPERTY ENCODED
-    quint8 readPropertyService[] = {
-        0x00,
-        0x00,
-        0x01,
-        0x0C,
-        0x0C,
-        0x00, 0x00, 0x00, 0x05,
-        0x19,
-        0x55
-    };
+//    quint8 readPropertyService[] = {
+//        0x00,
+//        0x00,
+//        0x01,
+//        0x0C,
+//        0x0C,
+//        0x00, 0x00, 0x00, 0x05,
+//        0x19,
+//        0x55
+//    };
 
-    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Addressed device:");
-    appHandler->indication(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
+//    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Addressed device:");
+//    appHandler->indication(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
 
-    //    //WRITE PROEPRTY ENCODED
-    //    quint8 wpService[] = {
-    //        0x00,
-    //        0x04,
-    //        0x59,
-    //        0x0F,
+//        //WRITE PROEPRTY ENCODED
+//        quint8 wpService[] = {
+//            0x00,
+//            0x04,
+//            0x59,
+//            0x0F,
 
-    //        0x0c,
-    //        0x00, 0x00/\*0x80*\/, 0x00, 0x01,
-    //        0x19,
-    //        0x55,
-    //        0x3e,
-    //        0x44,
-    //        0x43, 0x34, 0x00, 0x00,
-    //        0x3f
-    //    };
-    //    bHndlr->getBytes(wpService, sizeof(wpService), srcAddr, destAddr);
+//            0x0c,
+//            0x00, 0x00/*0x80*/, 0x00, /*0x01*/0x05, //analog input instance number 5
+//            0x19,
+//            0x55,
+//            0x3e,
+//            0x44,
+//            0x43, 0x34, 0x00, 0x00,
+//            0x3f
+//        };
+//        appHandler->indication(wpService, sizeof(wpService), srcAddr, destAddr);
 
     //    //WHO IS
     //    quint8 wiService[] = {
