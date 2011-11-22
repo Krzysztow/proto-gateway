@@ -4,13 +4,15 @@
 #include "internalrprequesthandler.h"
 #include "internalwhoisrequesthandler.h"
 #include "internalwhohasrequesthandler.h"
+#include "internalsubscribecovrequesthandler.h"
 #include "bacnetpci.h"
 
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
                                                                           ::BacnetConfirmedRequestData *pciData,
                                                                           Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
                                                                           InternalObjectsHandler *internalHandler)
-{
+{    
+    Q_CHECK_PTR(pciData);
     Q_CHECK_PTR(tsm);
     Q_CHECK_PTR(internalHandler);
 
@@ -24,6 +26,11 @@
     {
         return new Bacnet::InternalRPRequestHandler(pciData, requester, destination, tsm, device, internalHandler);
     }
+    case (BacnetServicesNS::SubscribeCOV)://fall through
+    case (BacnetServicesNS::SubscribeCOVProperty):
+    {
+        return new Bacnet::InternalSubscribeCOVRequestHandler(pciData, requester, destination, tsm, device, internalHandler);
+    }
     default:
         Q_ASSERT(false);
         return 0;//should
@@ -35,7 +42,6 @@
                                                                               Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
                                                                               InternalObjectsHandler *internalHandler)
 {
-    Q_UNUSED(requester);
     Q_UNUSED(destination);
     Q_CHECK_PTR(pciData);
     switch (pciData->service())
