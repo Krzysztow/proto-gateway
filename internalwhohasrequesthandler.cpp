@@ -8,19 +8,19 @@
 
 using namespace Bacnet;
 
-InternalWhoHasRequestHandler::InternalWhoHasRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                         InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalUnconfirmedRequestHandler(),
-_tsm(tsm),
-_device(device),
-_internalHandler(internalHandler),
-_externalHandler(externalHandler)
+InternalWhoHasRequestHandler::InternalWhoHasRequestHandler(BacnetUnconfirmedRequestData *reqData,
+                                                           BacnetAddress &requester,
+                                                           Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device, InternalObjectsHandler *internalHandler):
+    InternalUnconfirmedRequestHandler(reqData),
+    _tsm(tsm),
+    _device(device),
+    _requester(requester),
+    _internalHandler(internalHandler)
 {
 }
 
 InternalWhoHasRequestHandler::~InternalWhoHasRequestHandler()
 {
-
 }
 
 bool InternalWhoHasRequestHandler::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
@@ -46,39 +46,39 @@ void InternalWhoHasRequestHandler::finalize(bool *deleteAfter)
 
 bool InternalWhoHasRequestHandler::execute()
 {
-//    QList<BacnetDeviceObject*> devs = _internalHandler->devices();
-//    QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
-//    QList<BacnetDeviceObject*>::iterator devListEnd = devs.end();
+    //    QList<BacnetDeviceObject*> devs = _internalHandler->devices();
+    //    QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
+    //    QList<BacnetDeviceObject*>::iterator devListEnd = devs.end();
 
-//    //! \todo If not all the responses fit in the buffer divide it in some chunks and get asynchIds
-//    quint32 objIdNum;
-//    ObjectIdStruct tmp = {BacnetObjectType::Undefined, 0};
-//    IAmServiceData iAmData(tmp, Bacnet::ApduMaxSize, SegmentedNOT, SNGVendorIdentifier);
+    //    //! \todo If not all the responses fit in the buffer divide it in some chunks and get asynchIds
+    //    quint32 objIdNum;
+    //    ObjectIdStruct tmp = {BacnetObjectType::Undefined, 0};
+    //    IAmServiceData iAmData(tmp, Bacnet::ApduMaxSize, SegmentedNOT, SNGVendorIdentifier);
 
-//    QMap<quint32, BacnetObject*>::ConstIterator objIt;
-//    QMap<quint32, BacnetObject*>::ConstIterator objMapEnd;
+    //    QMap<quint32, BacnetObject*>::ConstIterator objIt;
+    //    QMap<quint32, BacnetObject*>::ConstIterator objMapEnd;
 
-//    for (; devIt != devListEnd; ++devIt) {
-//        objIdNum = (*devIt)->objectIdNum();
-//        if ( (_data._rangeLowLimit <= objIdNum) &&
-//             (objIdNum <= _data._rangeHighLimit) ) {
-//            iAmData._objId = (*devIt)->objectId();
-//            _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServices::I_Am);
-//        }
-//        //iterate over device's child objects
-//        objIt = (*devIt)->childObjects().begin();
-//        objMapEnd = (*devIt)->childObjects().end();
-//        for (; objIt != objMapEnd; ++objIt) {
-//            //! \todo Optimization may be aquired here by taking objectIdNum only once.
-//            if ( (_data._rangeLowLimit <= (*objIt)->objectIdNum()) &&
-//                 ((*objIt)->objectIdNum() <= _data._rangeHighLimit) ) {
-//                iAmData._objId = (*objIt)->objectId();
-//                _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServices::I_Am);
-//            }
-//        }
-//    }
+    //    for (; devIt != devListEnd; ++devIt) {
+    //        objIdNum = (*devIt)->objectIdNum();
+    //        if ( (_data._rangeLowLimit <= objIdNum) &&
+    //             (objIdNum <= _data._rangeHighLimit) ) {
+    //            iAmData._objId = (*devIt)->objectId();
+    //            _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServices::I_Am);
+    //        }
+    //        //iterate over device's child objects
+    //        objIt = (*devIt)->childObjects().begin();
+    //        objMapEnd = (*devIt)->childObjects().end();
+    //        for (; objIt != objMapEnd; ++objIt) {
+    //            //! \todo Optimization may be aquired here by taking objectIdNum only once.
+    //            if ( (_data._rangeLowLimit <= (*objIt)->objectIdNum()) &&
+    //                 ((*objIt)->objectIdNum() <= _data._rangeHighLimit) ) {
+    //                iAmData._objId = (*objIt)->objectId();
+    //                _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServices::I_Am);
+    //            }
+    //        }
+    //    }
 
-//    return QList<int>();
+    //    return QList<int>();
 
     QList<BacnetDeviceObject*> devs = _internalHandler->devices();
     QList<BacnetDeviceObject*>::iterator devIt = devs.begin();

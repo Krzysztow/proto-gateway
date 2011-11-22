@@ -9,9 +9,10 @@
 #include "asynchronousbacnettsmaction.h"
 #include "bacnettsm2.h"
 
-InternalConfirmedRequestHandler::InternalConfirmedRequestHandler(/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                                 InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/):
-_reqData(0)
+InternalConfirmedRequestHandler::InternalConfirmedRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination):
+    _reqData(crData),
+    _requester(requester),
+    _destination(destination)
 {
 }
 
@@ -22,17 +23,17 @@ InternalConfirmedRequestHandler::~InternalConfirmedRequestHandler()
     _reqData = 0;
 }
 
-void InternalConfirmedRequestHandler::setAddresses(BacnetAddress &requester, BacnetAddress &destination)
-{
-    _requester = requester;
-    _destination = destination;
-}
+//void InternalConfirmedRequestHandler::setAddresses(BacnetAddress &requester, BacnetAddress &destination)
+//{
+//    _requester = requester;
+//    _destination = destination;
+//}
 
-void InternalConfirmedRequestHandler::setConfirmedData(BacnetConfirmedRequestData *reqData)
-{
-    delete _reqData;
-    _reqData = reqData;
-}
+//void InternalConfirmedRequestHandler::setConfirmedData(BacnetConfirmedRequestData *reqData)
+//{
+//    delete _reqData;
+//    _reqData = reqData;
+//}
 
 void InternalConfirmedRequestHandler::finalizeInstant(Bacnet::BacnetTSM2 *tsm)
 {

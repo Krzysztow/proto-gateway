@@ -10,8 +10,10 @@ namespace Bacnet {
         public ::InternalUnconfirmedRequestHandler
     {
     public:
-        InternalWhoIsRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                    InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler);
+        InternalWhoIsRequestHandler(BacnetUnconfirmedRequestData *reqData,
+                                    BacnetAddress &requester,
+                                    Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                    InternalObjectsHandler *internalHandler);
         virtual ~InternalWhoIsRequestHandler();
 
     public://! overriden from InternalWhoIsRequestHandler, but \todo hsould be declaredin InternalRequestHandler.
@@ -27,8 +29,8 @@ namespace Bacnet {
     private:
         Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
+        BacnetAddress _requester;
         InternalObjectsHandler *_internalHandler;
-        ExternalObjectsHandler *_externalHandler;
 
         WhoIsServiceData _data;
     };

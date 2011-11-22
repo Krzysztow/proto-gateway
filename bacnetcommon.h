@@ -465,7 +465,7 @@ namespace Bacnet
         MaximumInstanceNumber = 0x3fffff,
         ObjectInstanceMask  = 0x3fffff,
         InvalidInstanceNumber = 0xffffffff,
-        SNGVendorIdentifier = 0x00ff00ff,
+        SNGVendorIdentifier = 99,
         PriorityValueNotPresent = 0xff
                            };
 

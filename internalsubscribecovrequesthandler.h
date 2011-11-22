@@ -11,8 +11,9 @@ namespace Bacnet {
         public ::InternalConfirmedRequestHandler
     {
     public:
-        InternalSubscribeCOVRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                    InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler);
+        InternalSubscribeCOVRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
+                                           Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                           InternalObjectsHandler *internalHandler);
         virtual ~InternalSubscribeCOVRequestHandler();
 
     public://! overriden from InternalSubscribeCOVRequestHandler, but \todo hsould be declaredin InternalRequestHandler.
@@ -33,7 +34,6 @@ namespace Bacnet {
         Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
         InternalObjectsHandler *_internalHandler;
-        ExternalObjectsHandler *_externalHandler;
 
         SubscribeCOVServiceData _data;
         Error _error;

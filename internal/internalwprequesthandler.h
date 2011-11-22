@@ -10,8 +10,9 @@ namespace Bacnet {
         public ::InternalConfirmedRequestHandler
     {
     public:
-        InternalWPRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                     InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler);
+        InternalWPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
+                                 Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                 InternalObjectsHandler *internalHandler);
         virtual ~InternalWPRequestHandler();
 
     public://! overriden from InternalWhoIsRequestHandler, but \todo hsould be declaredin InternalRequestHandler.
@@ -36,7 +37,6 @@ namespace Bacnet {
         Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
         InternalObjectsHandler *_internalHandler;
-        ExternalObjectsHandler *_externalHandler;
 
         WritePropertyServiceData _data;
         int _asynchId;

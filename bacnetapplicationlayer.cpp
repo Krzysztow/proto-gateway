@@ -113,7 +113,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
                 return;
             }
 
-            InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(crData, _tsm, device, _internalHandler, _externalHandler);
+            InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(srcAddr, destAddr, crData, _tsm, device, _internalHandler);
             Q_CHECK_PTR(handler);
             if (0 == handler) {
                 _tsm->sendReject(srcAddr, destAddr, BacnetRejectNS::ReasonUnrecognizedService, crData->invokedId());
@@ -129,8 +129,6 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
                 delete handler;
                 return;
             }
-            //! \todo Remove code duplication - with Unconfirmed request part.
-            handler->setAddresses(srcAddr, destAddr);
 
             bool readyToBeDeleted = handler->execute();
             if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
@@ -154,7 +152,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
             }
 
             //create appropriate handler. \note It takes ownership over ucrData!
-            InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(ucrData, _tsm, device, _internalHandler, _externalHandler);
+            InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(srcAddr, destAddr, ucrData, _tsm, device, _internalHandler);
             Q_CHECK_PTR(handler);
             if (0 == handler) {
                 qDebug("InternalUnconfirmedRequestHandler not created, drop silently.");
@@ -171,7 +169,6 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
                 //                delete ucrData;//this is deleted with handler - it took ownership.
                 return;
             }
-            handler->setAddresses(srcAddr, destAddr);
 
             bool readyToBeDeleted = handler->execute();
             if (readyToBeDeleted) {//some error occured or is done. Both ways, we are ready to send respond back.
@@ -411,7 +408,7 @@ int main(int argc, char *argv[])
     PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
     BacnetObject *aio = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 5, device);
 //    AnalogInputObject *aio = new AnalogInputObject(5, device);
-    aio->setObjectName("HW_Setpoint");
+    aio->setObjectName("OATemp");
     Bacnet::ProxyInternalProperty propProxy2(obs2, AppTags::Real, QVariant::Double, aio);
     aio->addProperty(BacnetPropertyNS::PresentValue, &propProxy2);
 
@@ -468,37 +465,47 @@ int main(int argc, char *argv[])
 //        };
 //        appHandler->indication(wpService, sizeof(wpService), srcAddr, destAddr);
 
-    //    //WHO IS
-    //    quint8 wiService[] = {
-    //        0x10,
-    //        0x08,
-    //        0x09, 0x03,
-    //        0x19, 0x03
-    //    };
-    //    bHndlr->getBytes(wiService, sizeof(wiService), srcAddr, destAddr);
+//        //WHO IS//device instance 03
+//        quint8 wiService[] = {
+//            0x10,
+//            0x08,
+//            0x09, 0x03,//find device
+//            0x19, 0x03
+//        };
+//        appHandler->indication(wiService, sizeof(wiService), srcAddr, destAddr);
 
-    //    //WHO HAS - object name is known
-    //    quint8 whoHasService[] = {
-    //        0x10,
-    //        0x07,
-    //        0x3d,
-    //        0x07,
-    //        0x00,
-    //        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
-    //    };
+//    //WHO IS//device instance 03
+//    quint8 wiService[] = {
+//        0x10,
+//        0x08,
+//        0x09, 0x01,//find device
+//        0x19, 0x01
+//    };
+//    appHandler->indication(wiService, sizeof(wiService), srcAddr, destAddr);
 
-    //    BacnetAddress broadAddr;
-    //    broadAddr.setGlobalBroadcast();
-    //    bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
+//    //WHO HAS - object name is known
+//    quint8 whoHasService[] = {
+//        0x10,
+//        0x07,
+//        0x3d,
+//        0x07,
+//        0x00,
+//        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
+//    };
+//    appHandler->indication(whoHasService, sizeof(whoHasService), srcAddr, destAddr);
 
-    //    //WHO HAS - object id is known
-    //    quint8 whoHasService2[] = {
-    //        0x10,
-    //        0x07,
-    //        0x2c,
-    //        0x00, 0x00, 0x00, 0x03
-    //    };
-    //    bHndlr->getBytes(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
+//        BacnetAddress broadAddr;
+//        broadAddr.setGlobalBroadcast();
+////        bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
+
+//        //WHO HAS - object id is known
+//        quint8 whoHasService2[] = {
+//            0x10,
+//            0x07,
+//            0x2c,
+//            0x00, 0x00, 0x00, 0x05
+//        };
+//        appHandler->indication(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
 
 
 

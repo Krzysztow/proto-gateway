@@ -29,8 +29,6 @@ namespace Bacnet {
     public:
         explicit BacnetTSM2(QObject *parent = 0);
 
-//        bool sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend);
-
         bool send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
         bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 

@@ -7,13 +7,13 @@
 
 using namespace Bacnet;
 
-InternalRPRequestHandler::InternalRPRequestHandler(Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                   InternalObjectsHandler *internalHandler, ExternalObjectsHandler *externalHandler):
-InternalConfirmedRequestHandler(/*tsm, device, internalHandler, externalHandler*/),
+InternalRPRequestHandler::InternalRPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
+                                                   Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                   InternalObjectsHandler *internalHandler):
+InternalConfirmedRequestHandler(crData, requester, destination),
 _tsm(tsm),
 _device(device),
 _internalHandler(internalHandler),
-_externalHandler(externalHandler),
 _asynchId(-1)
 {
 }
