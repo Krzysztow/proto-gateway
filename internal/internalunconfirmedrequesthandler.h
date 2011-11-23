@@ -18,7 +18,7 @@ class InternalUnconfirmedRequestHandler:
         public InternalRequestHandler
 {
 public:
-    InternalUnconfirmedRequestHandler(BacnetUnconfirmedRequestData *reqData);
+    InternalUnconfirmedRequestHandler();
     virtual ~InternalUnconfirmedRequestHandler();
 
 public://overridden from InternalRequestHandler
@@ -31,7 +31,6 @@ public://overridden from InternalRequestHandler
 public:
 
 protected:
-    BacnetUnconfirmedRequestData *_reqData;
 //    BacnetAddress _requester;
     BacnetAddress _destination;
 };

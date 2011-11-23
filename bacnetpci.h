@@ -74,6 +74,8 @@ public:
     inline BacnetServicesNS::BacnetConfirmedServiceChoice service() {return _serviceChoice;}
     inline quint8 invokedId() {return _invokeId;}
 
+    inline bool isSegmented() {return _segmented;}
+
 public://overridden from BacnetPciData
     virtual quint8 pduType();
     virtual qint16 toRaw(quint8 *buffer, quint16 length);
@@ -115,6 +117,7 @@ public:
     BacnetSimpleAckData() {}
     BacnetSimpleAckData(quint8 invokeId, quint8 serviceChoice);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline quint8 invokeId() {return _invokeId;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();
@@ -134,6 +137,8 @@ public:
                          quint8 sequenceNumber = 0, quint8 propWindSize = 0,
                          bool segmented = false, bool moreFollows = false);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline quint8 invokeId() {return _origInvokeId;}
+    inline bool isSegmented() {return _segmented;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();
@@ -154,6 +159,7 @@ class BacnetSegmentedAckData:
 public:
     BacnetSegmentedAckData() {}
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline quint8 invokeId() {return _origInvokeId;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();
@@ -179,6 +185,7 @@ public:
     BacnetErrorData() {}
     BacnetErrorData(quint8 origInvokeId, quint8 errorChoice);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline quint8 invokeId() {return _origInvokeId;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();
@@ -196,6 +203,7 @@ public:
     BacnetRejectData() {}
     BacnetRejectData(quint8 originalInvokeId, quint8 rejectReason);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline quint8 invokeId() {return _origInvokeId;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();
@@ -211,7 +219,9 @@ class BacnetAbortData:
 {
 public:
     BacnetAbortData() {}
+    BacnetAbortData(quint8 originalInvokeId, quint8 abortReason, bool fromServer);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
+    inline quint8 invokeId() {return _origInvokeId;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();

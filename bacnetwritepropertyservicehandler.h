@@ -1,7 +1,7 @@
 #ifndef BACNETWRITEPROPERTYSERVICEHANDLER_H
 #define BACNETWRITEPROPERTYSERVICEHANDLER_H
 
-#include "bacnetconfirmedservicehandler.h"
+#include "externalconfirmedservicehandler.h"
 
 class PropertySubject;
 
@@ -11,7 +11,7 @@ namespace Bacnet {
     class WritePropertyServiceData;
 
     class BacnetWritePropertyServiceHandler:
-            public BacnetConfirmedServiceHandler
+            public ExternalConfirmedServiceHandler
     {
     public:
         BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, ExternalObjectsHandler *respHandler);

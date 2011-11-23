@@ -33,11 +33,11 @@ quint32 ReadPropertyServiceHandler::handleTimeout(ActionToExecute *action)
     Q_CHECK_PTR(action);
     --sendTryOuts;
     if (0 == sendTryOuts) {
-        *action = BacnetConfirmedServiceHandler::DeleteServiceHandler;
+        *action = ExternalConfirmedServiceHandler::DeleteServiceHandler;
         return 0;
     }
 
-    *action = BacnetConfirmedServiceHandler::ResendService;
+    *action = ExternalConfirmedServiceHandler::ResendService;
     return 1000;
 }
 

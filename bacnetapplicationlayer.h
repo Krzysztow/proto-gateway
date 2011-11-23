@@ -34,7 +34,16 @@ public:
       */
     void indication(quint8 *data, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr);
 
-    void processConfirmedRequest(quint8 *dataPtr, quint16 dataLength);
+
+    void processConfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetConfirmedRequestData *crData);
+    void processUnconfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetUnconfirmedRequestData &ucrData);
+    void processAck(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
+    void processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
+    void processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
+    void processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
+
+public:
+
 
 protected:
     BacnetNetworkLayerHandler *_networkHndlr;

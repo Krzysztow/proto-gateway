@@ -14,7 +14,7 @@ namespace Bacnet {
 
     class BacnetReadPropertyAck;
     class BacnetTSM2;
-    class BacnetConfirmedServiceHandler;
+    class ExternalConfirmedServiceHandler;
     class Error;
 
     class ExternalObjectsHandler:
@@ -30,10 +30,10 @@ namespace Bacnet {
 
         BacnetExternalObjects::ExternalRoutingElement &routingEntry(::Property *property, bool *found = 0);
 
-        void handleResponse(BacnetConfirmedServiceHandler *act, BacnetReadPropertyAck &rp);
-        void handleResponse(BacnetConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
-        void handleError(BacnetConfirmedServiceHandler *act, Error &error);
-        void handleAbort(BacnetConfirmedServiceHandler *act,  quint8 abortReason);
+        void handleResponse(ExternalConfirmedServiceHandler *act, BacnetReadPropertyAck &rp);
+        void handleResponse(ExternalConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
+        void handleError(ExternalConfirmedServiceHandler *act, Error &error);
+        void handleAbort(ExternalConfirmedServiceHandler *act,  quint8 abortReason);
 
         bool isRegisteredAddress(InternalAddress &address);
         void addRegisteredAddress(InternalAddress &address);
@@ -72,7 +72,7 @@ namespace Bacnet {
             ::PropertySubject *concernedProperty;
         };
 
-        QMap<BacnetConfirmedServiceHandler*, RequestInfo> _bacnetPendingRequests;
+        QMap<ExternalConfirmedServiceHandler*, RequestInfo> _bacnetPendingRequests;
 
         BacnetTSM2 *_tsm;
         QList<InternalAddress> _registeredAddresses;

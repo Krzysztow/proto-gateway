@@ -10,8 +10,7 @@ namespace Bacnet {
         public ::InternalUnconfirmedRequestHandler
     {
     public:
-        InternalWhoHasRequestHandler(BacnetUnconfirmedRequestData *reqData,
-                                     BacnetAddress &requester,
+        InternalWhoHasRequestHandler(BacnetAddress &requester,
                                      Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                      InternalObjectsHandler *internalHandler);
         virtual ~InternalWhoHasRequestHandler();

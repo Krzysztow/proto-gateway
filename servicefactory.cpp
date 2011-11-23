@@ -38,21 +38,21 @@
 }
 
 ::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
-                                                                              BacnetUnconfirmedRequestData *pciData,
+                                                                              BacnetUnconfirmedRequestData &pciData,
                                                                               Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
                                                                               InternalObjectsHandler *internalHandler)
 {
     Q_UNUSED(destination);
-    Q_CHECK_PTR(pciData);
-    switch (pciData->service())
+    Q_UNUSED(pciData);
+    switch (pciData.service())
     {
     case (BacnetServicesNS::WhoIs):
     {
-        return new Bacnet::InternalWhoIsRequestHandler(pciData, requester, tsm, device, internalHandler);
+        return new Bacnet::InternalWhoIsRequestHandler(requester, tsm, device, internalHandler);
     }
     case (BacnetServicesNS::WhoHas):
     {
-        return new Bacnet::InternalWhoHasRequestHandler(pciData, requester, tsm, device, internalHandler);
+        return new Bacnet::InternalWhoHasRequestHandler(requester, tsm, device, internalHandler);
     }
     default:
         Q_ASSERT(false);

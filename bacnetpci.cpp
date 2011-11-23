@@ -368,6 +368,13 @@ quint8 BacnetRejectData::pduType()
     return BacnetPci::TypeReject;
 }
 
+BacnetAbortData::BacnetAbortData(quint8 originalInvokeId, quint8 abortReason, bool fromServer):
+    _sentByServer(fromServer),
+    _origInvokeId(originalInvokeId),
+    _abortReason(abortReason)
+{
+}
+
 qint16 BacnetAbortData::fromRaw(quint8 *dataPtr, quint16 length)
 {
     Q_ASSERT(length >= 3);

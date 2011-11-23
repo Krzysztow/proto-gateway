@@ -8,7 +8,7 @@
 
 namespace Bacnet {
 
-    class BacnetConfirmedServiceHandler;
+    class ExternalConfirmedServiceHandler;
     class AsynchronousBacnetTsmAction;
     class BacnetTSM
     {
@@ -17,13 +17,13 @@ namespace Bacnet {
 
         bool sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend);
 
-        bool send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+        bool send(ObjectIdStruct &destinedObject, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 
 //    public slots:
 //        void generateResponse();
 
     private:
-        BacnetConfirmedServiceHandler *tmp;
+        ExternalConfirmedServiceHandler *tmp;
     };
 }
 

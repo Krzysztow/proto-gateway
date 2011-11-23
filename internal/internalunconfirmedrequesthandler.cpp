@@ -2,15 +2,11 @@
 
 #include "bacnetpci.h"
 
-InternalUnconfirmedRequestHandler::InternalUnconfirmedRequestHandler(BacnetUnconfirmedRequestData *reqData):
-    _reqData(reqData)
+InternalUnconfirmedRequestHandler::InternalUnconfirmedRequestHandler()
 {
-    Q_CHECK_PTR(_reqData);
 }
 
 InternalUnconfirmedRequestHandler::~InternalUnconfirmedRequestHandler()
 {
-    delete _reqData;
-    _reqData = 0;
 }
 

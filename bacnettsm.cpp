@@ -1,7 +1,7 @@
 #include "bacnettsm.h"
 
 #include "asynchronousbacnettsmaction.h"
-#include "bacnetconfirmedservicehandler.h"
+#include "externalconfirmedservicehandler.h"
 #include "helpercoder.h"
 
 using namespace Bacnet;
@@ -28,7 +28,7 @@ bool BacnetTSM::sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction 
 }
 
 
-bool BacnetTSM::send(ObjectIdStruct &destinedObject, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM::send(ObjectIdStruct &destinedObject, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //find bacnetadderss to send.
 

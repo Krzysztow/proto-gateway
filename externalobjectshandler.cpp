@@ -153,7 +153,7 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
     return asynchId;
 }
 
-void ExternalObjectsHandler::handleResponse(BacnetConfirmedServiceHandler *act, bool ok)
+void ExternalObjectsHandler::handleResponse(ExternalConfirmedServiceHandler *act, bool ok)
 {
     if (!_bacnetPendingRequests.contains(act))//this could happen, if the internal timeout has occured
         return;
@@ -178,7 +178,7 @@ void ExternalObjectsHandler::handleResponse(BacnetConfirmedServiceHandler *act, 
     }
 }
 
-void ExternalObjectsHandler::handleResponse(BacnetConfirmedServiceHandler *act,
+void ExternalObjectsHandler::handleResponse(ExternalConfirmedServiceHandler *act,
                                             BacnetReadPropertyAck &rp)
 {
     if (!_bacnetPendingRequests.contains(act))//this could happen, if the internal timeout has occured
@@ -203,7 +203,7 @@ void ExternalObjectsHandler::handleResponse(BacnetConfirmedServiceHandler *act,
     ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
 }
 
-void ExternalObjectsHandler::handleError(BacnetConfirmedServiceHandler *act, Error &error)
+void ExternalObjectsHandler::handleError(ExternalConfirmedServiceHandler *act, Error &error)
 {
     RequestInfo ri = _bacnetPendingRequests.take(act);
     if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
@@ -245,7 +245,7 @@ void ExternalObjectsHandler::removeRegisteredAddress(InternalAddress &address)
     Q_ASSERT(!_registeredAddresses.contains(address));
 }
 
-void ExternalObjectsHandler::handleAbort(BacnetConfirmedServiceHandler *act,  quint8 abortReason)
+void ExternalObjectsHandler::handleAbort(ExternalConfirmedServiceHandler *act,  quint8 abortReason)
 {
     RequestInfo ri = _bacnetPendingRequests.take(act);
     if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured

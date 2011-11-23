@@ -1,14 +1,14 @@
 #ifndef COVCONFNOTIFICATIONSERVICEHANDLER_H
 #define COVCONFNOTIFICATIONSERVICEHANDLER_H
 
-#include "bacnetconfirmedservicehandler.h"
+#include "externalconfirmedservicehandler.h"
 
 namespace Bacnet {
 
 class CovNotificationRequestData;
 
 class CovConfNotificationServiceHandler:
-        public BacnetConfirmedServiceHandler
+        public ExternalConfirmedServiceHandler
 {
 public:
     CovConfNotificationServiceHandler(CovNotificationRequestData *data = 0);

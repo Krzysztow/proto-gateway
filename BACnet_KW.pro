@@ -68,8 +68,8 @@ SOURCES += main.cpp \
     bacnetinternaladdresshelper.cpp \
     whoisservicedata.cpp \
     iamservicedata.cpp \
-    internalunconfirmedrequesthandler.cpp \
-    internalwhoisrequesthandler.cpp \
+    internal/internalunconfirmedrequesthandler.cpp \
+    internal/internalwhoisrequesthandler.cpp \
     internalwhohasrequesthandler.cpp \
     whohasservicedata.cpp \
     ihaveservicedata.cpp \
@@ -89,7 +89,9 @@ SOURCES += main.cpp \
     internal/bacnetobject2.cpp \
     internal/deviceobject.cpp \
     internal/bacnetproperty.cpp \
-    internal/multipleasynchhelper.cpp
+    internal/multipleasynchhelper.cpp \
+    discoverywrapper.cpp \
+    external/externalservicehandler.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -124,7 +126,6 @@ HEADERS += bacnetvirtuallinklayer.h \
     cdm.h \
     bacnetservice.h \ # bacneterrorack.h \
 # bacnetreadpropertyservice.h \
-    bacnetconfirmedservicehandler.h \
     bacnetexternalobjects.h \
     internalconfirmedrequesthandler.h \
     asynchowner.h \
@@ -154,8 +155,8 @@ HEADERS += bacnetvirtuallinklayer.h \
     whoisservicedata.h \
     bacnetservicedata.h \
     iamservicedata.h \
-    internalunconfirmedrequesthandler.h \
-    internalwhoisrequesthandler.h \
+    internal/internalunconfirmedrequesthandler.h \
+    internal/internalwhoisrequesthandler.h \
     internalwhohasrequesthandler.h \
     whohasservicedata.h \
     ihaveservicedata.h \
@@ -176,8 +177,17 @@ HEADERS += bacnetvirtuallinklayer.h \
     internal/deviceobject.h \
     internal/bacnetproperty.h \
     internal/multipleasynchhelper.h \
-    internal/internalpropertycontainersupport.h
+    internal/internalpropertycontainersupport.h \
+    discoverywrapper.h \
+    /external/externalconfirmedservicehandler.h \
+    external/externalservicehandler.h
 OTHER_FILES +=
+
+
+
+
+
+
 
 
 

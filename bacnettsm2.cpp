@@ -2,12 +2,13 @@
 
 #include "helpercoder.h"
 #include "asynchronousbacnettsmaction.h"
-#include "bacnetconfirmedservicehandler.h"
+#include "externalconfirmedservicehandler.h"
 #include "bacnetnetworklayer.h"
 #include "bacnetpci.h"
 #include "error.h"
 #include "bacnetbuffermanager.h"
 #include "whoisservicedata.h"
+#include "bacnetapplicationlayer.h"
 
 using namespace Bacnet;
 
@@ -47,9 +48,11 @@ void BacnetTSM2::InvokeIdGenerator::returnId(quint8 id)
     idsBits[byteNumber] &= (~mask);//free bit
 }
 
-BacnetTSM2::BacnetTSM2(QObject *parent) :
-    QObject(parent)
+BacnetTSM2::BacnetTSM2(BacnetApplicationLayerHandler *appLayer, QObject *parent):
+    QObject(parent),
+    _appLayer(appLayer)
 {
+    Q_CHECK_PTR(_appLayer);
 }
 
 void BacnetTSM2::setAddress(InternalAddress &address)
@@ -113,7 +116,7 @@ bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *ad
     return false;
 }
 
-bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //generate invoke id.
     int invokeId = _generator.generateId();
@@ -159,7 +162,7 @@ bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAdd
     return true;
 }
 
-bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, BacnetConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     //find bacnetadderss to send.
     BacnetAddress destAddr;
@@ -231,6 +234,195 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
 
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending reject message with:");
     _netHandler->sendApdu(&buffer, false, &destination, &source);
+}
+
+void *BacnetTSM2::takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId)
+{
+    return 0;
+}
+
+void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *data, quint16 dataLength)
+{
+    //handle accordingly to the request type.
+    switch (BacnetPci::pduType(data))
+    {
+    case (BacnetPci::TypeConfirmedRequest):
+    {
+        /*upon reception:
+                  - when no semgenation - do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+                  - when segmented - respond with BacnetSegmentAck PDU and when all gotten, do what's needed & send BacnetSimpleAck or BacnetCompletAck PDU
+                 */
+
+        BacnetConfirmedRequestData *crData = new BacnetConfirmedRequestData();
+        qint32 ret = crData->fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
+        if (ret <= 0) {
+            delete crData;
+            //the other code means the erquest is wrongly shaped.
+            sendAbort(remoteSource, localDestination, crData->invokedId(), BacnetAbortNS::ReasonOther, true);
+            return;
+        }
+
+        if (crData->isSegmented()) {
+#ifdef NO_SEGMENTATION_SUPPORTED
+            qDebug("%s : segmented confrequest received - cannot handle it (%d).", __PRETTY_FUNCTION__, ret);
+            sendAbort(remoteSource, localDestination, crData->invokedId(), BacnetAbortNS::ReasonSegmentationNotSupported, true);
+            delete crData;
+            return;
+#else
+#error "Not implemented";
+            return;
+#endif
+        }
+
+        _appLayer->processConfirmedRequest(remoteSource, localDestination, data + ret, dataLength - ret, crData);
+        break;
+    }
+    case (BacnetPci::TypeUnconfirmedRequest): {
+        /*upon reception: do what's needed and that's all
+             */
+        BacnetUnconfirmedRequestData ucrData;
+        qint32 ret = ucrData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        //! \todo What to send here? If we couldn't parse it we even have no data for reject (invoke id);
+        if (ret <= 0) {
+            qDebug("%s : Couldn't parse pci data, stop (%d)", __PRETTY_FUNCTION__, ret);
+            return;
+        }
+        _appLayer->processUnconfirmedRequest(remoteSource, localDestination, data + ret, dataLength - ret, ucrData);
+        break;
+    }
+    case (BacnetPci::TypeSimpleAck):
+    {
+        BacnetSimpleAckData saData;
+        qint32 ret = saData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("%s : wrong simple ack data (%d)", __PRETTY_FUNCTION__, ret);
+            //sendAbort(remoteSource, localDestination, saData.invokedId(), BacnetAbortNS::ReasonOther, true);
+            return;
+        }
+
+        void *service = takeRespondedService(remoteSource, localDestination, saData.invokeId());
+        Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
+        if (0 != service)
+            _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
+        //        else
+        //            sendAbort(remoteSource, localDestination, saData.invokeId(), BacnetAbortNS::ReasonInvalidApduInThisState, true);
+        break;
+    }
+    case (BacnetPci::TypeComplexAck):
+    {
+        BacnetComplexAckData cplxData;
+        qint32 ret = cplxData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("%s : wrong complex ack data (%d)", __PRETTY_FUNCTION__, ret);
+            sendAbort(remoteSource, localDestination, cplxData.invokeId(), BacnetAbortNS::ReasonOther, true);
+            return;
+        }
+
+        if (cplxData.isSegmented()) {
+#ifdef NO_SEGMENTATION_SUPPORTED
+            qDebug("%s : segmented complex response received - cannot handle it (%d).", __PRETTY_FUNCTION__, ret);
+            sendAbort(remoteSource, localDestination, cplxData.invokeId(), BacnetAbortNS::ReasonSegmentationNotSupported, true);
+            return;
+#else
+#error "Not implemented";
+            return;
+#endif
+        }
+
+        void *service = takeRespondedService(remoteSource, localDestination, cplxData.invokeId());
+        Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
+        if (0 != service)
+            _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
+        else
+            sendAbort(remoteSource, localDestination, cplxData.invokeId(), BacnetAbortNS::ReasonInvalidApduInThisState, true);
+        return;
+    }
+    case (BacnetPci::TypeSemgmendAck):
+    {
+        /*upon reception update state machine and send back another segment
+             */
+
+#ifdef NO_SEGMENTATION_SUPPORTED
+
+        BacnetSegmentedAckData segData;
+        qint32 ret = segData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("%s : wrong complex ack data (%d)", __PRETTY_FUNCTION__, ret);
+            sendAbort(remoteSource, localDestination, segData.invokeId(), BacnetAbortNS::ReasonOther, true);
+        } else {
+            qDebug("%s : segment ack rcvd, which is wrong, since we didn;t start the transfer/reception (we don't support it)!", __PRETTY_FUNCTION__, ret);
+            sendAbort(remoteSource, localDestination, segData.invokeId(), BacnetAbortNS::ReasonSegmentationNotSupported, true);
+        }
+        return;
+#else
+#error "Not implemented";
+        return;
+#endif
+
+        break;
+    }
+    case (BacnetPci::TypeError):
+    {
+        /*BacnetConfirmedRequest seervice failed
+             */
+        BacnetErrorData errData;
+        qint32 ret = errData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("%s : wrong error data (%d)", __PRETTY_FUNCTION__, ret);
+            return;
+        }
+
+        void *service = takeRespondedService(remoteSource, localDestination, errData.invokeId());
+        Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
+        if (0 != service)
+            _appLayer->processError(remoteSource, localDestination, data + ret, dataLength - ret, service);
+    }
+        break;
+    case (BacnetPci::TypeReject):
+    {
+        /*Protocol error occured
+             */
+        BacnetRejectData rjctData;
+        qint32 ret = rjctData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("%s : wrong reject data (%d)", __PRETTY_FUNCTION__, ret);
+            return;
+        }
+
+        void *service = takeRespondedService(remoteSource, localDestination, rjctData.invokeId());
+        Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
+        if (0 != service)
+            _appLayer->processReject(remoteSource, localDestination, data + ret, dataLength - ret, service);
+    }
+        break;
+    case (BacnetPci::TypeAbort):
+    {
+        BacnetAbortData abrtData;
+        qint32 ret = abrtData.fromRaw(data, dataLength);
+        Q_ASSERT(ret > 0);
+        if (ret <= 0) {
+            qDebug("%s : wrong abort data (%d)", __PRETTY_FUNCTION__, ret);
+            return;
+        }
+
+        void *service = takeRespondedService(remoteSource, localDestination, abrtData.invokeId());
+        Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
+        if (0 != service)
+            _appLayer->processAbort(remoteSource, localDestination, data + ret, dataLength - ret, service);
+    }
+        break;
+    default: {
+        Q_ASSERT(false);
+    }
+    }
 }
 
 void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data)
@@ -330,7 +522,29 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending ack message with:");
 }
 
-void BacnetTSM2::sendError(BacnetAddress &destination, BacnetAddress &source, quint8 invokeId,
+void BacnetTSM2::sendAbort(BacnetAddress &remoteDestination, BacnetAddress &localSsource, quint8 invokeId, BacnetAbortNS::AbortReason abortReason, bool fromServer)
+{
+    BacnetAbortData abort(invokeId, abortReason, fromServer);
+    //get buffer
+    Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
+    //write to buffer
+    Q_ASSERT(buffer.isValid());
+    quint8 *actualPtr = buffer.bodyPtr();
+    quint16 buffLength = buffer.bodyLength();
+
+    qint32 ret = abort.toRaw(actualPtr, buffLength);
+    Q_ASSERT(ret > 0);
+    if (ret < 0) {
+        qDebug("%s : can't send abort!", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    buffer.setBodyLength(ret);
+    _netHandler->sendApdu(&buffer, false, &remoteDestination, &localSsource);
+    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending abort message with:");
+}
+
+void BacnetTSM2::sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId,
                            BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error)
 {
     BacnetErrorData errorData(invokeId, errorChoice);
@@ -355,7 +569,7 @@ void BacnetTSM2::sendError(BacnetAddress &destination, BacnetAddress &source, qu
     ++actualPtr;
 
     buffer.setBodyLength(actualPtr - buffer.bodyPtr());
-    _netHandler->sendApdu(&buffer, false, &destination, &source);
+    _netHandler->sendApdu(&buffer, false, &remoteDestination, &localSource);
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending error message with:");
 }
 

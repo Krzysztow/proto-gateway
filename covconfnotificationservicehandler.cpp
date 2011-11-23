@@ -46,10 +46,10 @@ quint32 CovConfNotificationServiceHandler::handleTimeout(ActionToExecute *action
     Q_CHECK_PTR(action);
     --_sendTryOuts;
     if (0 == _sendTryOuts) {
-        *action = BacnetConfirmedServiceHandler::DeleteServiceHandler;
+        *action = ExternalConfirmedServiceHandler::DeleteServiceHandler;
         return 0;
     }
 
-    *action = BacnetConfirmedServiceHandler::ResendService;
+    *action = ExternalConfirmedServiceHandler::ResendService;
     return 1000;
 }

@@ -1,7 +1,7 @@
 #ifndef BACNETREADPROPERTYSERVICEHANDLER_H
 #define BACNETREADPROPERTYSERVICEHANDLER_H
 
-#include "bacnetconfirmedservicehandler.h"
+#include "externalconfirmedservicehandler.h"
 
 
 class PropertySubject;
@@ -12,7 +12,7 @@ namespace Bacnet {
     class ReadPropertyServiceData;
 
     class ReadPropertyServiceHandler:
-            public BacnetConfirmedServiceHandler
+            public ExternalConfirmedServiceHandler
     {
     public:
         ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler);

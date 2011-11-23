@@ -8,11 +8,9 @@
 
 using namespace Bacnet;
 
-InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(BacnetUnconfirmedRequestData *reqData,
-                                                         BacnetAddress &requester,
+InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(BacnetAddress &requester,
                                                          Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
                                                          InternalObjectsHandler *internalHandler):
-    InternalUnconfirmedRequestHandler(reqData),
     _tsm(tsm),
     _device(device),
     _requester(requester),

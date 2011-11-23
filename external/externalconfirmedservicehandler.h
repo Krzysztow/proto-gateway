@@ -1,12 +1,12 @@
-#ifndef BACNETCONFIRMEDSERVICEHANDLER_H
-#define BACNETCONFIRMEDSERVICEHANDLER_H
+#ifndef EXTERNALCONFIRMEDSERVICEHANDLER_H
+#define EXTERNALCONFIRMEDSERVICEHANDLER_H
 
 #include <QtCore>
 #include "bacnetcommon.h"
 
 namespace Bacnet {
 
-    class BacnetConfirmedServiceHandler
+    class ExternalConfirmedServiceHandler
     {
     public:
         enum ActionToExecute {
@@ -14,7 +14,7 @@ namespace Bacnet {
             ResendService
         };
 
-        virtual ~BacnetConfirmedServiceHandler() {}
+        virtual ~ExternalConfirmedServiceHandler() {}
 
         virtual qint32 toRaw(quint8 *buffer, quint16 length) = 0;
         virtual void handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action) = 0;
@@ -25,4 +25,4 @@ namespace Bacnet {
 
 }
 
-#endif // BACNETCONFIRMEDSERVICEHANDLER_H
+#endif // EXTERNALCONFIRMEDSERVICEHANDLER_H
