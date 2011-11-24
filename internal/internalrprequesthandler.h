@@ -6,13 +6,15 @@
 
 namespace Bacnet {
 
+class BacnetApplicationLayerHandler;
+
     class InternalRPRequestHandler:
         public ::InternalConfirmedRequestHandler
     {
     public:
         InternalRPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                  Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                 InternalObjectsHandler *internalHandler);
+                                 BacnetApplicationLayerHandler *appLayer);
         virtual ~InternalRPRequestHandler();
 
     public://! overriden from InternalWhoIsRequestHandler, but \todo hsould be declaredin InternalRequestHandler.
@@ -35,7 +37,7 @@ namespace Bacnet {
     private:
         Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
-        InternalObjectsHandler *_internalHandler;
+        BacnetApplicationLayerHandler *_appLayer;
 
         ReadPropertyServiceData _data;
         int _asynchId;

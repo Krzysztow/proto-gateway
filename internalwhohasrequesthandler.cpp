@@ -5,15 +5,16 @@
 #include "ihaveservicedata.h"
 #include "bacnetdeviceobject.h"
 #include "bacnettsm2.h"
+#include "bacnetapplicationlayer.h"
 
 using namespace Bacnet;
 
 InternalWhoHasRequestHandler::InternalWhoHasRequestHandler(BacnetAddress &requester,
-                                                           Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device, InternalObjectsHandler *internalHandler):
+                                                           Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device, BacnetApplicationLayerHandler *appLayer):
     _tsm(tsm),
     _device(device),
     _requester(requester),
-    _internalHandler(internalHandler)
+    _appLayer(appLayer)
 {
 }
 
@@ -78,7 +79,7 @@ bool InternalWhoHasRequestHandler::execute()
 
     //    return QList<int>();
 
-    QList<BacnetDeviceObject*> devs = _internalHandler->devices();
+    QList<BacnetDeviceObject*> devs = _appLayer->devices();
     QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
     QList<BacnetDeviceObject*>::iterator devListEnd = devs.end();
 

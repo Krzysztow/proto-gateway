@@ -4,22 +4,26 @@
 #include "bacnetdeviceobject.h"
 #include "bacnetreadpropertyack.h"
 #include "internalobjectshandler.h"
+#include "bacnetapplicationlayer.h"
 
 using namespace Bacnet;
 
 InternalRPRequestHandler::InternalRPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                                    Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                   InternalObjectsHandler *internalHandler):
+                                                   BacnetApplicationLayerHandler *appLayer):
 InternalConfirmedRequestHandler(crData, requester, destination),
 _tsm(tsm),
 _device(device),
-_internalHandler(internalHandler),
-_asynchId(-1)
+_appLayer(appLayer),
+_asynchId(-1),
+_response(0)
 {
 }
 
 InternalRPRequestHandler::~InternalRPRequestHandler()
 {
+    delete _response;
+    _response = 0;
 }
 
 bool InternalRPRequestHandler::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
@@ -103,7 +107,8 @@ bool InternalRPRequestHandler::execute()
         return true;
     }
     _asynchId = readyness;
-    _internalHandler->addAsynchronousHandler(QList<int>()<<_asynchId, this);
+    Q_ASSERT(_appLayer->internalHandler());
+    _appLayer->internalHandler()->addAsynchronousHandler(QList<int>()<<_asynchId, this);
     return false;//not done, yet - don't delete me
 }
 

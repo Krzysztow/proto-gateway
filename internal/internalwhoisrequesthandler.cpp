@@ -3,6 +3,7 @@
 #include "bacnetcommon.h"
 #include "iamservicedata.h"
 #include "internalobjectshandler.h"
+#include "bacnetapplicationlayer.h"
 #include "bacnetdeviceobject.h"
 #include "bacnettsm2.h"
 
@@ -10,11 +11,11 @@ using namespace Bacnet;
 
 InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(BacnetAddress &requester,
                                                          Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                         InternalObjectsHandler *internalHandler):
+                                                         BacnetApplicationLayerHandler *appLayer):
     _tsm(tsm),
     _device(device),
     _requester(requester),
-    _internalHandler(internalHandler)
+    _appLayer(appLayer)
 {
 }
 
@@ -50,7 +51,7 @@ bool InternalWhoIsRequestHandler::execute()
     quint32 lowLimit = _data._rangeLowLimit | (BacnetObjectTypeNS::Device << 22);
     quint32 highLimit = _data._rangeHighLimit | (BacnetObjectTypeNS::Device << 22);
 
-    QList<BacnetDeviceObject*> devs = _internalHandler->devices();
+    QList<BacnetDeviceObject*> devs = _appLayer->devices();
     QList<BacnetDeviceObject*>::iterator devIt = devs.begin();
     QList<BacnetDeviceObject*>::iterator devListEnd = devs.end();
 

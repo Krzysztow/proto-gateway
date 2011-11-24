@@ -12,47 +12,16 @@
 
 using namespace Bacnet;
 
-BacnetTSM2::InvokeIdGenerator::InvokeIdGenerator()
-{
-    memset(idsBits, 0, NumberOfOctetsTaken);
-}
-
-
-int BacnetTSM2::InvokeIdGenerator::generateId()
-{
-    quint8 *bytePtr = idsBits;
-    quint8 mask = 0x01;
-    quint8 bitNumber;
-
-    for (int i=0; i<NumberOfOctetsTaken; ++i) {
-        if (*bytePtr != 0xff) { //there is a free entry
-            for (bitNumber = 0; bitNumber < 8; ++bitNumber) {
-                if ( (mask & *bytePtr) == 0) { //bit pointing by mask is free
-                    *bytePtr |= mask;//reserve field
-                    return (8*i + bitNumber);
-                }
-                mask <<= 1;
-            }
-        }
-        ++bytePtr;
-    }
-    return -1;
-}
-
-void BacnetTSM2::InvokeIdGenerator::returnId(quint8 id)
-{
-    quint8 byteNumber = id/8;
-    quint8 mask = (0x01 << id%8);
-
-    Q_ASSERT( (idsBits[byteNumber] & mask) != 0 );//assert it is used.
-    idsBits[byteNumber] &= (~mask);//free bit
-}
-
 BacnetTSM2::BacnetTSM2(BacnetApplicationLayerHandler *appLayer, QObject *parent):
     QObject(parent),
-    _appLayer(appLayer)
+    _appLayer(appLayer),
+    _requestTimeout_ms(DefaultTimeout_ms),
+    _requestRetriesCount(DefaultRetryCount),
+    _timerInterval_ms(DefaultTimerInterval_ms)
 {
     Q_CHECK_PTR(_appLayer);
+
+    _timer.start(_timerInterval_ms, this);
 }
 
 void BacnetTSM2::setAddress(InternalAddress &address)
@@ -116,15 +85,8 @@ bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *ad
     return false;
 }
 
-bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId)
 {
-    //generate invoke id.
-    int invokeId = _generator.generateId();
-    if (invokeId < 0) {//can't generate
-        qDebug("BacnetTSM2::send() : can't generate invoke id. Think about introducing another requesting object.");
-        return false;
-    }
-
     //get buffer
     Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
     //write to buffer
@@ -154,31 +116,39 @@ bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAdd
     qDebug("Length sent %d", ret);
 
     _netHandler->sendApdu(&buffer, true, &destination, &sourceAddress);
-
-    Q_ASSERT(!_pendingConfirmedRequests.contains(invokeId));
-    ConfirmedRequestEntry reqEntry = {serviceToSend, timeout_ms};
-    _pendingConfirmedRequests.insert(invokeId, reqEntry);
-    //QTimer::singleShot(0, this, SLOT(generateResponse()));
+    Q_ASSERT(_confiremedEntriesList.contains(invokeId));
     return true;
 }
 
-bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend)
 {
-    //find bacnetadderss to send.
-    BacnetAddress destAddr;
-    if (!deviceAddress(destinedObject, &destAddr)) {
-        ConfirmedAwaitingDiscoveryEntry discEntry = {serviceToSend, service, sourceAddress, timeout_ms};
-        if (!_awaitingDiscoveryRequests.contains(destinedObject))
-            _awaitingDiscoveryRequests.insert(destinedObject, QList<ConfirmedAwaitingDiscoveryEntry>()<<discEntry);
-        else
-            _awaitingDiscoveryRequests[destinedObject].append(discEntry);
-        discoverDevice(destinedObject);
-        return true;
+    //generate invoke id.
+    int invokeId = queueConfirmedRequest(serviceToSend, destination, sourceAddress, service);
+    if (invokeId < 0) {//can't generate
+        qDebug("BacnetTSM2::send() : can't generate invoke id. Think about introducing another requesting object.");
+        return false;
     }
-    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
 
-    return send(destAddr, srcAddr, service, serviceToSend, timeout_ms);
+    return send_hlpr(destination, sourceAddress, service, serviceToSend, invokeId);
 }
+
+//bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+//{
+//    //find bacnetadderss to send.
+//    BacnetAddress destAddr;
+//    if (!deviceAddress(destinedObject, &destAddr)) {
+//        ConfirmedAwaitingDiscoveryEntry discEntry = {serviceToSend, service, sourceAddress, timeout_ms};
+//        if (!_awaitingDiscoveryRequests.contains(destinedObject))
+//            _awaitingDiscoveryRequests.insert(destinedObject, QList<ConfirmedAwaitingDiscoveryEntry>()<<discEntry);
+//        else
+//            _awaitingDiscoveryRequests[destinedObject].append(discEntry);
+//        discoverDevice(destinedObject);
+//        return true;
+//    }
+//    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
+
+//    return send(destAddr, srcAddr, service, serviceToSend, timeout_ms);
+//}
 
 
 //void BacnetTSM2::generateResponse()
@@ -236,7 +206,7 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
     _netHandler->sendApdu(&buffer, false, &destination, &source);
 }
 
-void *BacnetTSM2::takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId)
+ExternalConfirmedServiceHandler *BacnetTSM2::takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId)
 {
     return 0;
 }
@@ -304,7 +274,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        void *service = takeRespondedService(remoteSource, localDestination, saData.invokeId());
+        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, saData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -334,7 +304,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
 #endif
         }
 
-        void *service = takeRespondedService(remoteSource, localDestination, cplxData.invokeId());
+        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, cplxData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -348,7 +318,6 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
              */
 
 #ifdef NO_SEGMENTATION_SUPPORTED
-
         BacnetSegmentedAckData segData;
         qint32 ret = segData.fromRaw(data, dataLength);
         Q_ASSERT(ret > 0);
@@ -356,7 +325,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             qDebug("%s : wrong complex ack data (%d)", __PRETTY_FUNCTION__, ret);
             sendAbort(remoteSource, localDestination, segData.invokeId(), BacnetAbortNS::ReasonOther, true);
         } else {
-            qDebug("%s : segment ack rcvd, which is wrong, since we didn;t start the transfer/reception (we don't support it)!", __PRETTY_FUNCTION__, ret);
+            qDebug("%s : segment ack rcvd, which is wrong, since we didn;t start the transfer/reception (we don't support it)!", __PRETTY_FUNCTION__);
             sendAbort(remoteSource, localDestination, segData.invokeId(), BacnetAbortNS::ReasonSegmentationNotSupported, true);
         }
         return;
@@ -379,7 +348,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        void *service = takeRespondedService(remoteSource, localDestination, errData.invokeId());
+        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, errData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processError(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -397,7 +366,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        void *service = takeRespondedService(remoteSource, localDestination, rjctData.invokeId());
+        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, rjctData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processReject(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -413,7 +382,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        void *service = takeRespondedService(remoteSource, localDestination, abrtData.invokeId());
+        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, abrtData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processAbort(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -425,59 +394,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
     }
 }
 
-void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data)
-{
-    Q_UNUSED(source);
-    Q_UNUSED(destination);
-    Q_UNUSED(data);
-}
-
-void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetComplexAckData *data, quint8 *bodyPtr, quint16 bodyLength)
-{
-    Q_UNUSED(source);
-    Q_UNUSED(destination);
-    Q_UNUSED(data);
-    Q_UNUSED(bodyPtr);
-    Q_UNUSED(bodyLength);
-}
-
-void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetSegmentedAckData *data, quint8 *bodyPtr, quint16 bodyLength)
-{
-    Q_UNUSED(source);
-    Q_UNUSED(destination);
-    Q_UNUSED(data);
-    Q_UNUSED(bodyPtr);
-    Q_UNUSED(bodyLength);
-}
-
-void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetErrorData *data, quint8 *bodyPtr, quint16 bodyLength)
-{
-    Q_UNUSED(source);
-    Q_UNUSED(destination);
-    Q_UNUSED(data);
-    Q_UNUSED(bodyPtr);
-    Q_UNUSED(bodyLength);
-}
-
-void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetRejectData *data, quint8 *bodyPtr, quint16 bodyLength)
-{
-    Q_UNUSED(source);
-    Q_UNUSED(destination);
-    Q_UNUSED(data);
-    Q_UNUSED(bodyPtr);
-    Q_UNUSED(bodyLength);
-}
-
-void BacnetTSM2::receive(BacnetAddress &source, BacnetAddress &destination, BacnetAbortData *data, quint8 *bodyPtr, quint16 bodyLength)
-{
-    Q_UNUSED(source);
-    Q_UNUSED(destination);
-    Q_UNUSED(data);
-    Q_UNUSED(bodyPtr);
-    Q_UNUSED(bodyLength);
-}
-
-void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice)
+void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, BacnetServiceData *data, BacnetConfirmedRequestData *reqData)
 {
     //get buffer
     Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
@@ -487,8 +404,9 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
     quint16 buffLength = buffer.bodyLength();
 
     qint32 ret;
+    Q_CHECK_PTR(reqData);
     if (0 == data) {//simple ACK
-        BacnetSimpleAckData simpleAck(invokeId, serviceChoice);
+        BacnetSimpleAckData simpleAck(reqData->invokedId(), reqData->service());
         ret = simpleAck.toRaw(actualPtr, buffLength);
         if (ret <= 0) {
             qDebug("BacnetTSM2::sendAck() : Can't write to buff (%d)", ret);
@@ -500,7 +418,8 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
         return;
     }
 
-    BacnetComplexAckData complexAck(invokeId, serviceChoice, 0, 0, false, false);
+#ifdef NO_SEGMENTATION_SUPPORTED
+    BacnetComplexAckData complexAck(reqData->invokedId(), reqData->service(), 0, 0, false, false);
     ret = complexAck.toRaw(actualPtr, buffLength);
     Q_ASSERT(ret> 0);
     if (ret <= 0) {
@@ -520,6 +439,9 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
 
     _netHandler->sendApdu(&buffer, false, &destination, &source);
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending ack message with:");
+#else
+#error "Not implemented, segmentation!"
+#endif
 }
 
 void BacnetTSM2::sendAbort(BacnetAddress &remoteDestination, BacnetAddress &localSsource, quint8 invokeId, BacnetAbortNS::AbortReason abortReason, bool fromServer)
@@ -573,18 +495,18 @@ void BacnetTSM2::sendError(BacnetAddress &remoteDestination, BacnetAddress &loca
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending error message with:");
 }
 
-void BacnetTSM2::sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
-{
-    //find bacnetadderss to send.
-    BacnetAddress destAddr;
-    if (!deviceAddress(destinedObject, &destAddr)) {
-        discoverDevice(destinedObject);
-        qDebug("%s : unconfirmed request not sent, since no %d in entry table is preseny. Discovert started.", __PRETTY_FUNCTION__, objIdToNum(destinedObject));
-        return;
-    }
+//void BacnetTSM2::sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
+//{
+//    //find bacnetadderss to send.
+//    BacnetAddress destAddr;
+//    if (!deviceAddress(destinedObject, &destAddr)) {
+//        discoverDevice(destinedObject);
+//        qDebug("%s : unconfirmed request not sent, since no %d in entry table is preseny. Discovert started.", __PRETTY_FUNCTION__, objIdToNum(destinedObject));
+//        return;
+//    }
 
-    return sendUnconfirmed(destAddr, source, data, serviceChoice);
-}
+//    return sendUnconfirmed(destAddr, source, data, serviceChoice);
+//}
 
 void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
 {
@@ -616,3 +538,49 @@ void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress
     _netHandler->sendApdu(&buffer, false, &destination, &source);
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "sendUnconfirmed: ");
 }
+
+Bacnet::BacnetTSM2::ConfirmedRequestEntry::ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice serviceCode):
+    handler(handler),
+    timeLeft_ms(timeout_ms),
+    retriesLeft(retriesNum),
+    dst(destination),
+    src(source),
+    service(serviceCode)
+{
+}
+
+void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
+{
+    QHash<int, ConfirmedRequestEntry>::Iterator it = _confiremedEntriesList.begin();
+    QHash<int, ConfirmedRequestEntry>::Iterator itEnd = _confiremedEntriesList.end();
+
+    while (it != itEnd) {
+        it->timeLeft_ms -= _requestTimeout_ms;
+        if (it->timeLeft_ms < 0) {
+            --(it->retriesLeft);
+            if (it->retriesLeft > 0) {//resend
+                it->timeLeft_ms = _requestTimeout_ms;
+                send_hlpr(it->dst, it->src, it->service, it->handler, it.key());
+            } else {
+                _appLayer->processTimeout(it->handler);
+                it = _confiremedEntriesList.erase(it);
+                continue;//called to avoid ++it
+            }
+        }
+        ++it;
+    }
+}
+
+int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice service)
+{
+    int invokeId = _generator.generateId();
+    if (invokeId < 0) {
+        qDebug("%s : cannot generate id!", __PRETTY_FUNCTION__);
+        return invokeId;
+    }
+
+    Q_ASSERT(!_confiremedEntriesList.contains(invokeId));
+    _confiremedEntriesList.insert(invokeId, ConfirmedRequestEntry(handler, _requestTimeout_ms, _requestRetriesCount, destination, source, service));
+    return invokeId;
+}
+

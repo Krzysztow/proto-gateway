@@ -2,13 +2,14 @@
 #define BACNETTSM2_H
 
 #include <QObject>
+#include <QBasicTimer>
 
 #include "bacnetaddress.h"
 #include "bacnetcommon.h"
 #include "bacnetservicedata.h"
 #include "bacnetinternaladdresshelper.h"
-
 #include "bacnetpci.h"
+#include "invokeidgenerator.h"
 
 #define NO_SEGMENTATION_SUPPORTED
 
@@ -36,49 +37,60 @@ public:
 
 public://functions connected with parsing
     void receive(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *data, quint16 dataLength);
-    //returns service data poitner to the last service received by receive() function. Remember, the storage is valid only temporarily.
-    quint8 *serviceDataPtr(quint16 *serviceDataLength);
-
-    void *takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId);
 private:
+    ExternalConfirmedServiceHandler *takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId);
     BacnetApplicationLayerHandler *_appLayer;
 
 public:
+//    bool send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend);
 
-    bool send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
-    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
-
-    void receive(BacnetAddress &source, BacnetAddress &destination, BacnetSimpleAckData *data);
-    void receive(BacnetAddress &source, BacnetAddress &destination, BacnetComplexAckData *data, quint8 *bodyPtr, quint16 bodyLength);
-    void receive(BacnetAddress &source, BacnetAddress &destination, BacnetSegmentedAckData *data, quint8 *bodyPtr, quint16 bodyLength);
-    void receive(BacnetAddress &source, BacnetAddress &destination, BacnetErrorData *data, quint8 *bodyPtr, quint16 bodyLength);
-    void receive(BacnetAddress &source, BacnetAddress &destination, BacnetRejectData *data, quint8 *bodyPtr, quint16 bodyLength);
-    void receive(BacnetAddress &source, BacnetAddress &destination, BacnetAbortData *data, quint8 *bodyPtr, quint16 bodyLength);
-
-
-    void sendAck(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetServiceData *data, quint8 invokeId, quint8 serviceChoice);
+    void sendAck(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetServiceData *data, BacnetConfirmedRequestData *reqData);
     void sendReject(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetRejectNS::RejectReason reason, quint8 invokeId);
     void sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error);
     void sendAbort(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetAbortNS::AbortReason abortReason, bool fromServer);
 
-    void sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+//    void sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
     void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
     void setAddress(InternalAddress &address);
     InternalAddress &myAddress();
 
+private:
+    bool send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId);
 
 public:
     bool deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address);
     void discoverDevice(const ObjectIdStruct &deviceId);
 
+protected:
+    void timerEvent(QTimerEvent *);
+
 private:
-    struct ConfirmedRequestEntry
+    static const int DefaultTimeout_ms = 1000;
+    static const int DefaultRetryCount = 3;
+    int _requestTimeout_ms;
+    int _requestRetriesCount;
+    class ConfirmedRequestEntry
     {
+    public:
         //invoke id is a key
+        ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice serviceCode);
+
+    public:
         ExternalConfirmedServiceHandler *handler;
-        quint32 timeLeft_ms;
+        int timeLeft_ms;
+        int retriesLeft;
+        BacnetAddress dst;
+        BacnetAddress src;
+        BacnetServicesNS::BacnetConfirmedServiceChoice service;
     };
+    int queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice service);
+    QHash<int, ConfirmedRequestEntry> _confiremedEntriesList;
+
+    QBasicTimer _timer;
+    static const int DefaultTimerInterval_ms = 250;
+    int _timerInterval_ms;
 
     struct ConfirmedAwaitingDiscoveryEntry
     {
@@ -89,8 +101,6 @@ private:
         quint32 timeLeft_ms;
     };
 
-    QHash<int, ConfirmedRequestEntry> _pendingConfirmedRequests;
-    QHash<ObjectIdStruct, QList<ConfirmedAwaitingDiscoveryEntry> > _awaitingDiscoveryRequests;
     InternalAddress _myRequestAddress;
     BacnetNetworkLayerHandler *_netHandler;
 
@@ -107,10 +117,10 @@ private:
             All             = Static | Dynamic | DynamicExpiring | Initialized
         };
         quint8 type;
-        quint16 timeLeft_s;
+        quint16 timeLeft_ms;
 
         bool isInitialized() {return (type & Initialized);}
-        bool hasExpired() { return ((type & DynamicExpiring) == 0 ? false : (timeLeft_s == 0));}
+        bool hasExpired() { return ((type & DynamicExpiring) == 0 ? false : (timeLeft_ms == 0));}
     };
     QHash<ObjectIdStruct, RoutingEntry> _routingTable;
 
@@ -121,21 +131,7 @@ public slots:
 
     //Invoke Id GENERATOR
 private:
-    class InvokeIdGenerator
-    {
-    public:
-        InvokeIdGenerator();
-
-        int generateId();
-        void returnId(quint8 id);
-
-    public:
-        static const int MaxIdsNumber = 255;
-
-    private:
-        static const int NumberOfOctetsTaken = MaxIdsNumber/8 + ( (MaxIdsNumber%8 == 0) ? 0 : 1);
-        quint8 idsBits[NumberOfOctetsTaken];
-    } _generator;
+    InvokeIdGenerator _generator;
 };
 
 }

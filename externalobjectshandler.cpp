@@ -10,11 +10,12 @@
 #include "bacnetreadpropertyservicehandler.h"
 #include "bacnetwritepropertyservicehandler.h"
 #include "bacnetdefaultobject.h"
+#include "bacnetapplicationlayer.h"
 
 using namespace Bacnet;
 
-ExternalObjectsHandler::ExternalObjectsHandler(BacnetTSM2 *tsm):
-        _tsm(tsm)
+ExternalObjectsHandler::ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer):
+    _appLayer(appLayer)
 {
 }
 
@@ -147,8 +148,9 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
     RequestInfo ri = {asynchId, RequestRead, property};
     _bacnetPendingRequests.insert(serviceHandler, ri);
     ObjectIdStruct objId = numToObjId(readElement._deviceIdentifier);
+    BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _tsm->send(objId, _registeredAddresses.first(), BacnetServicesNS::ReadProperty, serviceHandler, 1000);
+    _appLayer->send(objId, fromAddr, BacnetServicesNS::ReadProperty, serviceHandler, 1000);
 
     return asynchId;
 }
@@ -326,8 +328,9 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
     RequestInfo ri = {asynchId, RequestWrite, toBeSet};
     _bacnetPendingRequests.insert(serviceHandler, ri);
     ObjectIdStruct objId = numToObjId(rEntry._deviceIdentifier);
+    BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _tsm->send(objId, _registeredAddresses.first(), BacnetServicesNS::WriteProperty, serviceHandler, 1000);
+    _appLayer->send(objId, fromAddr, BacnetServicesNS::WriteProperty, serviceHandler, 1000);
 
     return asynchId;
 }

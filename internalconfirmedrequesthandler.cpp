@@ -42,7 +42,7 @@ void InternalConfirmedRequestHandler::finalizeInstant(Bacnet::BacnetTSM2 *tsm)
         tsm->sendError(_requester, _destination, _reqData->invokedId(), _reqData->service(), error());
     } else {
          response = takeResponseData();
-         tsm->sendAck(_requester, _destination, response, _reqData->invokedId(), _reqData->service());
+         tsm->sendAck(_requester, _destination, response, _reqData);
     }
 
     qDebug("Don't forget to delete erquestPci and requestService");

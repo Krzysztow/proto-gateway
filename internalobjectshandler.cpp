@@ -12,7 +12,6 @@
 #include "helpercoder.h"
 #include "bacnetdeviceobject.h"
 #include "bacnetservice.h"
-#include "bacnettsm2.h"
 
 #include "helpercoder.h"
 #include "analoginputobject.h"
@@ -22,6 +21,7 @@
 #include "covconfnotificationservicehandler.h"
 #include "bacnetinternaladdresshelper.h"
 #include "internalrequesthandler.h"
+#include "bacnetapplicationlayer.h"
 
 //void AsynchSetter::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
 void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device)
@@ -58,25 +58,25 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
         covData->_listOfValues.append(propertiesValues[i]);
     }
 
-    BacnetAddress devAddress = BacnetInternalAddressHelper::toBacnetAddress(device->address());
+    BacnetAddress devAddress = device->address();
 
     //! \todo Unify send interface!
     //send it
     if (subscription.isIssueConfirmedNotifications()) {
         Bacnet::CovConfNotificationServiceHandler *hndlr = new Bacnet::CovConfNotificationServiceHandler(covData);//takes ownership
         if (subscription.recipientHasAddress()) {
-            _tsm->send(subscription.recipientAddress()->address(), devAddress, BacnetServicesNS::ConfirmedCOVNotification, hndlr);
+            _appLayer->send(subscription.recipientAddress()->address(), devAddress, BacnetServicesNS::ConfirmedCOVNotification, hndlr);
         } else {
             Q_ASSERT(0 != subscription.recipientObjId());
-            _tsm->send(subscription.recipientObjId()->_value, device->address(), BacnetServicesNS::ConfirmedCOVNotification, hndlr);
+            _appLayer->send(subscription.recipientObjId()->_value, device->address(), BacnetServicesNS::ConfirmedCOVNotification, hndlr);
         }
 #warning "Get rid of _value dependency (ObjIdStruct)"
     } else {
         if (subscription.recipientHasAddress()) {
-            _tsm->sendUnconfirmed(subscription.recipientAddress()->address(), devAddress, *covData, BacnetServicesNS::UnconfirmedCOVNotification);
+            _appLayer->sendUnconfirmed(subscription.recipientAddress()->address(), devAddress, *covData, BacnetServicesNS::UnconfirmedCOVNotification);
         } else {
             Q_ASSERT(0 != subscription.recipientObjId());
-            _tsm->sendUnconfirmed(subscription.recipientObjId()->_value, devAddress, *covData, BacnetServicesNS::UnconfirmedCOVNotification);
+            _appLayer->sendUnconfirmed(subscription.recipientObjId()->_value, devAddress, *covData, BacnetServicesNS::UnconfirmedCOVNotification);
         }
 
         //was sent, now has to be destroyed!
@@ -120,9 +120,9 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
 //            //send
 //            CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
 //            covData = 0;//so that next time, new one is created.
-//            _tsm->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
+//            _appLayer->send((*subscriptionsIt)._subscriberAddress, , BacnetServices::ConfirmedCOVNotification, hndlr);
 //        } else {
-//            _tsm->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
+//            _appLayer->sendUnconfirmed((*subscriptionsIt)._subscriberAddress, , *covData, BacnetServices::UnconfirmedCOVNotification);
 //        }
 //    }
 }
@@ -135,13 +135,15 @@ void InternalObjectsHandler::addAsynchronousHandler(QList<int> asynchIds, Intern
     }
 }
 
-bool InternalObjectsHandler::addDevice(InternalAddress address, Bacnet::BacnetDeviceObject *device)
+bool InternalObjectsHandler::addDevice(BacnetAddress &address, Bacnet::BacnetDeviceObject *device)
 {
-    Q_ASSERT(!_devices.contains(address));
-    if ( (BacnetInternalAddressHelper::InvalidInternalAddress == address) || _devices.contains(address))
+    InternalAddress intAddress = BacnetInternalAddressHelper::internalAddress(address);
+    Q_ASSERT(!_devices.contains(intAddress));
+    Q_CHECK_PTR(device);
+    if ( (BacnetInternalAddressHelper::InvalidInternalAddress == intAddress) || _devices.contains(intAddress))
         return false;
 
-    _devices.insert(address, device);
+    _devices.insert(intAddress, device);
     device->setHandler(this);
     return true;
 }
@@ -156,10 +158,10 @@ QList<Bacnet::BacnetDeviceObject*> InternalObjectsHandler::devices()
     return _devices.values();
 }
 
-InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm):
-    _tsm(tsm)
+InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetApplicationLayerHandler *appLayer):
+    _appLayer(appLayer)
 {
-    Q_CHECK_PTR(_tsm);
+    Q_CHECK_PTR(_appLayer);
 }
 
 //void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error)

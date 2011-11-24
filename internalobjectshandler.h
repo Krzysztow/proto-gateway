@@ -19,13 +19,14 @@ namespace Bacnet {
     class SubscribeCOVServiceData;
     class CovSubscription;
     class PropertyValue;
+    class BacnetApplicationLayerHandler;
     typedef QSharedPointer<PropertyValue> PropertyValueShared;
 }
 
 class InternalObjectsHandler
 {
 public:
-    InternalObjectsHandler(Bacnet::BacnetTSM2 *tsm);
+    InternalObjectsHandler(Bacnet::BacnetApplicationLayerHandler *appLayer);
 
 public://interface for BacnetObject-Internal interaction
     void propertyIoFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device);
@@ -34,7 +35,7 @@ public://interface for BacnetObject-Internal interaction
     void propertyValueChanged(Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues);
 
 public:
-    bool addDevice(InternalAddress address, Bacnet::BacnetDeviceObject *device);
+    bool addDevice(BacnetAddress &address, Bacnet::BacnetDeviceObject *device);
     QMap<quint32, Bacnet::BacnetDeviceObject*> &virtualDevices();
 
     //! \todo If performance here is bad, just return reference to QMap, as is stored.
@@ -43,7 +44,7 @@ public:
 public:
     QMap<InternalAddress, Bacnet::BacnetDeviceObject*> _devices;
     QHash<int, InternalRequestHandler*> _asynchRequests;
-    Bacnet::BacnetTSM2 *_tsm;
+    Bacnet::BacnetApplicationLayerHandler *_appLayer;
 
 //    /****************************
 //          COV handling part

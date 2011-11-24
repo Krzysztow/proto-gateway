@@ -91,7 +91,8 @@ SOURCES += main.cpp \
     internal/bacnetproperty.cpp \
     internal/multipleasynchhelper.cpp \
     discoverywrapper.cpp \
-    external/externalservicehandler.cpp
+    external/externalservicehandler.cpp \
+    invokeidgenerator.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -180,8 +181,11 @@ HEADERS += bacnetvirtuallinklayer.h \
     internal/internalpropertycontainersupport.h \
     discoverywrapper.h \
     /external/externalconfirmedservicehandler.h \
-    external/externalservicehandler.h
+    external/externalservicehandler.h \
+    invokeidgenerator.h
 OTHER_FILES +=
+
+
 
 
 

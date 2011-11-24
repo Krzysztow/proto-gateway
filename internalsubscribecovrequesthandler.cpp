@@ -11,11 +11,11 @@ using namespace Bacnet;
 
 InternalSubscribeCOVRequestHandler::InternalSubscribeCOVRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                                                        Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                                       InternalObjectsHandler *internalHandler):
+                                                                       BacnetApplicationLayerHandler *appLayer):
     InternalConfirmedRequestHandler(crData, requester, destination),
     _tsm(tsm),
     _device(device),
-    _internalHandler(internalHandler)
+    _appLayer(appLayer)
 {
 }
 
@@ -47,7 +47,7 @@ void InternalSubscribeCOVRequestHandler::finalize(bool *deleteAfter)
 
 bool InternalSubscribeCOVRequestHandler::execute()
 {
-    Q_CHECK_PTR(_internalHandler);//should never happen in case of confirmed services.
+    Q_CHECK_PTR(_appLayer);//should never happen in case of confirmed services.
     BacnetObject *object = _device->bacnetObject(_data._monitoredObjectId.instanceNumber());
     Q_CHECK_PTR(object);
 

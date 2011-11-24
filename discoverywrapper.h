@@ -3,8 +3,6 @@
 
 namespace Bacnet {
 
-
-
 class DiscoveryWrapper
 {
 public:

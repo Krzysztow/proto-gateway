@@ -16,12 +16,13 @@ namespace Bacnet {
     class BacnetTSM2;
     class ExternalConfirmedServiceHandler;
     class Error;
+    class BacnetApplicationLayerHandler;
 
     class ExternalObjectsHandler:
             public PropertyOwner
     {
     public:
-        ExternalObjectsHandler(BacnetTSM2 *tsm);
+        ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer);
 
         void addMappedProperty(Property *property, quint32 objectId,
                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
@@ -74,7 +75,7 @@ namespace Bacnet {
 
         QMap<ExternalConfirmedServiceHandler*, RequestInfo> _bacnetPendingRequests;
 
-        BacnetTSM2 *_tsm;
+        BacnetApplicationLayerHandler *_appLayer;
         QList<InternalAddress> _registeredAddresses;
     };
 

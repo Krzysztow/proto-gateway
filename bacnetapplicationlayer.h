@@ -2,6 +2,8 @@
 #define BACNETAPPLICATIONLAYERHANDLER_H
 
 #include <QtCore>
+#include <QList>
+#include <QObject>
 
 #include "bacnetpci.h"
 
@@ -10,14 +12,18 @@ class BacnetNetworkLayerHandler;
 class InternalObjectsHandler;
 
 namespace Bacnet {
-
 class ExternalObjectsHandler;
+class ExternalConfirmedServiceHandler;
 class BacnetTSM2;
+class BacnetServiceData;
+class BacnetDeviceObject;
 
-class BacnetApplicationLayerHandler
+class BacnetApplicationLayerHandler:
+        public QObject
 {
+    Q_OBJECT
 public:
-    BacnetApplicationLayerHandler(BacnetNetworkLayerHandler *networkHndlr);
+    BacnetApplicationLayerHandler(BacnetNetworkLayerHandler *networkHndlr, QObject *parent = 0);
     virtual ~BacnetApplicationLayerHandler();
 
     /**
@@ -34,16 +40,23 @@ public:
       */
     void indication(quint8 *data, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr);
 
-
     void processConfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetConfirmedRequestData *crData);
     void processUnconfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetUnconfirmedRequestData &ucrData);
-    void processAck(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
-    void processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
-    void processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
-    void processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, void *serviceACT);
+    void processAck(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processTimeout(ExternalConfirmedServiceHandler *serviceAct);
 
-public:
+    void sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+    void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+    bool send(const ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
 
+
+    InternalObjectsHandler *internalHandler();
+    ExternalObjectsHandler *externalHandler();
+    QList<BacnetDeviceObject*> devices();
 
 protected:
     BacnetNetworkLayerHandler *_networkHndlr;

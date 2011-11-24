@@ -14,7 +14,7 @@
 
 using namespace Bacnet;
 
-BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, InternalAddress address):
+BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, BacnetAddress &address):
     BacnetObject(identifier, this),
     _address(address)
 {
@@ -23,10 +23,10 @@ BacnetDeviceObject::BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, Int
 #endif
 
     Q_ASSERT( identifier.type() == BacnetObjectTypeNS::Device);
-    Q_ASSERT(_address != BacnetInternalAddressHelper::InvalidInternalAddress);
+    Q_ASSERT(_address.isAddrInitialized());
 }
 
-BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber, InternalAddress address):
+BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber, BacnetAddress &address):
     BacnetObject(BacnetObjectTypeNS::Device, instanceNumber, this),
     _address(address)
 {
@@ -35,7 +35,7 @@ BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber, InternalAddress a
 #endif
 
     Q_ASSERT(instanceNumber <= 0x03fffff);
-    Q_ASSERT(_address != BacnetInternalAddressHelper::InvalidInternalAddress);
+    Q_ASSERT(_address.isAddrInitialized());
 }
 
 BacnetDeviceObject::~BacnetDeviceObject()
@@ -349,7 +349,7 @@ const QMap<quint32, Bacnet::BacnetObject*> &BacnetDeviceObject::childObjects()
     return _childObjects;
 }
 
-InternalAddress &BacnetDeviceObject::address()
+BacnetAddress &BacnetDeviceObject::address()
 {
     return _address;
 }

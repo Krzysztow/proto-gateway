@@ -8,7 +8,6 @@
 #include "bacnetdata.h"
 #include "bacnetobjectinternalsupport.h"
 #include "propertyvalue.h"
-#include "bacnetinternaladdresshelper.h"
 
 class InternalObjectsHandler;
 
@@ -18,8 +17,8 @@ class BacnetDeviceObject:
         public BacnetObject
 {
 public:
-    BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, InternalAddress address);
-    BacnetDeviceObject(quint32 instanceNumber, InternalAddress address);
+    BacnetDeviceObject(Bacnet::ObjectIdentifier &identifier, BacnetAddress &address);
+    BacnetDeviceObject(quint32 instanceNumber, BacnetAddress &address);
     ~BacnetDeviceObject();
 
 public://overridden from BacnetObject
@@ -39,7 +38,7 @@ public://method overriden from InternalPropertyContainerSupport. Interface deriv
     //                                   BacnetObject *parentObject = 0, BacnetDeviceObject *deviceObject = 0);
 
 public://functions specific to BACnet device
-    InternalAddress &address();
+    BacnetAddress &address();
 
     bool addBacnetObject(BacnetObject *object);
     BacnetObject *bacnetObject(quint32 instanceNumber);
@@ -62,7 +61,7 @@ public:
     TPropertiesMap _specializedProperties;
 
     QMap<quint32, BacnetObject*> _childObjects;
-    InternalAddress _address;
+    BacnetAddress _address;
     InternalObjectsHandler *_handler;
 };
 

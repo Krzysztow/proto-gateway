@@ -10,26 +10,26 @@
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
                                                                           ::BacnetConfirmedRequestData *pciData,
                                                                           Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
-                                                                          InternalObjectsHandler *internalHandler)
+                                                                          Bacnet::BacnetApplicationLayerHandler *appLayer)
 {    
     Q_CHECK_PTR(pciData);
     Q_CHECK_PTR(tsm);
-    Q_CHECK_PTR(internalHandler);
+    Q_CHECK_PTR(appLayer);
 
     switch (pciData->service())
     {
     case (BacnetServicesNS::WriteProperty) :
     {
-        return new Bacnet::InternalWPRequestHandler(pciData, requester, destination, tsm, device, internalHandler);;
+        return new Bacnet::InternalWPRequestHandler(pciData, requester, destination, tsm, device, appLayer);;
     }
     case (BacnetServicesNS::ReadProperty) :
     {
-        return new Bacnet::InternalRPRequestHandler(pciData, requester, destination, tsm, device, internalHandler);
+        return new Bacnet::InternalRPRequestHandler(pciData, requester, destination, tsm, device, appLayer);
     }
     case (BacnetServicesNS::SubscribeCOV)://fall through
     case (BacnetServicesNS::SubscribeCOVProperty):
     {
-        return new Bacnet::InternalSubscribeCOVRequestHandler(pciData, requester, destination, tsm, device, internalHandler);
+        return new Bacnet::InternalSubscribeCOVRequestHandler(pciData, requester, destination, tsm, device, appLayer);
     }
     default:
         Q_ASSERT(false);
@@ -40,19 +40,20 @@
 ::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
                                                                               BacnetUnconfirmedRequestData &pciData,
                                                                               Bacnet::BacnetTSM2 *tsm, Bacnet::BacnetDeviceObject *device,
-                                                                              InternalObjectsHandler *internalHandler)
+                                                                              Bacnet::BacnetApplicationLayerHandler *appLayer)
 {
+    Q_CHECK_PTR(appLayer);
     Q_UNUSED(destination);
     Q_UNUSED(pciData);
     switch (pciData.service())
     {
     case (BacnetServicesNS::WhoIs):
     {
-        return new Bacnet::InternalWhoIsRequestHandler(requester, tsm, device, internalHandler);
+        return new Bacnet::InternalWhoIsRequestHandler(requester, tsm, device, appLayer);
     }
     case (BacnetServicesNS::WhoHas):
     {
-        return new Bacnet::InternalWhoHasRequestHandler(requester, tsm, device, internalHandler);
+        return new Bacnet::InternalWhoHasRequestHandler(requester, tsm, device, appLayer);
     }
     default:
         Q_ASSERT(false);

@@ -5,16 +5,17 @@
 #include "ihaveservicedata.h"
 #include "bacnetdeviceobject.h"
 #include "bacnettsm2.h"
+#include "bacnetapplicationlayer.h"
 
 using namespace Bacnet;
 
 InternalWPRequestHandler::InternalWPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                                    Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                                   InternalObjectsHandler *internalHandler):
+                                                   BacnetApplicationLayerHandler *appLayer):
 InternalConfirmedRequestHandler(crData, requester, destination),
 _tsm(tsm),
 _device(device),
-_internalHandler(internalHandler),
+_appLayer(appLayer),
 _asynchId(-1)
 {
 }
@@ -87,7 +88,9 @@ bool InternalWPRequestHandler::execute()
         return true;
     }
     _asynchId = readyness;
-    _internalHandler->addAsynchronousHandler(QList<int>()<<_asynchId, this);
+    Q_CHECK_PTR(_appLayer->internalHandler());
+    //! \todo Refactor it!
+    _appLayer->internalHandler()->addAsynchronousHandler(QList<int>()<<_asynchId, this);
     return false;
 }
 

@@ -6,13 +6,15 @@
 
 namespace Bacnet {
 
+class BacnetApplicationLayerHandler;
+
     class InternalWPRequestHandler:
         public ::InternalConfirmedRequestHandler
     {
     public:
         InternalWPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                  Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                 InternalObjectsHandler *internalHandler);
+                                 BacnetApplicationLayerHandler *appLayer);
         virtual ~InternalWPRequestHandler();
 
     public://! overriden from InternalWhoIsRequestHandler, but \todo hsould be declaredin InternalRequestHandler.
@@ -36,7 +38,7 @@ namespace Bacnet {
     private:
         Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
-        InternalObjectsHandler *_internalHandler;
+        BacnetApplicationLayerHandler *_appLayer;
 
         WritePropertyServiceData _data;
         int _asynchId;
