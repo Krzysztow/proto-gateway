@@ -17,8 +17,10 @@ BacnetApplicationLayerHandler::BacnetApplicationLayerHandler(BacnetNetworkLayerH
     _networkHndlr(networkHndlr),
     _internalHandler(new InternalObjectsHandler(this)),
     _externalHandler(new ExternalObjectsHandler(this)),
-    _tsm(new Bacnet::BacnetTSM2(this))
+    _tsm(new Bacnet::BacnetTSM2(this)),
+    _routingTable(DefaultDynamicElementsSize)
 {
+    _timer.start(TimerInterval_ms, this);
 }
 
 BacnetApplicationLayerHandler::~BacnetApplicationLayerHandler()
@@ -120,10 +122,17 @@ void Bacnet::BacnetApplicationLayerHandler::processTimeout(ExternalConfirmedServ
 }
 
 
-void BacnetApplicationLayerHandler::sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
+bool BacnetApplicationLayerHandler::sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
 {
-    Q_ASSERT(false);//need to implement it!
+    BacnetAddress dest;
+    return false;
 }
+
+bool BacnetApplicationLayerHandler::sendUnconfirmedWithDiscovery(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice)
+{
+    return false;
+}
+
 
 void BacnetApplicationLayerHandler::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
 {
@@ -132,11 +141,17 @@ void BacnetApplicationLayerHandler::sendUnconfirmed(const BacnetAddress &destina
 
 bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
-    Q_ASSERT(false);
+    bool found(false);
+    const RoutingEntry &re =_routingTable.findEntry(objIdToNum(destinedObject), &found);
+    if (found) {
+        send(re.address, sourceAddress, service, serviceToSend);
+    }
+    return found;
 }
 
 bool BacnetApplicationLayerHandler::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
+#warning "ADD TO PENDING SERVICES!"
     return _tsm->send(destination, sourceAddress, service, serviceToSend);
 }
 
@@ -168,6 +183,42 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
     _tsm->receive(srcAddr, destAddr, data, length);
 }
 
+void BacnetApplicationLayerHandler::discoverDevice(const ObjectIdStruct &deviceId)
+{
+//    BacnetUnconfirmedRequestData reqData(BacnetServicesNS::WhoIs);
+//    WhoIsServiceData serviceData(objIdToNum(deviceId));
+
+//    //get buffer
+//    Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
+//    //write to buffer
+//    Q_ASSERT(buffer.isValid());
+//    quint8 *buffStart = buffer.bodyPtr();
+//    quint16 buffLength = buffer.bodyLength();
+//    qint32 ret = reqData.toRaw(buffStart, buffLength);
+//    Q_ASSERT(ret > 0);
+//    if (ret <= 0) {
+//        qDebug("BacnetTSM2::send() : couldn't write to buffer (pci), %d.", ret);
+//        return;
+//    }
+//    buffStart += ret;
+//    buffLength -= ret;
+//    ret = serviceData.toRaw(buffStart, buffLength);
+//    Q_ASSERT(ret > 0);
+//    if (ret <= 0) {
+//        qDebug("BacnetTSM2::send() : couldn't write to buffer (service), %d.", ret);
+//        return;
+//    }
+//    buffStart += ret;
+//    buffer.setBodyLength(buffStart - buffer.bodyPtr());
+
+//    BacnetAddress globalAddr;
+//    globalAddr.setGlobalBroadcast();
+
+//    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(_myRequestAddress);
+
+//    HelperCoder::printArray(buffStart, buffer.bodyLength(), "Discovery request to be sent: ");
+//    _netHandler->sendApdu(&buffer, false, &globalAddr, &srcAddr);
+}
 
 ExternalObjectsHandler *BacnetApplicationLayerHandler::externalHandler()
 {
@@ -179,6 +230,10 @@ InternalObjectsHandler *BacnetApplicationLayerHandler::internalHandler()
     return _internalHandler;
 }
 
+void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
+{
+
+}
 
 #define BAC_APP_TEST
 #ifndef BAC_APP_TEST

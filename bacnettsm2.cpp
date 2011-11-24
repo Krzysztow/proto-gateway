@@ -34,56 +34,19 @@ InternalAddress &BacnetTSM2::myAddress()
     return _myRequestAddress;
 }
 
-void BacnetTSM2::discoverDevice(const ObjectIdStruct &deviceId)
-{
-    BacnetUnconfirmedRequestData reqData(BacnetServicesNS::WhoIs);
-    WhoIsServiceData serviceData(objIdToNum(deviceId));
+//bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address)
+//{
+//    Q_CHECK_PTR(address);
+//    if (!_routingTable.contains(deviceId))
+//        return false;
 
-    //get buffer
-    Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
-    //write to buffer
-    Q_ASSERT(buffer.isValid());
-    quint8 *buffStart = buffer.bodyPtr();
-    quint16 buffLength = buffer.bodyLength();
-    qint32 ret = reqData.toRaw(buffStart, buffLength);
-    Q_ASSERT(ret > 0);
-    if (ret <= 0) {
-        qDebug("BacnetTSM2::send() : couldn't write to buffer (pci), %d.", ret);
-        return;
-    }
-    buffStart += ret;
-    buffLength -= ret;
-    ret = serviceData.toRaw(buffStart, buffLength);
-    Q_ASSERT(ret > 0);
-    if (ret <= 0) {
-        qDebug("BacnetTSM2::send() : couldn't write to buffer (service), %d.", ret);
-        return;
-    }
-    buffStart += ret;
-    buffer.setBodyLength(buffStart - buffer.bodyPtr());
-
-    BacnetAddress globalAddr;
-    globalAddr.setGlobalBroadcast();
-
-    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(_myRequestAddress);
-
-    HelperCoder::printArray(buffStart, buffer.bodyLength(), "Discovery request to be sent: ");
-    _netHandler->sendApdu(&buffer, false, &globalAddr, &srcAddr);
-}
-
-bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address)
-{
-    Q_CHECK_PTR(address);
-    if (!_routingTable.contains(deviceId))
-        return false;
-
-    RoutingEntry &routEntry  = _routingTable[deviceId];
-    if (routEntry.isInitialized() && !routEntry.hasExpired()) {
-        *address = routEntry.address;
-        return true;
-    }
-    return false;
-}
+//    RoutingEntry &routEntry  = _routingTable[deviceId];
+//    if (routEntry.isInitialized() && !routEntry.hasExpired()) {
+//        *address = routEntry.address;
+//        return true;
+//    }
+//    return false;
+//}
 
 bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId)
 {

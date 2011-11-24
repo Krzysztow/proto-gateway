@@ -6,6 +6,7 @@
 #include <QObject>
 
 #include "bacnetpci.h"
+#include "routingtable.h"
 
 class BacnetAddress;
 class BacnetNetworkLayerHandler;
@@ -48,24 +49,38 @@ public:
     void processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
     void processTimeout(ExternalConfirmedServiceHandler *serviceAct);
 
-    void sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+    //! tries to send the data. When there is no translation entry obj id -> address, returns false. When discovery is to be used, when such case happens, use \sa sendUnconfirmedWithDiscovery()
+    bool sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
+    //! sends unconfirmed data. When there is no translation entry objId -> address, first issues Who-has service. \note Takes ownership over BacnetServiceData.
+    bool sendUnconfirmedWithDiscovery(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice);
+
     void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
     bool send(const ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
     bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
-
 
     InternalObjectsHandler *internalHandler();
     ExternalObjectsHandler *externalHandler();
     QList<BacnetDeviceObject*> devices();
 
+private:
+    void discoverDevice(const ObjectIdStruct &deviceId);
+
+protected:
+    void timerEvent(QTimerEvent *);
+
 protected:
     BacnetNetworkLayerHandler *_networkHndlr;
 
-    //! \todo should be changed when configuration is done with config files.
 public:
     InternalObjectsHandler *_internalHandler;
     Bacnet::ExternalObjectsHandler *_externalHandler;
     Bacnet::BacnetTSM2 *_tsm;
+
+private:
+    static const int TimerInterval_ms = 1000;
+    QBasicTimer _timer;
+    static const int DefaultDynamicElementsSize = 100;
+    RoutingTable _routingTable;
 };
 
 }

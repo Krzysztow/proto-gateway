@@ -92,7 +92,8 @@ SOURCES += main.cpp \
     internal/multipleasynchhelper.cpp \
     discoverywrapper.cpp \
     external/externalservicehandler.cpp \
-    invokeidgenerator.cpp
+    invokeidgenerator.cpp \
+    routingtable.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -182,8 +183,11 @@ HEADERS += bacnetvirtuallinklayer.h \
     discoverywrapper.h \
     /external/externalconfirmedservicehandler.h \
     external/externalservicehandler.h \
-    invokeidgenerator.h
+    invokeidgenerator.h \
+    routingtable.h
 OTHER_FILES +=
+
+
 
 
 

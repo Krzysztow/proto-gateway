@@ -59,9 +59,6 @@ public:
 private:
     bool send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId);
 
-public:
-    bool deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address);
-    void discoverDevice(const ObjectIdStruct &deviceId);
 
 protected:
     void timerEvent(QTimerEvent *);
@@ -92,46 +89,42 @@ private:
     static const int DefaultTimerInterval_ms = 250;
     int _timerInterval_ms;
 
-    struct ConfirmedAwaitingDiscoveryEntry
-    {
-        //objId is a key
-        ExternalConfirmedServiceHandler *handler;
-        BacnetServicesNS::BacnetConfirmedServiceChoice choice;
-        InternalAddress sourceAddress;
-        quint32 timeLeft_ms;
-    };
-
+private:
+    InvokeIdGenerator _generator;
     InternalAddress _myRequestAddress;
     BacnetNetworkLayerHandler *_netHandler;
 
-    class RoutingEntry
-    {
-    public:
-        //ObjectIdStruct deviceId;
-        BacnetAddress address;
-        enum {
-            Static          = 0x01,
-            Dynamic         = 0x02,
-            DynamicExpiring = 0x04,
-            Initialized     = 0x08,
-            All             = Static | Dynamic | DynamicExpiring | Initialized
-        };
-        quint8 type;
-        quint16 timeLeft_ms;
+//    bool deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address);
+//    void discoverDevice(const ObjectIdStruct &deviceId);
 
-        bool isInitialized() {return (type & Initialized);}
-        bool hasExpired() { return ((type & DynamicExpiring) == 0 ? false : (timeLeft_ms == 0));}
-    };
-    QHash<ObjectIdStruct, RoutingEntry> _routingTable;
+    //    struct ConfirmedAwaitingDiscoveryEntry
+    //    {
+    //        //objId is a key
+    //        ExternalConfirmedServiceHandler *handler;
+    //        BacnetServicesNS::BacnetConfirmedServiceChoice choice;
+    //        InternalAddress sourceAddress;
+    //        quint32 timeLeft_ms;
+    //    };
 
-signals:
+//    class RoutingEntry
+//    {
+//    public:
+//        //ObjectIdStruct deviceId;
+//        BacnetAddress address;
+//        enum {
+//            Static          = 0x01,
+//            Dynamic         = 0x02,
+//            DynamicExpiring = 0x04,
+//            Initialized     = 0x08,
+//            All             = Static | Dynamic | DynamicExpiring | Initialized
+//        };
+//        quint8 type;
+//        quint16 timeLeft_ms;
 
-public slots:
-    //each interval, check pendingConfirmedRequests, awaitingDiscoveryRequests and check RoutingElements
-
-    //Invoke Id GENERATOR
-private:
-    InvokeIdGenerator _generator;
+//        bool isInitialized() {return (type & Initialized);}
+//        bool hasExpired() { return ((type & DynamicExpiring) == 0 ? false : (timeLeft_ms == 0));}
+//    };
+//    QHash<ObjectIdStruct, RoutingEntry> _routingTable;
 };
 
 }
