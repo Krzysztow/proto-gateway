@@ -10,7 +10,9 @@ class RemoteObjectsToDeviceMapper
 public:
     RemoteObjectsToDeviceMapper(int maximumSize);
     quint32 findEntry(quint32 objectId, bool *found);
-    void addOrUpdateRoutingEntry(quint32 objectIdNum, quint32 deviceObjectIdNum, bool forceAdd = false);
+
+    //! Adds element to the routing table. Returns true, if element existed.
+    bool addOrUpdateRoutingEntry(quint32 objectIdNum, quint32 deviceObjectIdNum, bool forceAdd = false);
 
 private:
     static const int TableSizeWarningLimit = 10;

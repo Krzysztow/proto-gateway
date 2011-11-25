@@ -21,6 +21,7 @@ class BacnetServiceData;
 class BacnetDeviceObject;
 class DiscoveryWrapper;
 class Error;
+class ObjectIdentifier;
 
 class BacnetApplicationLayerHandler:
         public QObject
@@ -65,6 +66,7 @@ public:
     inline void sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error) {_tsm->sendError(remoteDestination, localSource, invokeId, errorChoice, error);}
     inline void sendAbort(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetAbortNS::AbortReason abortReason, bool fromServer) {_tsm->sendAbort(remoteDestination, localSource, invokeId, abortReason, fromServer);}
 
+
     InternalObjectsHandler *internalHandler();
     ExternalObjectsHandler *externalHandler();
     QList<BacnetDeviceObject*> devices();
@@ -75,8 +77,12 @@ private:
       */
     friend class UnconfirmedDiscoveryWrapper;
     friend class ConfirmedDiscoveryWrapper;
-    void discover(quint32 objectId);
+    void discover(quint32 objectId, bool forceToHave = false);
     QHash<ObjIdNum, DiscoveryWrapper*> _awaitingDiscoveries;
+public:
+    void registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName);
+    void registerDevice(BacnetAddress &devAddress, ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId);
+
 
 protected:
     void timerEvent(QTimerEvent *);

@@ -1,6 +1,6 @@
 #include "internalunconfirmedrequesthandler.h"
 
-#include "bacnetpci.h"
+using namespace Bacnet;
 
 InternalUnconfirmedRequestHandler::InternalUnconfirmedRequestHandler()
 {

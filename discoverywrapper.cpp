@@ -43,9 +43,10 @@ DiscoveryWrapper::Action ConfirmedDiscoveryWrapper::handleTimeout(BacnetApplicat
     }
 }
 
-void ConfirmedDiscoveryWrapper::deleteContents()
+void ConfirmedDiscoveryWrapper::discoveryFinished(BacnetApplicationLayerHandler *appLayer, BacnetAddress &responderAddress)
 {
-    delete _serviceToSend;
+    Q_CHECK_PTR(appLayer);
+    appLayer->send(responderAddress, _sourceAddress, _service, _serviceToSend);
 }
 
 UnconfirmedDiscoveryWrapper::UnconfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice, int retryCount):
@@ -71,8 +72,10 @@ DiscoveryWrapper::Action  UnconfirmedDiscoveryWrapper::handleTimeout(BacnetAppli
     }
 }
 
-void UnconfirmedDiscoveryWrapper::deleteContents()
+void UnconfirmedDiscoveryWrapper::discoveryFinished(BacnetApplicationLayerHandler *appLayer, BacnetAddress &responderAddress)
 {
+    Q_CHECK_PTR(appLayer);
+    appLayer->sendUnconfirmed(responderAddress, _source, *_data, _serviceChoice);
     delete _data;
 }
 

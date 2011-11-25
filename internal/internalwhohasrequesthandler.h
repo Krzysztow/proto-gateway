@@ -9,7 +9,7 @@ namespace Bacnet {
 class BacnetApplicationLayerHandler;
 
     class InternalWhoHasRequestHandler:
-        public ::InternalUnconfirmedRequestHandler
+        public InternalUnconfirmedRequestHandler
     {
     public:
         InternalWhoHasRequestHandler(BacnetAddress &requester, BacnetDeviceObject *device,

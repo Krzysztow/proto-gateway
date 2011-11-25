@@ -226,7 +226,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
     _tsm->receive(srcAddr, destAddr, data, length);
 }
 
-void BacnetApplicationLayerHandler::discover(quint32 objectId)
+void BacnetApplicationLayerHandler::discover(quint32 objectId, bool forceToHave)
 {
     BacnetAddress fromAddress = _externalHandler->someAddress();
     if (!fromAddress.isAddrInitialized()) {
@@ -244,7 +244,70 @@ void BacnetApplicationLayerHandler::discover(quint32 objectId)
         WhoHasServiceData whoHasServiceData(objectId);
         _tsm->sendUnconfirmed(bCastAddr, fromAddress, whoHasServiceData, BacnetServicesNS::WhoHas);
     }
+
+    if (forceToHave)
+        _awaitingDiscoveries.insertMulti(objectId, 0);
 }
+
+void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName)
+{
+    ObjIdNum devNum = devId.objectIdNum();
+    ObjIdNum objNum = objId.objectIdNum();
+    qDebug("%s : Gotten response from device %d, ovject %d of name %s", __PRETTY_FUNCTION__, devNum, objNum, qPrintable(objName));
+
+    bool isResponseForUs(false);
+
+    QHash<ObjIdNum, DiscoveryWrapper*>::Iterator it = _awaitingDiscoveries.begin();
+    QHash<ObjIdNum, DiscoveryWrapper*>::Iterator itEnd = _awaitingDiscoveries.end();
+
+    while (it != itEnd) {
+        if ( (it.key() == devNum) || (it.key() == objNum) ) { //it is a request issued as a response to our who-has request
+            if (it.key() == objNum)
+                isResponseForUs = true;
+            if (0 != it.value()) //it could be zero, when the appliaction layer was called to resolve address of the object without any data to be send.
+                (*it)->discoveryFinished(this, devAddress);
+            it = _awaitingDiscoveries.erase(it);
+            delete it.value();//the wrapper is not needed anymore. The data will be deleted along (if the wrapper didn't do something other with it already).
+        } else
+            ++it;
+    }
+
+    _objectDeviceMapper.addOrUpdateRoutingEntry(objNum, devNum, isResponseForUs);
+    /**
+      If device was not in the devices list, add it. However, remember we don't have full information about the device - we insert some predicted defaults, which could be ok.
+      To correct it, issue who-is and for a time being use those defaults.
+      */
+    if (!_devicesRoutingTable.addOrUpdateRoutingEntry(devAddress, devNum, ApduMaxSize, SegmentedNOT, true, false)) {
+        _awaitingDiscoveries.insertMulti(devNum, 0);
+        discover(devNum);
+    }
+}
+
+void BacnetApplicationLayerHandler::registerDevice(BacnetAddress &devAddress, Bacnet::ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId)
+{
+    ObjIdNum devNum = devId.objectIdNum();
+    qDebug("%s : Gotten response from device %d, and vendor id %d", __PRETTY_FUNCTION__, devNum, vendorId);
+
+    bool isResponseForUs(false);
+
+    QHash<ObjIdNum, DiscoveryWrapper*>::Iterator it = _awaitingDiscoveries.begin();
+    QHash<ObjIdNum, DiscoveryWrapper*>::Iterator itEnd = _awaitingDiscoveries.end();
+
+    while (it != itEnd) {
+        if (it.key() == devNum) { //it is a request issued as a response to our who-is request
+            if (it.key() == devNum)
+                isResponseForUs = true;
+            if (0 != it.value()) //it could be zero, when the appliaction layer was called to resolve address of the object without any data to be send.
+                (*it)->discoveryFinished(this, devAddress);
+            it = _awaitingDiscoveries.erase(it);
+            delete it.value();
+        } else
+            ++it;
+    }
+
+    _devicesRoutingTable.addOrUpdateRoutingEntry(devAddress, devNum, maxApduSize, segmentationType, true, true);//force update, since this is for sure fine quality information!
+}
+
 
 ExternalObjectsHandler *BacnetApplicationLayerHandler::externalHandler()
 {
@@ -263,13 +326,17 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 
     DiscoveryWrapper::Action action;
     while (it != itEnd) {
-        action = (*it)->handleTimeout(this);
-        if (DiscoveryWrapper::DeleteMe == action) {
+        if (0 != it.value()) { //there is some service pending for it.
+            action = (*it)->handleTimeout(this);
+            if (DiscoveryWrapper::DeleteMe == action) {
+                it = _awaitingDiscoveries.erase(it);
+                delete (*it);
+            } else {
+                Q_ASSERT(DiscoveryWrapper::LeaveMeInQueue == action);
+                ++it;
+            }
+        } else { //that was us (app layer), who called it.
             it = _awaitingDiscoveries.erase(it);
-            delete (*it);
-        } else {
-            Q_ASSERT(DiscoveryWrapper::LeaveMeInQueue == action);
-            ++it;
         }
     }
 }
@@ -453,5 +520,6 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+
 
 #endif

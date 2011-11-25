@@ -5,6 +5,7 @@
 #include "internalwhoisrequesthandler.h"
 #include "internalwhohasrequesthandler.h"
 #include "internalsubscribecovrequesthandler.h"
+#include "internalihaveservicehandler.h"
 #include "bacnetpci.h"
 
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
@@ -16,12 +17,10 @@
 
     switch (pciData->service())
     {
-    case (BacnetServicesNS::WriteProperty) :
-    {
+    case (BacnetServicesNS::WriteProperty) : {
         return new Bacnet::InternalWPRequestHandler(pciData, requester, destination, device, appLayer);;
     }
-    case (BacnetServicesNS::ReadProperty) :
-    {
+    case (BacnetServicesNS::ReadProperty) : {
         return new Bacnet::InternalRPRequestHandler(pciData, requester, destination, device, appLayer);
     }
     case (BacnetServicesNS::SubscribeCOV)://fall through
@@ -35,7 +34,7 @@
     }
 }
 
-::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
+Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
                                                                               BacnetUnconfirmedRequestData &pciData, Bacnet::BacnetDeviceObject *device,
                                                                               Bacnet::BacnetApplicationLayerHandler *appLayer)
 {
@@ -44,13 +43,14 @@
     Q_UNUSED(pciData);
     switch (pciData.service())
     {
-    case (BacnetServicesNS::WhoIs):
-    {
+    case (BacnetServicesNS::WhoIs): {
         return new Bacnet::InternalWhoIsRequestHandler(requester, device, appLayer);
     }
-    case (BacnetServicesNS::WhoHas):
-    {
+    case (BacnetServicesNS::WhoHas): {
         return new Bacnet::InternalWhoHasRequestHandler(requester, device, appLayer);
+    }
+    case (BacnetServicesNS::I_Have): {
+        return new Bacnet::InternalIHaveServiceHandler(requester, appLayer);
     }
     default:
         Q_ASSERT(false);

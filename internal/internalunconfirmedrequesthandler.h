@@ -7,12 +7,12 @@
 /** We stick to this upper class
   */
 
-namespace Bacnet {
-    class BacnetTSM2;
-    class ExternalObjectsHandler;
-};
 class InternalObjectsHandler;
 class BacnetUnconfirmedRequestData;
+
+namespace Bacnet {
+class BacnetTSM2;
+class ExternalObjectsHandler;
 
 class InternalUnconfirmedRequestHandler:
         public InternalRequestHandler
@@ -27,12 +27,7 @@ public://overridden from InternalRequestHandler
     virtual void finalize(bool *deleteAfter) = 0;
     virtual bool execute() = 0;
     virtual qint32 fromRaw(quint8 *servicePtr, quint16 length) = 0;
-
-public:
-
-protected:
-//    BacnetAddress _requester;
-    BacnetAddress _destination;
 };
 
+}
 #endif // INTERNALUNCONFIRMEDREQUESTHANDLER_H

@@ -4,7 +4,6 @@
 #include "bacnetcommon.h"
 
 class InternalConfirmedRequestHandler;
-class InternalUnconfirmedRequestHandler;
 class BacnetUnconfirmedRequestData;
 class BacnetConfirmedRequestData;
 class BacnetAddress;
@@ -14,6 +13,7 @@ class BacnetDeviceObject;
 class BacnetServiceData;
 class ExternalObjectsHandler;
 class BacnetApplicationLayerHandler;
+class InternalUnconfirmedRequestHandler;
 }
 
 namespace ServiceFactory
@@ -23,7 +23,7 @@ namespace ServiceFactory
                                                           Bacnet::BacnetDeviceObject *device,
                                                           Bacnet::BacnetApplicationLayerHandler *appLayer);
 
-::InternalUnconfirmedRequestHandler *createUnconfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
+Bacnet::InternalUnconfirmedRequestHandler *createUnconfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
                                                               BacnetUnconfirmedRequestData &pciData,
                                                               Bacnet::BacnetDeviceObject *device,
                                                               Bacnet::BacnetApplicationLayerHandler *appLayer);

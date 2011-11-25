@@ -9,11 +9,11 @@ namespace Bacnet {
 class RoutingEntry {
 public:
     RoutingEntry();
-    RoutingEntry(BacnetAddress &address, quint32 objIdNum,int maxApduLengthAccepted, BacnetSegmentation segmentation);
+    RoutingEntry(BacnetAddress &address, quint32 devObjIdNum,int maxApduLengthAccepted, BacnetSegmentation segmentation);
 
 public:
     BacnetAddress address;
-    quint32 objIdNum;
+    quint32 devObjIdNum;
     int maxApduLengthAccepted;
     BacnetSegmentation segmentation;
 };
@@ -26,11 +26,12 @@ public:
     const RoutingEntry &findEntry(const BacnetAddress &address, bool *found);
     const RoutingEntry &findEntry(quint32 objIdNum, bool *found);
 
-    void addOrUpdateRoutingEntry(BacnetAddress &address, quint32 objIdNum, int maxApduLengthAccepted, BacnetSegmentation segmentation, bool addToDynamicTable = true, bool forceAdd = true);
+    //! Adds entry to one of the internal lists. Returns true, if the element was already in the table.
+    bool addOrUpdateRoutingEntry(BacnetAddress &address, quint32 devObjIdNum, int maxApduLengthAccepted, BacnetSegmentation segmentation, bool addToDynamicTable = true, bool forceAdd = true);
 
 private:
     const RoutingEntry &findEntry_helper(QHash<quint32, RoutingEntry> &rTable, const BacnetAddress &address, bool *found);
-    const RoutingEntry &findEntry_helper(QHash<quint32, RoutingEntry> &rTable, quint32 objIdNum, bool *found);
+    const RoutingEntry &findEntry_helper(QHash<quint32, RoutingEntry> &rTable, ObjIdNum devObjjIdNum, bool *found);
 
 private:
     static const int RoutingtableWarningLimit = 10;

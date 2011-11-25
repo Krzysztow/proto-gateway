@@ -21,8 +21,9 @@ quint32 RemoteObjectsToDeviceMapper::findEntry(quint32 objectId, bool *found)
     }
 }
 
-void RemoteObjectsToDeviceMapper::addOrUpdateRoutingEntry(quint32 objectIdNum, quint32 deviceObjectIdNum, bool forceAdd)
+bool RemoteObjectsToDeviceMapper::addOrUpdateRoutingEntry(quint32 objectIdNum, quint32 deviceObjectIdNum, bool forceAdd)
 {
+    Q_ASSERT(BacnetObjectTypeNS::Device == numToObjId(deviceObjectIdNum).objectType);
     QHash<quint32, quint32>::Iterator it = _mapperTable.find(objectIdNum);
     if (_mapperTable.end() != it) { //we found it, update
         it.value() = deviceObjectIdNum;

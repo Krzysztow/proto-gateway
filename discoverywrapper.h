@@ -20,7 +20,7 @@ public:
         DeleteMe
     };
     virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer) = 0;
-    virtual void deleteContents() = 0;
+    virtual void discoveryFinished(BacnetApplicationLayerHandler *appLayer, BacnetAddress &responderAddress) = 0;
 };
 
 class ConfirmedDiscoveryWrapper:
@@ -31,7 +31,7 @@ public:
 
 public://DiscoveryWrapper interface
     virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer);
-    virtual void deleteContents();
+    virtual void discoveryFinished(BacnetApplicationLayerHandler *appLayer, BacnetAddress &responderAddress);
 
 public:
     ObjIdNum _destinedObject;
@@ -48,7 +48,7 @@ public:
 
 public://DiscoveryWrapper interface
     virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer);
-    virtual void deleteContents();
+    virtual void discoveryFinished(BacnetApplicationLayerHandler *appLayer, BacnetAddress &responderAddress);
 
 public:
     ObjIdNum _destinedObject;
