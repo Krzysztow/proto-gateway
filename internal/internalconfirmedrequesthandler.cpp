@@ -7,7 +7,7 @@
 #include "bacnetpci.h"
 #include "error.h"
 #include "asynchronousbacnettsmaction.h"
-#include "bacnettsm2.h"
+#include "bacnetapplicationlayer.h"
 
 InternalConfirmedRequestHandler::InternalConfirmedRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination):
     _reqData(crData),
@@ -35,14 +35,15 @@ InternalConfirmedRequestHandler::~InternalConfirmedRequestHandler()
 //    _reqData = reqData;
 //}
 
-void InternalConfirmedRequestHandler::finalizeInstant(Bacnet::BacnetTSM2 *tsm)
+void InternalConfirmedRequestHandler::finalizeInstant(Bacnet::BacnetApplicationLayerHandler *appLayer)
 {
+    Q_CHECK_PTR(appLayer);
     Bacnet::BacnetServiceData *response(0);
     if (hasError()) {
-        tsm->sendError(_requester, _destination, _reqData->invokedId(), _reqData->service(), error());
+        appLayer->sendError(_requester, _destination, _reqData->invokedId(), _reqData->service(), error());
     } else {
          response = takeResponseData();
-         tsm->sendAck(_requester, _destination, response, _reqData);
+         appLayer->sendAck(_requester, _destination, response, _reqData);
     }
 
     qDebug("Don't forget to delete erquestPci and requestService");

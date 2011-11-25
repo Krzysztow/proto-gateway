@@ -7,7 +7,7 @@
 #include "bacnetservicedata.h"
 
 namespace Bacnet {
-    class BacnetTSM2;
+    class BacnetApplicationLayerHandler;
     class ExternalObjectsHandler;
 }
 class InternalObjectsHandler;
@@ -17,8 +17,7 @@ class InternalConfirmedRequestHandler:
         public InternalRequestHandler
 {
 public:
-    InternalConfirmedRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination/*Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
-                                    InternalObjectsHandler *internalHandler, Bacnet::ExternalObjectsHandler *externalHandler*/);
+    InternalConfirmedRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination);
     virtual ~InternalConfirmedRequestHandler();
 
 public://methods overridden from InternalRequestHandler
@@ -38,7 +37,7 @@ public:
     virtual Bacnet::BacnetServiceData *takeResponseData() = 0;
 
 public:
-    void finalizeInstant(Bacnet::BacnetTSM2 *tsm);
+    void finalizeInstant(Bacnet::BacnetApplicationLayerHandler *appLayer);
 
 protected:
     BacnetConfirmedRequestData *_reqData;

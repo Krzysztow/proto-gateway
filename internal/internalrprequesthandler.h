@@ -13,7 +13,7 @@ class BacnetApplicationLayerHandler;
     {
     public:
         InternalRPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
-                                 Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                 BacnetDeviceObject *device,
                                  BacnetApplicationLayerHandler *appLayer);
         virtual ~InternalRPRequestHandler();
 
@@ -35,7 +35,6 @@ class BacnetApplicationLayerHandler;
         bool finishReading_helper(BacnetObject *readObject, int resultCode);
 
     private:
-        Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
         BacnetApplicationLayerHandler *_appLayer;
 

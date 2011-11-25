@@ -12,8 +12,7 @@ class BacnetApplicationLayerHandler;
         public ::InternalUnconfirmedRequestHandler
     {
     public:
-        InternalWhoHasRequestHandler(BacnetAddress &requester,
-                                     BacnetTSM2 *tsm, BacnetDeviceObject *device,
+        InternalWhoHasRequestHandler(BacnetAddress &requester, BacnetDeviceObject *device,
                                      BacnetApplicationLayerHandler *appLayer);
         virtual ~InternalWhoHasRequestHandler();
 
@@ -28,7 +27,6 @@ class BacnetApplicationLayerHandler;
         bool execute();
 
     private:
-        Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
         BacnetAddress _requester;
         BacnetApplicationLayerHandler *_appLayer;

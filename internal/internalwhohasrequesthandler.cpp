@@ -9,9 +9,7 @@
 
 using namespace Bacnet;
 
-InternalWhoHasRequestHandler::InternalWhoHasRequestHandler(BacnetAddress &requester,
-                                                           Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device, BacnetApplicationLayerHandler *appLayer):
-    _tsm(tsm),
+InternalWhoHasRequestHandler::InternalWhoHasRequestHandler(BacnetAddress &requester, BacnetDeviceObject *device, BacnetApplicationLayerHandler *appLayer):
     _device(device),
     _requester(requester),
     _appLayer(appLayer)
@@ -114,7 +112,7 @@ bool InternalWhoHasRequestHandler::execute()
                     iHaveData._devId.setObjectIdNum(devInstanceNum | BacnetObjectTypeNS::Device << 22);
                     iHaveData._objId = (*objIt)->objectId();
                     iHaveData._objName = (*objIt)->objectName();
-                    _tsm->sendUnconfirmed(_requester, _destination, iHaveData, BacnetServicesNS::I_Have);
+                    _appLayer->sendUnconfirmed(_requester, _destination, iHaveData, BacnetServicesNS::I_Have);
                     //we can stop here, since no two objects internetowrk-wide may have the same instance numbers or names.
                     return true;
                 }

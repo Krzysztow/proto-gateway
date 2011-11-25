@@ -14,7 +14,7 @@ class BacnetApplicationLayerHandler;
     {
     public:
         InternalSubscribeCOVRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
-                                           Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                           BacnetDeviceObject *device,
                                            BacnetApplicationLayerHandler *appLayer);
         virtual ~InternalSubscribeCOVRequestHandler();
 
@@ -33,7 +33,6 @@ class BacnetApplicationLayerHandler;
         virtual Bacnet::BacnetServiceData *takeResponseData();
 
     private:
-        Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
         BacnetApplicationLayerHandler *_appLayer;
 

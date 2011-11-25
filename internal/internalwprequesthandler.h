@@ -13,7 +13,7 @@ class BacnetApplicationLayerHandler;
     {
     public:
         InternalWPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
-                                 Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                 BacnetDeviceObject *device,
                                  BacnetApplicationLayerHandler *appLayer);
         virtual ~InternalWPRequestHandler();
 
@@ -36,7 +36,6 @@ class BacnetApplicationLayerHandler;
         bool finishWriting_helper(BacnetDeviceObject *object, int resultCode);
 
     private:
-        Bacnet::BacnetTSM2 *_tsm;
         BacnetDeviceObject *_device;
         BacnetApplicationLayerHandler *_appLayer;
 

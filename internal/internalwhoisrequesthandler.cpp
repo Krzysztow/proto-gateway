@@ -9,10 +9,8 @@
 
 using namespace Bacnet;
 
-InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(BacnetAddress &requester,
-                                                         Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+InternalWhoIsRequestHandler::InternalWhoIsRequestHandler(BacnetAddress &requester, BacnetDeviceObject *device,
                                                          BacnetApplicationLayerHandler *appLayer):
-    _tsm(tsm),
     _device(device),
     _requester(requester),
     _appLayer(appLayer)
@@ -65,7 +63,7 @@ bool InternalWhoIsRequestHandler::execute()
         if ( (lowLimit <= objIdNum) &&
              (objIdNum <= highLimit) ) {
             iAmData._objId = (*devIt)->objectIdNum();
-            _tsm->sendUnconfirmed(_requester, _destination, iAmData, BacnetServicesNS::I_Am);
+            _appLayer->sendUnconfirmed(_requester, _destination, iAmData, BacnetServicesNS::I_Am);
         }
     }
 

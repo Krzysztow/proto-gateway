@@ -10,10 +10,9 @@
 using namespace Bacnet;
 
 InternalWPRequestHandler::InternalWPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
-                                                   Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                   BacnetDeviceObject *device,
                                                    BacnetApplicationLayerHandler *appLayer):
 InternalConfirmedRequestHandler(crData, requester, destination),
-_tsm(tsm),
 _device(device),
 _appLayer(appLayer),
 _asynchId(-1)
@@ -58,7 +57,7 @@ bool InternalWPRequestHandler::isFinished()
 void InternalWPRequestHandler::finalize(bool *deleteAfter)
 {
     Q_CHECK_PTR(deleteAfter);
-    finalizeInstant(_tsm);
+    finalizeInstant(_appLayer);
     if (deleteAfter)
         *deleteAfter = true;
 }
@@ -72,7 +71,7 @@ bool InternalWPRequestHandler::execute()
     Q_CHECK_PTR(object);
     if (0 == object) {
         _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
-        finalizeInstant(_tsm);
+        finalizeInstant(_appLayer);
         return true;
     }
 
@@ -84,7 +83,7 @@ bool InternalWPRequestHandler::execute()
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
         finishWriting_helper(_device, readyness);
-        finalizeInstant(_tsm);
+        finalizeInstant(_appLayer);
         return true;
     }
     _asynchId = readyness;

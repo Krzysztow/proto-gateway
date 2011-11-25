@@ -10,10 +10,9 @@
 using namespace Bacnet;
 
 InternalSubscribeCOVRequestHandler::InternalSubscribeCOVRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
-                                                                       Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                                       BacnetDeviceObject *device,
                                                                        BacnetApplicationLayerHandler *appLayer):
     InternalConfirmedRequestHandler(crData, requester, destination),
-    _tsm(tsm),
     _device(device),
     _appLayer(appLayer)
 {
@@ -60,7 +59,7 @@ bool InternalSubscribeCOVRequestHandler::execute()
             object->addOrUpdateCovSubscription(_data, _requester, &_error);//if something wrong happens, object will set error.
         }
     }
-    finalizeInstant(_tsm);
+    finalizeInstant(_appLayer);
     return true;//we are done. This instance may be deleted.
 }
 

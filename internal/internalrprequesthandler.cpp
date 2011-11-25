@@ -9,10 +9,9 @@
 using namespace Bacnet;
 
 InternalRPRequestHandler::InternalRPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
-                                                   Bacnet::BacnetTSM2 *tsm, BacnetDeviceObject *device,
+                                                   BacnetDeviceObject *device,
                                                    BacnetApplicationLayerHandler *appLayer):
 InternalConfirmedRequestHandler(crData, requester, destination),
-_tsm(tsm),
 _device(device),
 _appLayer(appLayer),
 _asynchId(-1),
@@ -75,7 +74,7 @@ bool InternalRPRequestHandler::isFinished()
 void InternalRPRequestHandler::finalize(bool *deleteAfter)
 {
     Q_CHECK_PTR(deleteAfter);
-    finalizeInstant(_tsm);
+    finalizeInstant(_appLayer);
     if (deleteAfter)
         *deleteAfter = true;
 }
@@ -89,7 +88,7 @@ bool InternalRPRequestHandler::execute()
     Q_CHECK_PTR(object);
     if (0 == object) {
         _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
-        finalizeInstant(_tsm);
+        finalizeInstant(_appLayer);
         return true;//am done, delete me
     }
 
@@ -98,12 +97,12 @@ bool InternalRPRequestHandler::execute()
     if (readyness < 0) {
         if (!_error.hasError())
             _error.setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeUnknownProperty);
-        finalizeInstant(_tsm);
+        finalizeInstant(_appLayer);
         return true;//am done, delete me
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
         finishReading_helper(object, readyness);
-        finalizeInstant(_tsm);
+        finalizeInstant(_appLayer);
         return true;
     }
     _asynchId = readyness;

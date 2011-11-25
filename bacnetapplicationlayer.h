@@ -8,6 +8,7 @@
 #include "bacnetpci.h"
 #include "routingtable.h"
 #include "remoteobjectstodevicemapper.h"
+#include "bacnettsm2.h"
 
 class BacnetAddress;
 class BacnetNetworkLayerHandler;
@@ -16,10 +17,10 @@ class InternalObjectsHandler;
 namespace Bacnet {
 class ExternalObjectsHandler;
 class ExternalConfirmedServiceHandler;
-class BacnetTSM2;
 class BacnetServiceData;
 class BacnetDeviceObject;
 class DiscoveryWrapper;
+class Error;
 
 class BacnetApplicationLayerHandler:
         public QObject
@@ -59,6 +60,10 @@ public:
     void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
     bool send(const ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
     bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+    inline void sendAck(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetServiceData *data, BacnetConfirmedRequestData *reqData) {_tsm->sendAck(remoteDestination, localSource, data, reqData);}
+    inline void sendReject(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetRejectNS::RejectReason reason, quint8 invokeId) {_tsm->sendReject(remoteDestination, localSource, reason, invokeId);}
+    inline void sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error) {_tsm->sendError(remoteDestination, localSource, invokeId, errorChoice, error);}
+    inline void sendAbort(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetAbortNS::AbortReason abortReason, bool fromServer) {_tsm->sendAbort(remoteDestination, localSource, invokeId, abortReason, fromServer);}
 
     InternalObjectsHandler *internalHandler();
     ExternalObjectsHandler *externalHandler();
