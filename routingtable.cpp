@@ -4,7 +4,7 @@ using namespace Bacnet;
 
 RoutingEntry::RoutingEntry():
     //address gets default, uninitialized constructor
-    objIdNum(Bacnet::invalidObjId()),
+    objIdNum(Bacnet::invalidObjIdNum()),
     maxApduLengthAccepted(ApduMaxSize),
     segmentation(Bacnet::SegmentedNOT)
 {

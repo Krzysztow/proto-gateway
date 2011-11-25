@@ -9,6 +9,9 @@
 #include "internalunconfirmedrequesthandler.h"
 #include "internalconfirmedrequesthandler.h"
 #include "servicefactory.h"
+#include "whoisservicedata.h"
+#include "whohasservicedata.h"
+#include "discoverywrapper.h"
 
 using namespace Bacnet;
 
@@ -18,7 +21,8 @@ BacnetApplicationLayerHandler::BacnetApplicationLayerHandler(BacnetNetworkLayerH
     _internalHandler(new InternalObjectsHandler(this)),
     _externalHandler(new ExternalObjectsHandler(this)),
     _tsm(new Bacnet::BacnetTSM2(this)),
-    _routingTable(DefaultDynamicElementsSize)
+    _devicesRoutingTable(DefaultDynamicElementsSize),
+    _objectDeviceMapper(DefaultMapperElementsSize)
 {
     _timer.start(TimerInterval_ms, this);
 }
@@ -128,11 +132,35 @@ bool BacnetApplicationLayerHandler::sendUnconfirmed(const ObjectIdStruct &destin
     return false;
 }
 
+//! \note Takes ownership over the data element!
 bool BacnetApplicationLayerHandler::sendUnconfirmedWithDiscovery(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice)
 {
-    return false;
-}
+    bool found(true);
+    quint32 objIdNum = objIdToNum(destinedObject);
+    if (BacnetObjectTypeNS::Device !=  destinedObject.objectType) { //this is not a device, we have to find it's device object
+        objIdNum = _objectDeviceMapper.findEntry(objIdNum, &found);//substitute locally objectIdNum with it's device number
+    }
 
+    if (found) { //Here, if foud is true, then objIdNum is the device instance. If so, try to find device address
+        const RoutingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
+        if (found) {
+            sendUnconfirmed(re.address, source, *data, serviceChoice);
+            delete data;
+            return found;
+        }
+    }
+
+
+    /*being here means that either we have not sufficient information - if we had objectId, then objIdNum is pointing to it's device.
+      Otherwise objIdNum is the object to be looked for itself. Create wrapper for a BacnetServiceData and send discovery request (whois or whohas -
+      type depends on the objId Num value)
+    */
+    UnconfirmedDiscoveryWrapper *udw = new UnconfirmedDiscoveryWrapper(objIdNum, source, data, serviceChoice);
+    _awaitingDiscoveries.insertMulti(objIdNum, udw);
+    discover(objIdNum);
+
+    return found;
+}
 
 void BacnetApplicationLayerHandler::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
 {
@@ -142,10 +170,26 @@ void BacnetApplicationLayerHandler::sendUnconfirmed(const BacnetAddress &destina
 bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
     bool found(false);
-    const RoutingEntry &re =_routingTable.findEntry(objIdToNum(destinedObject), &found);
+    quint32 objIdNum = objIdToNum(destinedObject);
+    if (BacnetObjectTypeNS::Device !=  destinedObject.objectType) { //this is not a device, we have to find it's device object
+        objIdNum = _objectDeviceMapper.findEntry(objIdNum, &found);//substitute locally objectIdNum with it's device number
+    }
+
+    Q_ASSERT(InvalidInstanceNumber != numToObjId(objIdNum).instanceNum);
+    const RoutingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
     if (found) {
         send(re.address, sourceAddress, service, serviceToSend);
+        return found;
     }
+
+    /*being here means that either we have not sufficient information - if we had objectId, then objIdNum is pointing to it's device.
+      Otherwise objIdNum is the object to be looked for itself. Create wrapper for a BacnetServiceData and send discovery request (whois or whohas -
+      type depends on the objId Num value)
+    */
+    ConfirmedDiscoveryWrapper *cdw = new ConfirmedDiscoveryWrapper(objIdNum, sourceAddress, service, serviceToSend);
+    _awaitingDiscoveries.insertMulti(objIdNum, cdw);
+    discover(objIdNum);
+
     return found;
 }
 
@@ -183,41 +227,24 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
     _tsm->receive(srcAddr, destAddr, data, length);
 }
 
-void BacnetApplicationLayerHandler::discoverDevice(const ObjectIdStruct &deviceId)
+void BacnetApplicationLayerHandler::discover(quint32 objectId)
 {
-//    BacnetUnconfirmedRequestData reqData(BacnetServicesNS::WhoIs);
-//    WhoIsServiceData serviceData(objIdToNum(deviceId));
-
-//    //get buffer
-//    Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
-//    //write to buffer
-//    Q_ASSERT(buffer.isValid());
-//    quint8 *buffStart = buffer.bodyPtr();
-//    quint16 buffLength = buffer.bodyLength();
-//    qint32 ret = reqData.toRaw(buffStart, buffLength);
-//    Q_ASSERT(ret > 0);
-//    if (ret <= 0) {
-//        qDebug("BacnetTSM2::send() : couldn't write to buffer (pci), %d.", ret);
-//        return;
-//    }
-//    buffStart += ret;
-//    buffLength -= ret;
-//    ret = serviceData.toRaw(buffStart, buffLength);
-//    Q_ASSERT(ret > 0);
-//    if (ret <= 0) {
-//        qDebug("BacnetTSM2::send() : couldn't write to buffer (service), %d.", ret);
-//        return;
-//    }
-//    buffStart += ret;
-//    buffer.setBodyLength(buffStart - buffer.bodyPtr());
-
-//    BacnetAddress globalAddr;
-//    globalAddr.setGlobalBroadcast();
-
-//    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(_myRequestAddress);
-
-//    HelperCoder::printArray(buffStart, buffer.bodyLength(), "Discovery request to be sent: ");
-//    _netHandler->sendApdu(&buffer, false, &globalAddr, &srcAddr);
+    BacnetAddress fromAddress = _externalHandler->someAddress();
+    if (!fromAddress.isAddrInitialized()) {
+        Q_ASSERT(false);
+        qDebug("%s : External objects handler has given uninitialized address!", __PRETTY_FUNCTION__);
+        return;
+    }
+    BacnetAddress bCastAddr;
+    bCastAddr.setGlobalBroadcast();
+    ObjectIdStruct obId = numToObjId(objectId);
+    if (BacnetObjectTypeNS::Device == obId.objectType) {//looking for a device. Issue Who is.
+        WhoIsServiceData whoIsServiceData(objectId);
+        _tsm->sendUnconfirmed(bCastAddr, fromAddress, whoIsServiceData, BacnetServicesNS::WhoIs);
+    } else { //looking for an object, send who has.
+        WhoHasServiceData whoHasServiceData(objectId);
+        _tsm->sendUnconfirmed(bCastAddr, fromAddress, whoHasServiceData, BacnetServicesNS::WhoHas);
+    }
 }
 
 ExternalObjectsHandler *BacnetApplicationLayerHandler::externalHandler()
@@ -232,7 +259,20 @@ InternalObjectsHandler *BacnetApplicationLayerHandler::internalHandler()
 
 void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 {
+    QHash<ObjIdNum, DiscoveryWrapper*>::Iterator it = _awaitingDiscoveries.begin();
+    QHash<ObjIdNum, DiscoveryWrapper*>::Iterator itEnd = _awaitingDiscoveries.end();
 
+    DiscoveryWrapper::Action action;
+    while (it != itEnd) {
+        action = (*it)->handleTimeout(this);
+        if (DiscoveryWrapper::DeleteMe == action) {
+            it = _awaitingDiscoveries.erase(it);
+            delete (*it);
+        } else {
+            Q_ASSERT(DiscoveryWrapper::LeaveMeInQueue == action);
+            ++it;
+        }
+    }
 }
 
 #define BAC_APP_TEST

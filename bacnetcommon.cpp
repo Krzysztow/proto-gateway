@@ -1,10 +1,12 @@
 #include "bacnetcommon.h"
 
-quint32 Bacnet::objIdToNum(const Bacnet::ObjectIdStruct &objId) {
+using namespace Bacnet;
+
+Bacnet::ObjIdNum Bacnet::objIdToNum(const Bacnet::ObjectIdStruct &objId) {
     return ( (objId.objectType << 22) | (0x3fffff & objId.instanceNum) );
 }
 
-Bacnet::ObjectIdStruct Bacnet::numToObjId(unsigned int numObjId) {
+Bacnet::ObjectIdStruct Bacnet::numToObjId(Bacnet::ObjIdNum numObjId) {
     Bacnet::ObjectIdStruct objIdStr = {
         (BacnetObjectTypeNS::ObjectType)(numObjId >> 22),
         numObjId & 0x3fffff
@@ -13,9 +15,13 @@ Bacnet::ObjectIdStruct Bacnet::numToObjId(unsigned int numObjId) {
     return objIdStr;
 }
 
-quint32 Bacnet::invalidObjId() {
+const Bacnet::ObjectIdStruct &Bacnet::invalidObjectId() {
     static ObjectIdStruct invlaidStruct = {BacnetObjectTypeNS::Undefined, InvalidInstanceNumber};
-    return objIdToNum(invlaidStruct);
+    return invlaidStruct;
+}
+
+Bacnet::ObjIdNum Bacnet::invalidObjIdNum() {
+    return objIdToNum(invalidObjectId());
 }
 
 uint Bacnet::qHash(ObjectIdStruct objId)

@@ -48,7 +48,7 @@ public:
       Sets address as a remote broadcast.
       \warning this is only preparation, you have to remember to set appropriate networknumber (earlier or later).
       */
-    void setRemoteBroadcast();
+    void setIsRemoteBroadcast();
 
     /**
       Depicts if address is a remote broadcast.
@@ -123,7 +123,7 @@ private:
     };
 
     quint8 _macAddress[MaxMacLength];
-    qint32 _networkNumber;
+    qint16 _networkNumber;
     qint8 _macAddrLength;
 };
 

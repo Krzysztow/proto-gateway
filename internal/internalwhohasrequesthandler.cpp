@@ -91,7 +91,7 @@ bool InternalWhoHasRequestHandler::execute()
 #warning "Change object Id struct to the quint32"
     quint32 searchedObjInstance = InvalidInstanceNumber;
     if (0 != _data._objidentifier)
-        searchedObjInstance = objIdToNum(*_data._objidentifier);
+        searchedObjInstance = _data._objidentifier->objectIdNum();
     if (InvalidInstanceNumber == minDevId) {
         minDevId = 0;
         maxDevId = MaximumInstanceNumber;
@@ -109,7 +109,7 @@ bool InternalWhoHasRequestHandler::execute()
             objMapEnd = (*devIt)->childObjects().end();
             for (; objIt != objMapEnd; ++objIt) {
                 if ( ( (0 != _data._objidentifier) && ((*objIt)->objectIdNum() == searchedObjInstance) ) ||
-                     ( (0 != _data._objName) && ((*objIt)->objectName() == (*_data._objName)) ) ) {
+                     ( (0 != _data._objName) && ((*objIt)->objectName() == (_data._objName->value())) ) ) {
                     //manipulate object data.
                     iHaveData._devId.setObjectIdNum(devInstanceNum | BacnetObjectTypeNS::Device << 22);
                     iHaveData._objId = (*objIt)->objectId();

@@ -23,7 +23,7 @@ bool BacnetAddress::isGlobalBroadcast() const
     return (_networkNumber == GlobalBroadcastNet);
 }
 
-void BacnetAddress::setRemoteBroadcast()
+void BacnetAddress::setIsRemoteBroadcast()
 {
     //network address must be set earlier or later
     _macAddrLength = 0;

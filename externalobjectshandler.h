@@ -39,6 +39,7 @@ namespace Bacnet {
         bool isRegisteredAddress(InternalAddress &address);
         void addRegisteredAddress(InternalAddress &address);
         void removeRegisteredAddress(InternalAddress &address);
+        BacnetAddress someAddress();
 
     public://overridden from PropertyOwner
         int getPropertyRequested(PropertySubject *toBeGotten);

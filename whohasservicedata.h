@@ -3,6 +3,7 @@
 
 #include <QtCore>
 
+#include "bacnetprimitivedata.h"
 #include "bacnetservicedata.h"
 #include "bacnetcommon.h"
 
@@ -13,6 +14,9 @@ namespace Bacnet {
     {
     public:
         WhoHasServiceData();
+        WhoHasServiceData(quint32 objectIdNum, quint32 rangeLowLimit = Bacnet::InvalidInstanceNumber, quint32 rangeHighLimit = Bacnet::InvalidInstanceNumber);
+        WhoHasServiceData(QString &objectName, quint32 rangeLowLimit = Bacnet::InvalidInstanceNumber, quint32 rangeHighLimit = Bacnet::InvalidInstanceNumber);
+
         ~WhoHasServiceData();
 
     public://implementations of BacnetServiceData interface.
@@ -22,8 +26,8 @@ namespace Bacnet {
     public://is there any reason we should make it private?
         quint32 _rangeLowLimit;
         quint32 _rangeHighLimit;
-        ObjectIdStruct *_objidentifier;
-        QString *_objName;
+        ObjectIdentifier *_objidentifier;
+        CharacterString *_objName;
     };
 
 }

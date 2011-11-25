@@ -7,6 +7,7 @@
 
 #include "bacnetpci.h"
 #include "routingtable.h"
+#include "remoteobjectstodevicemapper.h"
 
 class BacnetAddress;
 class BacnetNetworkLayerHandler;
@@ -18,6 +19,7 @@ class ExternalConfirmedServiceHandler;
 class BacnetTSM2;
 class BacnetServiceData;
 class BacnetDeviceObject;
+class DiscoveryWrapper;
 
 class BacnetApplicationLayerHandler:
         public QObject
@@ -63,7 +65,13 @@ public:
     QList<BacnetDeviceObject*> devices();
 
 private:
-    void discoverDevice(const ObjectIdStruct &deviceId);
+    /** Sends discovery request for objectId.
+    If the object Id is of device type, Who-Is request is submitted. Otherwise Who-has service request is sent.
+      */
+    friend class UnconfirmedDiscoveryWrapper;
+    friend class ConfirmedDiscoveryWrapper;
+    void discover(quint32 objectId);
+    QHash<ObjIdNum, DiscoveryWrapper*> _awaitingDiscoveries;
 
 protected:
     void timerEvent(QTimerEvent *);
@@ -80,7 +88,10 @@ private:
     static const int TimerInterval_ms = 1000;
     QBasicTimer _timer;
     static const int DefaultDynamicElementsSize = 100;
-    RoutingTable _routingTable;
+    RoutingTable _devicesRoutingTable;
+    static const int DefaultMapperElementsSize = 100;
+    RemoteObjectsToDeviceMapper _objectDeviceMapper;
+
 };
 
 }

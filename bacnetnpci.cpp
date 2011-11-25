@@ -20,7 +20,7 @@ void BacnetNpci::decodeAddressHlpr(quint8 **netFieldPtr, BacnetAddress *bacAddre
     //get address
     if (length == 0) {
         if (!bacAddress->isGlobalBroadcast())
-            bacAddress->setRemoteBroadcast();
+            bacAddress->setIsRemoteBroadcast();
     } else {
         bacAddress->macAddressFromRaw(*netFieldPtr, length);
         (*netFieldPtr) += length;

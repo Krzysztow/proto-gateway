@@ -17,6 +17,7 @@ public:
     int maxApduLengthAccepted;
     BacnetSegmentation segmentation;
 };
+
 class RoutingTable
 {
 public:

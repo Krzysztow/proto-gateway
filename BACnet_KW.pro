@@ -10,7 +10,8 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 INCLUDEPATH += internal \
-    external
+    external \
+    applayer
 
 SOURCES += main.cpp \
     bacnetvirtuallinklayer.cpp \
@@ -38,7 +39,6 @@ SOURCES += main.cpp \
     cdm.cpp \
     bacnetwritepropertyservicehandler.cpp \
     bacnetreadpropertyservicehandler.cpp \
-    internalconfirmedrequesthandler.cpp \
     internalobjectshandler.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \ # bacnetreadpropertyservice.cpp \
@@ -68,32 +68,37 @@ SOURCES += main.cpp \
     bacnetinternaladdresshelper.cpp \
     whoisservicedata.cpp \
     iamservicedata.cpp \
-    internal/internalunconfirmedrequesthandler.cpp \
-    internal/internalwhoisrequesthandler.cpp \
-    internalwhohasrequesthandler.cpp \
     whohasservicedata.cpp \
     ihaveservicedata.cpp \
     subscribecovservicedata.cpp \
-    internalsubscribecovrequesthandler.cpp \
-    internal/internalwprequesthandler.cpp \
     writepropertyservicedata.cpp \
     covsupport.cpp \
     covnotificationrequestdata.cpp \
     covconfnotificationservicehandler.cpp \
     datavisitor.cpp \
     covincrementhandlers.cpp \
-    internalsubscribecovservicehandler.cpp \
     bacnetcovsubscription.cpp \
     covsubscriptionstimehandler.cpp \
+    discoverywrapper.cpp \
+    invokeidgenerator.cpp \
+    routingtable.cpp \
+    \
+    internal/internalsubscribecovrequesthandler.cpp \
+    internal/internalwprequesthandler.cpp \
+    internal/internalunconfirmedrequesthandler.cpp \
+    internal/internalwhoisrequesthandler.cpp \
+    internal/internalwhohasrequesthandler.cpp \
+    internal/internalsubscribecovservicehandler.cpp \
     internal/internalrprequesthandler.cpp \
     internal/bacnetobject2.cpp \
     internal/deviceobject.cpp \
     internal/bacnetproperty.cpp \
+    internal/internalconfirmedrequesthandler.cpp \
     internal/multipleasynchhelper.cpp \
-    discoverywrapper.cpp \
+    \
     external/externalservicehandler.cpp \
-    invokeidgenerator.cpp \
-    routingtable.cpp
+    \
+    applayer/remoteobjectstodevicemapper.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -129,7 +134,6 @@ HEADERS += bacnetvirtuallinklayer.h \
     bacnetservice.h \ # bacneterrorack.h \
 # bacnetreadpropertyservice.h \
     bacnetexternalobjects.h \
-    internalconfirmedrequesthandler.h \
     asynchowner.h \
     analoginputobject.h \
     bacnetobjectinternalsupport.h \
@@ -157,35 +161,43 @@ HEADERS += bacnetvirtuallinklayer.h \
     whoisservicedata.h \
     bacnetservicedata.h \
     iamservicedata.h \
-    internal/internalunconfirmedrequesthandler.h \
-    internal/internalwhoisrequesthandler.h \
-    internalwhohasrequesthandler.h \
     whohasservicedata.h \
     ihaveservicedata.h \
     subscribecovservicedata.h \
-    internalsubscribecovrequesthandler.h \
-    internal/internalwprequesthandler.h \
     writepropertyservicedata.h \
     covsupport.h \
     covnotificationrequestdata.h \
     covconfnotificationservicehandler.h \
     datavisitor.h \
     covincrementhandlers.h \
-    internalsubscribecovservicehandler.h \
     bacnetcovsubscription.h \
     covsubscriptionstimehandler.h \
+    discoverywrapper.h \
+    invokeidgenerator.h \
+    routingtable.h \
+    \
+    internal/internalconfirmedrequesthandler.h \
+    internal/internalunconfirmedrequesthandler.h \
+    internal/internalwhoisrequesthandler.h \
+    internal/internalwhohasrequesthandler.h \
+    internal/internalwprequesthandler.h \
+    internal/internalsubscribecovrequesthandler.h \
+    internal/internalsubscribecovservicehandler.h \
     internal/internalrprequesthandler.h \
     internal/bacnetobject2.h \
     internal/deviceobject.h \
     internal/bacnetproperty.h \
     internal/multipleasynchhelper.h \
     internal/internalpropertycontainersupport.h \
-    discoverywrapper.h \
-    /external/externalconfirmedservicehandler.h \
+    \
     external/externalservicehandler.h \
-    invokeidgenerator.h \
-    routingtable.h
+    external/externalconfirmedservicehandler.h \
+    \
+    applayer/remoteobjectstodevicemapper.h
+
 OTHER_FILES +=
+
+
 
 
 

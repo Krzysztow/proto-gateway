@@ -6,12 +6,30 @@
 using namespace Bacnet;
 
 WhoHasServiceData::WhoHasServiceData():
-        _rangeLowLimit(Bacnet::InvalidInstanceNumber),
-        _rangeHighLimit(Bacnet::InvalidInstanceNumber),
-        _objidentifier(0),
-        _objName(0)
+    _rangeLowLimit(Bacnet::InvalidInstanceNumber),
+    _rangeHighLimit(Bacnet::InvalidInstanceNumber),
+    _objidentifier(0),
+    _objName(0)
 {
 }
+
+WhoHasServiceData::WhoHasServiceData(QString &objectName, quint32 rangeLowLimit, quint32 rangeHighLimit):
+    _rangeLowLimit(rangeLowLimit),
+    _rangeHighLimit(rangeHighLimit),
+    _objidentifier(0),
+    _objName(new CharacterString(objectName))
+{
+    Q_ASSERT(!_objName->value().isEmpty());
+}
+
+WhoHasServiceData::WhoHasServiceData(quint32 objectIdNum, quint32 rangeLowLimit, quint32 rangeHighLimit):
+    _rangeLowLimit(rangeLowLimit),
+    _rangeHighLimit(rangeHighLimit),
+    _objidentifier(new ObjectIdentifier(objectIdNum)),
+    _objName(0)
+{
+}
+
 
 WhoHasServiceData::~WhoHasServiceData()
 {
@@ -47,9 +65,9 @@ qint32 WhoHasServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
 
     //encode one of the choices
     if (0 != _objidentifier) {
-        ret = BacnetCoder::objectIdentifierToRaw(actualPtr, buffLength, (*_objidentifier), true, 2);
+        ret = _objidentifier->toRaw(actualPtr, buffLength, 2);;
     } else if (0 != _objName) {
-        ret = BacnetCoder::stringToRaw(actualPtr, buffLength, (*_objName), true, 3);
+        ret = _objName->toRaw(actualPtr, buffLength, 3);
     } else
         return -3;
 
@@ -96,14 +114,31 @@ qint32 WhoHasServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     if (ret < 0)
         return -BacnetRejectNS::ReasonInvalidTag;
     if (bParser.isContextTag(2)) {//we have an object ID
-        _objidentifier = new ObjectIdStruct;
-        *(_objidentifier) = bParser.toObjectId(&convOkOrCtxt);
+        if (0 != _objName) {
+            delete _objName;
+            _objName = 0;
+        }
+        ObjectIdStruct objId = bParser.toObjectId(&convOkOrCtxt);
+        if (0 == _objidentifier) {
+            _objidentifier = new ObjectIdentifier(objId);
+        } else
+            _objidentifier->setObjectId(objId);
+
+
         if (!convOkOrCtxt)
             return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;
     } else if (bParser.isContextTag(3)){ //we have an object name
-        _objName = new QString();
-        *_objName = bParser.toString(&convOkOrCtxt);
+        if (0 != _objidentifier) {
+            delete _objidentifier;
+            _objidentifier = 0;
+        }
+        QString objName = bParser.toString(&convOkOrCtxt);
+        if (0 == _objName)
+            _objName = new CharacterString(objName);
+        else
+            _objName->setValue(objName);
+
         if (!convOkOrCtxt)
             return -BacnetRejectNS::ReasonInvalidParameterDataType;
         consumedBytes += ret;

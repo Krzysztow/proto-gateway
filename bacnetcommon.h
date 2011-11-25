@@ -455,9 +455,11 @@ namespace Bacnet
         quint32 instanceNum;
     };
 
-    quint32 objIdToNum(const ObjectIdStruct &objId);
-    quint32 invalidObjId();
-    ObjectIdStruct numToObjId(unsigned int numObjId);
+    typedef quint32 ObjIdNum;
+    ObjIdNum objIdToNum(const ObjectIdStruct &objId);
+    const ObjectIdStruct &invalidObjectId();
+    ObjIdNum invalidObjIdNum();
+    ObjectIdStruct numToObjId(ObjIdNum numObjId);
     uint qHash(ObjectIdStruct objId);
     bool operator==(ObjectIdStruct one, ObjectIdStruct other);
 

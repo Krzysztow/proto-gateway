@@ -334,3 +334,13 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
 
     return asynchId;
 }
+
+BacnetAddress Bacnet::ExternalObjectsHandler::someAddress()
+{
+    Q_ASSERT(_registeredAddresses.isEmpty());
+    if (_registeredAddresses.isEmpty()) {
+        BacnetAddress uninitAddr;
+        return uninitAddr;
+    } else
+        return BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
+}

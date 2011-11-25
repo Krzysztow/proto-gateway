@@ -16,11 +16,10 @@ public:
     DiscoveryWrapper();
 
     enum Action {
-        DeleteAll,
-        DeleteWrapper,
-        DontDelete
+        LeaveMeInQueue,
+        DeleteMe
     };
-    virtual quint32 handleTimeout(BacnetApplicationLayerHandler *appLayer, Action *action) = 0;
+    virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer) = 0;
     virtual void deleteContents() = 0;
 };
 
@@ -28,14 +27,14 @@ class ConfirmedDiscoveryWrapper:
         public DiscoveryWrapper
 {
 public:
-    ConfirmedDiscoveryWrapper(const ObjectIdStruct &destinedObject, const BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend);
+    ConfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend);
 
 public://DiscoveryWrapper interface
-    virtual quint32 handleTimeout(BacnetApplicationLayerHandler *appLayer, Action *action);
+    virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer);
     virtual void deleteContents();
 
 public:
-    ObjectIdStruct _destinedObject;
+    ObjIdNum _destinedObject;
     BacnetAddress _sourceAddress;
     BacnetServicesNS::BacnetConfirmedServiceChoice _service;
     ExternalConfirmedServiceHandler *_serviceToSend;
@@ -45,17 +44,18 @@ class UnconfirmedDiscoveryWrapper:
         public DiscoveryWrapper
 {
 public:
-    UnconfirmedDiscoveryWrapper(const ObjectIdStruct &destinedObject, const BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice);
+    UnconfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice, int retryCount = 3);
 
 public://DiscoveryWrapper interface
-    virtual quint32 handleTimeout(BacnetApplicationLayerHandler *appLayer, Action *action);
+    virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer);
     virtual void deleteContents();
 
 public:
-    ObjectIdStruct _destinedObject;
+    ObjIdNum _destinedObject;
     BacnetAddress _source;
     BacnetServiceData *_data;
     quint8 _serviceChoice;
+    int _retryCount;
 };
 
 

@@ -2,6 +2,7 @@
 
 #include "externalconfirmedservicehandler.h"
 #include "bacnetapplicationlayer.h"
+#include "bacnetservicedata.h"
 
 using namespace Bacnet;
 
@@ -9,35 +10,36 @@ DiscoveryWrapper::DiscoveryWrapper()
 {
 }
 
-ConfirmedDiscoveryWrapper::ConfirmedDiscoveryWrapper(const ObjectIdStruct &destinedObject, const BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend):
+ConfirmedDiscoveryWrapper::ConfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend):
     _destinedObject(destinedObject),
     _sourceAddress(sourceAddress),
-    _service(_service),
+    _service(service),
     _serviceToSend(serviceToSend)
 {
 }
 
-quint32 ConfirmedDiscoveryWrapper::handleTimeout(BacnetApplicationLayerHandler *appLayer, DiscoveryWrapper::Action *action)
+DiscoveryWrapper::Action ConfirmedDiscoveryWrapper::handleTimeout(BacnetApplicationLayerHandler *appLayer)
 {
-    Q_CHECK_PTR(action);
     Q_CHECK_PTR(appLayer);
     if (0 != _serviceToSend) {
         ExternalConfirmedServiceHandler::ActionToExecute todo;
         _serviceToSend->handleTimeout(&todo);
         if (ExternalConfirmedServiceHandler::ResendService == todo) {
             if (0 != appLayer) {
-                appLayer->send(_destinedObject, _sourceAddress, _service, _serviceToSend);
-                if (0 != action) *action = DeleteWrapper;
+                appLayer->discover(_destinedObject);
+                return LeaveMeInQueue;
             } else {
                 qDebug("%s : app layer not provided!", __PRETTY_FUNCTION__);
-                if (0 != action) *action = DeleteAll;
+                delete _serviceToSend;
+                _serviceToSend = 0;
+                return DeleteMe;
                 Q_ASSERT(false);
             }
         } else {
-            if (0 != action) *action = DeleteAll;
+            return DeleteMe;
         }
     } else {
-        if (0 != action) *action = DeleteWrapper;
+        return DeleteMe;
     }
 }
 
@@ -46,21 +48,27 @@ void ConfirmedDiscoveryWrapper::deleteContents()
     delete _serviceToSend;
 }
 
-UnconfirmedDiscoveryWrapper::UnconfirmedDiscoveryWrapper(const ObjectIdStruct &destinedObject, const BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice):
+UnconfirmedDiscoveryWrapper::UnconfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice, int retryCount):
     _destinedObject(destinedObject),
     _source(source),
     _data(data),
-    _serviceChoice(serviceChoice)
+    _serviceChoice(serviceChoice),
+    _retryCount(retryCount)
 {
 }
 
-quint32 UnconfirmedDiscoveryWrapper::handleTimeout(BacnetApplicationLayerHandler *appLayer, Action *action)
+DiscoveryWrapper::Action  UnconfirmedDiscoveryWrapper::handleTimeout(BacnetApplicationLayerHandler *appLayer)
 {
-    Q_CHECK_PTR(action);
     Q_CHECK_PTR(appLayer);
     Q_UNUSED(appLayer);
-    if (0 != action)
-        *action = DeleteAll;
+    --_retryCount;
+    Q_ASSERT(_retryCount >= 0);
+    if (_retryCount > 0) {
+        return LeaveMeInQueue;
+        appLayer->discover(_destinedObject);
+    } else {
+        return DeleteMe;
+    }
 }
 
 void UnconfirmedDiscoveryWrapper::deleteContents()
