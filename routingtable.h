@@ -8,10 +8,11 @@ namespace Bacnet {
 
 class RoutingEntry {
 public:
+    RoutingEntry();
     RoutingEntry(BacnetAddress &address, quint32 objIdNum,int maxApduLengthAccepted, BacnetSegmentation segmentation);
 
 public:
-        BacnetAddress address;
+    BacnetAddress address;
     quint32 objIdNum;
     int maxApduLengthAccepted;
     BacnetSegmentation segmentation;

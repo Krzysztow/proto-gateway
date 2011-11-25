@@ -13,6 +13,11 @@ Bacnet::ObjectIdStruct Bacnet::numToObjId(unsigned int numObjId) {
     return objIdStr;
 }
 
+quint32 Bacnet::invalidObjId() {
+    static ObjectIdStruct invlaidStruct = {BacnetObjectTypeNS::Undefined, InvalidInstanceNumber};
+    return objIdToNum(invlaidStruct);
+}
+
 uint Bacnet::qHash(ObjectIdStruct objId)
 {
     return objIdToNum(objId);

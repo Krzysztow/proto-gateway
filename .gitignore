@@ -4,3 +4,7 @@
 *~
 #ignore moc files
 *moc_*
+#ignore Makefiles
+*Makefile
+#ignore user.pro files
+*.pro.user*
