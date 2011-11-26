@@ -42,7 +42,6 @@ private:
     BacnetApplicationLayerHandler *_appLayer;
 
 public:
-//    bool send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
     bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend);
 
     void sendAck(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetServiceData *data, BacnetConfirmedRequestData *reqData);
@@ -50,7 +49,6 @@ public:
     void sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error);
     void sendAbort(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetAbortNS::AbortReason abortReason, bool fromServer);
 
-//    void sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
     void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
 
     void setAddress(InternalAddress &address);
@@ -93,38 +91,6 @@ private:
     InvokeIdGenerator _generator;
     InternalAddress _myRequestAddress;
     BacnetNetworkLayerHandler *_netHandler;
-
-//    bool deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address);
-//    void discoverDevice(const ObjectIdStruct &deviceId);
-
-    //    struct ConfirmedAwaitingDiscoveryEntry
-    //    {
-    //        //objId is a key
-    //        ExternalConfirmedServiceHandler *handler;
-    //        BacnetServicesNS::BacnetConfirmedServiceChoice choice;
-    //        InternalAddress sourceAddress;
-    //        quint32 timeLeft_ms;
-    //    };
-
-//    class RoutingEntry
-//    {
-//    public:
-//        //ObjectIdStruct deviceId;
-//        BacnetAddress address;
-//        enum {
-//            Static          = 0x01,
-//            Dynamic         = 0x02,
-//            DynamicExpiring = 0x04,
-//            Initialized     = 0x08,
-//            All             = Static | Dynamic | DynamicExpiring | Initialized
-//        };
-//        quint8 type;
-//        quint16 timeLeft_ms;
-
-//        bool isInitialized() {return (type & Initialized);}
-//        bool hasExpired() { return ((type & DynamicExpiring) == 0 ? false : (timeLeft_ms == 0));}
-//    };
-//    QHash<ObjectIdStruct, RoutingEntry> _routingTable;
 };
 
 }

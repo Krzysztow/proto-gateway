@@ -53,3 +53,7 @@ quint32 CovConfNotificationServiceHandler::handleTimeout(ActionToExecute *action
     *action = ExternalConfirmedServiceHandler::ResendService;
     return 1000;
 }
+
+void CovConfNotificationServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+{
+}

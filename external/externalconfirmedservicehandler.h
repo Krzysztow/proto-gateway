@@ -11,6 +11,7 @@ namespace Bacnet {
     public:
         enum ActionToExecute {
             DeleteServiceHandler,
+            DoNothing,
             ResendService
         };
 
@@ -20,6 +21,7 @@ namespace Bacnet {
         virtual void handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action) = 0;
         virtual void handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action) = 0;
         virtual void handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action) = 0;
+        virtual void handleReject(quint8 *abortPtr, quint16 length, ActionToExecute *action) = 0;
         virtual quint32 handleTimeout(ActionToExecute *action) = 0;
     };
 

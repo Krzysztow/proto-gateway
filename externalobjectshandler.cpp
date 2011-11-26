@@ -335,7 +335,7 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
     return asynchId;
 }
 
-BacnetAddress Bacnet::ExternalObjectsHandler::someAddress()
+BacnetAddress Bacnet::ExternalObjectsHandler::oneOfAddresses()
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {

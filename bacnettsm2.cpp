@@ -34,20 +34,6 @@ InternalAddress &BacnetTSM2::myAddress()
     return _myRequestAddress;
 }
 
-//bool BacnetTSM2::deviceAddress(const ObjectIdStruct &deviceId, BacnetAddress *address)
-//{
-//    Q_CHECK_PTR(address);
-//    if (!_routingTable.contains(deviceId))
-//        return false;
-
-//    RoutingEntry &routEntry  = _routingTable[deviceId];
-//    if (routEntry.isInitialized() && !routEntry.hasExpired()) {
-//        *address = routEntry.address;
-//        return true;
-//    }
-//    return false;
-//}
-
 bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId)
 {
     //get buffer
@@ -95,57 +81,6 @@ bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAdd
     return send_hlpr(destination, sourceAddress, service, serviceToSend, invokeId);
 }
 
-//bool BacnetTSM2::send(const ObjectIdStruct &destinedObject, InternalAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
-//{
-//    //find bacnetadderss to send.
-//    BacnetAddress destAddr;
-//    if (!deviceAddress(destinedObject, &destAddr)) {
-//        ConfirmedAwaitingDiscoveryEntry discEntry = {serviceToSend, service, sourceAddress, timeout_ms};
-//        if (!_awaitingDiscoveryRequests.contains(destinedObject))
-//            _awaitingDiscoveryRequests.insert(destinedObject, QList<ConfirmedAwaitingDiscoveryEntry>()<<discEntry);
-//        else
-//            _awaitingDiscoveryRequests[destinedObject].append(discEntry);
-//        discoverDevice(destinedObject);
-//        return true;
-//    }
-//    BacnetAddress srcAddr = BacnetInternalAddressHelper::toBacnetAddress(sourceAddress);
-
-//    return send(destAddr, srcAddr, service, serviceToSend, timeout_ms);
-//}
-
-
-//void BacnetTSM2::generateResponse()
-//{
-//    BacnetConfirmedServiceHandler::ActionToExecute action;
-
-//    BacnetConfirmedServiceHandler *sH = _pendingConfirmedRequests[0].handler;
-
-//    for (int i = 0; i < 10; ++i) {
-//        quint32 t = sH->handleTimeout(&action);
-//        if (BacnetConfirmedServiceHandler::ResendService == action) {
-//            qDebug("Data resent, next timeout in %d secs.\n", t);
-
-//            if (i == 1) {
-//                //quint8 dataRcvd_readAck[] = {0x0c, 0x00, 0x00, 0x00, 0x05, 0x19, 0x55, 0x3e, 0x44, 0x42, 0x90, 0x99, 0x9a, 0x3f};
-//                quint8 dataRcvd[] = {};
-//                const quint16 dataRcvdLength = sizeof(dataRcvd);
-//                HelperCoder::printArray(dataRcvd, dataRcvdLength, "Simulated response rcv'd: ");
-//                sH->handleAck(dataRcvd, dataRcvdLength, &action);
-//                if (BacnetConfirmedServiceHandler::DeleteServiceHandler == action) {
-//                    delete sH;
-//                    sH = 0;
-//                }
-//            }
-
-//        } else {
-//            qDebug("Service problem, deleted.");
-//            delete sH;
-//            sH = 0;
-//        }
-//    }
-
-//}
-
 void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetRejectNS::RejectReason reason, quint8 invokeId)
 {
     BacnetRejectData rejectData(invokeId, reason);
@@ -171,13 +106,26 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
 
 ExternalConfirmedServiceHandler *BacnetTSM2::takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId)
 {
-    return 0;
+    ExternalConfirmedServiceHandler *handler(0);
+    QHash<int, ConfirmedRequestEntry>::Iterator it = _confiremedEntriesList.find(invokeId);
+    if (it == _confiremedEntriesList.end()) {
+        qDebug("%s : Response for 0x%x requested, and TSM has none.", __PRETTY_FUNCTION__, invokeId);
+    } else {
+        ConfirmedRequestEntry &entry = it.value();
+        if ( (remoteSource == entry.dst) && (localDestination == entry.src) ) {//this is response to our request, indeed.
+            handler = entry.handler;
+            _confiremedEntriesList.erase(it);
+        }
+    }
+
+    return handler;
 }
 
 void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *data, quint16 dataLength)
 {
     //handle accordingly to the request type.
-    switch (BacnetPci::pduType(data))
+    BacnetPci::BacnetPduType pduType = BacnetPci::pduType(data);
+    switch (pduType)
     {
     case (BacnetPci::TypeConfirmedRequest):
     {
@@ -240,9 +188,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, saData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
-        //        else
-        //            sendAbort(remoteSource, localDestination, saData.invokeId(), BacnetAbortNS::ReasonInvalidApduInThisState, true);
+            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
         break;
     }
     case (BacnetPci::TypeComplexAck):
@@ -270,7 +216,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, cplxData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
         else
             sendAbort(remoteSource, localDestination, cplxData.invokeId(), BacnetAbortNS::ReasonInvalidApduInThisState, true);
         return;
@@ -314,7 +260,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, errData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processError(remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
     }
         break;
     case (BacnetPci::TypeReject):
@@ -332,7 +278,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, rjctData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processReject(remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
     }
         break;
     case (BacnetPci::TypeAbort):
@@ -348,7 +294,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, abrtData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processAbort(remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
     }
         break;
     default: {
@@ -458,19 +404,6 @@ void BacnetTSM2::sendError(BacnetAddress &remoteDestination, BacnetAddress &loca
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending error message with:");
 }
 
-//void BacnetTSM2::sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
-//{
-//    //find bacnetadderss to send.
-//    BacnetAddress destAddr;
-//    if (!deviceAddress(destinedObject, &destAddr)) {
-//        discoverDevice(destinedObject);
-//        qDebug("%s : unconfirmed request not sent, since no %d in entry table is preseny. Discovert started.", __PRETTY_FUNCTION__, objIdToNum(destinedObject));
-//        return;
-//    }
-
-//    return sendUnconfirmed(destAddr, source, data, serviceChoice);
-//}
-
 void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)
 {
     BacnetUnconfirmedRequestData header(serviceChoice);
@@ -525,7 +458,7 @@ void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
                 it->timeLeft_ms = _requestTimeout_ms;
                 send_hlpr(it->dst, it->src, it->service, it->handler, it.key());
             } else {
-                _appLayer->processTimeout(it->handler);
+                _appLayer->processTimeout(it->dst, it->src, it->handler);
                 it = _confiremedEntriesList.erase(it);
                 continue;//called to avoid ++it
             }

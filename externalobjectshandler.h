@@ -2,6 +2,7 @@
 #define EXTERNALOBJECTSHANDLER_H
 
 #include <QtCore>
+#include <QObject>
 
 #include "propertyowner.h"
 #include "property.h"
@@ -19,8 +20,10 @@ namespace Bacnet {
     class BacnetApplicationLayerHandler;
 
     class ExternalObjectsHandler:
+            public QObject,
             public PropertyOwner
     {
+        Q_OBJECT;
     public:
         ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer);
 
@@ -39,7 +42,7 @@ namespace Bacnet {
         bool isRegisteredAddress(InternalAddress &address);
         void addRegisteredAddress(InternalAddress &address);
         void removeRegisteredAddress(InternalAddress &address);
-        BacnetAddress someAddress();
+        BacnetAddress oneOfAddresses();
 
     public://overridden from PropertyOwner
         int getPropertyRequested(PropertySubject *toBeGotten);

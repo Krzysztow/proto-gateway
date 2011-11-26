@@ -71,3 +71,8 @@ void BacnetWritePropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 le
     _responseHandler->handleAbort(this, 0);
     *action = DeleteServiceHandler;
 }
+
+void BacnetWritePropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+{
+
+}

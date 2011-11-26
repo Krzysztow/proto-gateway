@@ -100,7 +100,8 @@ SOURCES += main.cpp \
     applayer/remoteobjectstodevicemapper.cpp \
     applayer/iamservicedata.cpp \
     applayer/covnotificationrequestdata.cpp \
-    internal/internaliamservicehandler.cpp
+    internal/internaliamservicehandler.cpp \
+    externalconfirmedservicewrapper.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -197,9 +198,12 @@ HEADERS += bacnetvirtuallinklayer.h \
     applayer/iamservicedata.h \
     applayer/covnotificationrequestdata.h \
     applayer/bacnetservicedata.h \
-    internal/internaliamservicehandler.h
+    internal/internaliamservicehandler.h \
+    externalconfirmedservicewrapper.h
 
 OTHER_FILES +=
+
+
 
 
 

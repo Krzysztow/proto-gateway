@@ -9,6 +9,7 @@
 #include "routingtable.h"
 #include "remoteobjectstodevicemapper.h"
 #include "bacnettsm2.h"
+#include "externalconfirmedservicewrapper.h"
 
 class BacnetAddress;
 class BacnetNetworkLayerHandler;
@@ -47,11 +48,8 @@ public:
 
     void processConfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetConfirmedRequestData *crData);
     void processUnconfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetUnconfirmedRequestData &ucrData);
-    void processAck(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
-    void processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
-    void processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
-    void processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
-    void processTimeout(ExternalConfirmedServiceHandler *serviceAct);
+    void processResponse(BacnetPci::BacnetPduType responseType, BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processTimeout(BacnetAddress &remoteDestination, BacnetAddress &localSource, ExternalConfirmedServiceHandler *serviceAct);
 
     //! tries to send the data. When there is no translation entry obj id -> address, returns false. When discovery is to be used, when such case happens, use \sa sendUnconfirmedWithDiscovery()
     bool sendUnconfirmed(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
@@ -83,6 +81,8 @@ public:
     void registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName);
     void registerDevice(BacnetAddress &devAddress, ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId);
 
+private:
+    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper> _awaitingConfirmedServices;
 
 protected:
     void timerEvent(QTimerEvent *);

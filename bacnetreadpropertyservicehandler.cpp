@@ -77,3 +77,7 @@ void ReadPropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, A
     _responseHandler->handleAbort(this, 0);
     *action = DeleteServiceHandler;
 }
+
+void ReadPropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+{
+}
