@@ -123,7 +123,7 @@ private:
     };
 
     quint8 _macAddress[MaxMacLength];
-    qint16 _networkNumber;
+    qint32 _networkNumber;
     qint8 _macAddrLength;
 };
 

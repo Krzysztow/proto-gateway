@@ -19,7 +19,7 @@ namespace Bacnet {
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);
 
     public:
-        ObjectIdentifier _objId;
+        ObjectIdentifier _devObjId;
         quint32 _maxApduLength;
         BacnetSegmentation  _segmentationSupported;
         quint32 _vendorId;

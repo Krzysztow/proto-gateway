@@ -79,6 +79,7 @@ void BacnetApplicationLayerHandler::processUnconfirmedRequest(BacnetAddress &rem
     BacnetDeviceObject *device = _internalHandler->virtualDevices().value(destination);
 
     //create appropriate handler. \note It takes ownership over ucrData!
+    qDebug("--- Address length is %d", remoteSource.macAddrLength());
     InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(remoteSource, localDestination, ucrData, device, this);
     Q_CHECK_PTR(handler);
     if (0 == handler) {
@@ -202,7 +203,7 @@ void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, Bac
 {
     //is it really intended for us?
     Bacnet::BacnetDeviceObject *device(0);
-    if (destAddr.isGlobalBroadcast() || destAddr.isGlobalBroadcast()){
+    if (destAddr.isGlobalBroadcast() || destAddr.isRemoteBroadcast()){
         device = 0;
     } else {
         InternalAddress destination = BacnetInternalAddressHelper::internalAddress(destAddr);
@@ -253,7 +254,10 @@ void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, Ob
 {
     ObjIdNum devNum = devId.objectIdNum();
     ObjIdNum objNum = objId.objectIdNum();
-    qDebug("%s : Gotten response from device %d, ovject %d of name %s", __PRETTY_FUNCTION__, devNum, objNum, qPrintable(objName));
+    ObjectIdStruct check = numToObjId(devNum);
+    Q_ASSERT(check.instanceNum == devId.instanceNumber());
+    Q_ASSERT(check.objectType == devId.type());
+    qDebug("%s : Gotten response from device 0x%x, ovject 0x%x of name %s", __PRETTY_FUNCTION__, devNum, objNum, qPrintable(objName));
 
     bool isResponseForUs(false);
 
@@ -286,7 +290,7 @@ void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, Ob
 void BacnetApplicationLayerHandler::registerDevice(BacnetAddress &devAddress, Bacnet::ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId)
 {
     ObjIdNum devNum = devId.objectIdNum();
-    qDebug("%s : Gotten response from device %d, and vendor id %d", __PRETTY_FUNCTION__, devNum, vendorId);
+    qDebug("%s : Gotten response from device 0x%x, and vendor id 0x%x", __PRETTY_FUNCTION__, devNum, vendorId);
 
     bool isResponseForUs(false);
 
@@ -373,6 +377,7 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "bacnetnetworklayer.h"
 #include "cdm.h"
 #include "bacnetproperty.h"
+#include "bacnetbipaddress.h"
 
 int main(int argc, char *argv[])
 {
@@ -394,6 +399,12 @@ int main(int argc, char *argv[])
     test.setValue((double)72.3);
 
     BacnetAddress srcAddr;
+    QHostAddress sa("192.168.1.70");
+    BacnetBipAddressHelper::setMacAddress(sa, 12, &srcAddr);
+
+    InternalAddress intAddr = 123;
+    appHandler->externalHandler()->addRegisteredAddress(intAddr);
+
     quint32 destAddrInt(0x00000001);
     BacnetAddress destAddr = BacnetInternalAddressHelper::toBacnetAddress(destAddrInt);
 
@@ -503,8 +514,8 @@ int main(int argc, char *argv[])
     //    };
     //    appHandler->indication(whoHasService, sizeof(whoHasService), srcAddr, destAddr);
 
-    //        BacnetAddress broadAddr;
-    //        broadAddr.setGlobalBroadcast();
+//            BacnetAddress broadAddr;
+//            broadAddr.setGlobalBroadcast();
     ////        bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
 
     //        //WHO HAS - object id is known
@@ -516,7 +527,43 @@ int main(int argc, char *argv[])
     //        };
     //        appHandler->indication(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
 
+//    //I-HAVE
+//    quint8 iHaveData[] = {
+//        0x10,
+//        0x01,
+//        0xc4,
+//        0x02, 0x00, 0x00, 0x08,
+//        0xc4,
+//        0x00, 0x00, 0x00, 0x03,
+//        0x75,
+//        0x07,
+//        0x00,
+//        0x4f, 0x41, 0x54, 0x65, 0x6d, 0x70
+//    };
+//    const quint16 iHaveDataSize = sizeof(iHaveData);
+//    BacnetAddress broadAddr;
+//    broadAddr.setGlobalBroadcast();
 
+//    appHandler->indication(iHaveData, iHaveDataSize, srcAddr, broadAddr);
+
+//    //I-AM
+//    quint8 iAmData[] = {
+//        0x10,
+//        0x00,
+//        0xc4,
+//        0x02, 0x00, 0x00, 0x01,
+//        0x22,
+//        0x01, 0xe0,
+//        0x91,
+//        0x01,
+//        0x21,
+//        0x63
+//    };
+//    const quint16 iAmDataSize = sizeof(iAmData);
+//    BacnetAddress broadAddr;
+//    broadAddr.setGlobalBroadcast();
+
+//    appHandler->indication(iAmData, iAmDataSize, srcAddr, broadAddr);
 
     return a.exec();
 }

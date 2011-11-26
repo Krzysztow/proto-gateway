@@ -62,7 +62,7 @@ bool InternalWhoIsRequestHandler::execute()
         objIdNum = (*devIt)->objectIdNum();
         if ( (lowLimit <= objIdNum) &&
              (objIdNum <= highLimit) ) {
-            iAmData._objId = (*devIt)->objectIdNum();
+            iAmData._devObjId = (*devIt)->objectIdNum();
             _appLayer->sendUnconfirmed(_requester, (*devIt)->address(), iAmData, BacnetServicesNS::I_Am);
         }
     }

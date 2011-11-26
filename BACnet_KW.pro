@@ -64,16 +64,8 @@ SOURCES += main.cpp \
     bacnetdata.cpp \
     bacnetserviceack.cpp \
     propertyfactory.cpp \ # check.cpp \
-    readpropertyservicedata.cpp \
     bacnetinternaladdresshelper.cpp \
-    whoisservicedata.cpp \
-    iamservicedata.cpp \
-    whohasservicedata.cpp \
-    ihaveservicedata.cpp \
-    subscribecovservicedata.cpp \
-    writepropertyservicedata.cpp \
     covsupport.cpp \
-    covnotificationrequestdata.cpp \
     covconfnotificationservicehandler.cpp \
     datavisitor.cpp \
     covincrementhandlers.cpp \
@@ -95,10 +87,20 @@ SOURCES += main.cpp \
     internal/bacnetproperty.cpp \
     internal/internalconfirmedrequesthandler.cpp \
     internal/multipleasynchhelper.cpp \
+    internal/internalihaveservicehandler.cpp \
     \
     external/externalservicehandler.cpp \
     \
-    applayer/remoteobjectstodevicemapper.cpp
+    applayer/writepropertyservicedata.cpp \
+    applayer/whoisservicedata.cpp \
+    applayer/whohasservicedata.cpp \
+    applayer/subscribecovservicedata.cpp \
+    applayer/readpropertyservicedata.cpp \
+    applayer/ihaveservicedata.cpp \
+    applayer/remoteobjectstodevicemapper.cpp \
+    applayer/iamservicedata.cpp \
+    applayer/covnotificationrequestdata.cpp \
+    internal/internaliamservicehandler.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -156,17 +158,8 @@ HEADERS += bacnetvirtuallinklayer.h \
     propertyowner.h \
     propertyfactory.h \ # check.h \
     cos.h \
-    readpropertyservicedata.h \
     bacnetinternaladdresshelper.h \
-    whoisservicedata.h \
-    bacnetservicedata.h \
-    iamservicedata.h \
-    whohasservicedata.h \
-    ihaveservicedata.h \
-    subscribecovservicedata.h \
-    writepropertyservicedata.h \
     covsupport.h \
-    covnotificationrequestdata.h \
     covconfnotificationservicehandler.h \
     datavisitor.h \
     covincrementhandlers.h \
@@ -189,13 +182,28 @@ HEADERS += bacnetvirtuallinklayer.h \
     internal/bacnetproperty.h \
     internal/multipleasynchhelper.h \
     internal/internalpropertycontainersupport.h \
+    internal/internalihaveservicehandler.h\
     \
     external/externalservicehandler.h \
     external/externalconfirmedservicehandler.h \
     \
-    applayer/remoteobjectstodevicemapper.h
+    applayer/writepropertyservicedata.h \
+    applayer/whoisservicedata.h \
+    applayer/whohasservicedata.h \
+    applayer/subscribecovservicedata.h \
+    applayer/readpropertyservicedata.h \
+    applayer/ihaveservicedata.h \
+    applayer/remoteobjectstodevicemapper.h \
+    applayer/iamservicedata.h \
+    applayer/covnotificationrequestdata.h \
+    applayer/bacnetservicedata.h \
+    internal/internaliamservicehandler.h
 
 OTHER_FILES +=
+
+
+
+
 
 
 

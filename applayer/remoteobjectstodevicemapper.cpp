@@ -27,6 +27,7 @@ bool RemoteObjectsToDeviceMapper::addOrUpdateRoutingEntry(quint32 objectIdNum, q
     QHash<quint32, quint32>::Iterator it = _mapperTable.find(objectIdNum);
     if (_mapperTable.end() != it) { //we found it, update
         it.value() = deviceObjectIdNum;
+        return true;
     } else { //was not found, we need to add
         int count = _mapperTable.count();
         if (_tableMaximumSize >= count) {
@@ -42,4 +43,6 @@ bool RemoteObjectsToDeviceMapper::addOrUpdateRoutingEntry(quint32 objectIdNum, q
         if (count > TableSizeWarningLimit)
             qDebug("%s : mapper table size is %d", __PRETTY_FUNCTION__, count);
     }
+
+    return false;
 }

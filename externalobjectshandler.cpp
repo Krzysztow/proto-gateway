@@ -337,7 +337,7 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
 
 BacnetAddress Bacnet::ExternalObjectsHandler::someAddress()
 {
-    Q_ASSERT(_registeredAddresses.isEmpty());
+    Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {
         BacnetAddress uninitAddr;
         return uninitAddr;

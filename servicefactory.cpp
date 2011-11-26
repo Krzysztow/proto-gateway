@@ -6,6 +6,7 @@
 #include "internalwhohasrequesthandler.h"
 #include "internalsubscribecovrequesthandler.h"
 #include "internalihaveservicehandler.h"
+#include "internaliamservicehandler.h"
 #include "bacnetpci.h"
 
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
@@ -41,6 +42,7 @@ Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHand
     Q_CHECK_PTR(appLayer);
     Q_UNUSED(destination);
     Q_UNUSED(pciData);
+    qDebug("=== address lenght is %d", requester.macAddrLength());
     switch (pciData.service())
     {
     case (BacnetServicesNS::WhoIs): {
@@ -51,6 +53,9 @@ Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHand
     }
     case (BacnetServicesNS::I_Have): {
         return new Bacnet::InternalIHaveServiceHandler(requester, appLayer);
+    }
+    case (BacnetServicesNS::I_Am): {
+        return new Bacnet::InternalIAmServiceHandler(appLayer, requester);
     }
     default:
         Q_ASSERT(false);

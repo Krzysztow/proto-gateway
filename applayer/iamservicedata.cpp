@@ -7,7 +7,7 @@
 using namespace Bacnet;
 
 IAmServiceData::IAmServiceData(ObjectIdentifier &objId, quint32 maxAPDULength, BacnetSegmentation segmentation, quint32 vendorId):
-        _objId(objId),
+        _devObjId(objId),
         _maxApduLength(maxAPDULength),
         _segmentationSupported(segmentation),
         _vendorId(vendorId)
@@ -26,7 +26,7 @@ qint32 IAmServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
     qint32 ret(0);
     quint8 *actualPtr(startPtr);
 
-    ret = _objId.toRaw(actualPtr, buffLength);
+    ret = _devObjId.toRaw(actualPtr, buffLength);
     if (ret < 0)
         return ret;
     actualPtr += ret;
@@ -62,7 +62,7 @@ qint32 IAmServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     bool convOkOrCtxt;
 
     //parse object identifier
-    ret = _objId.fromRaw(bParser);
+    ret = _devObjId.fromRaw(bParser);
     if (ret < 0)
         return -BacnetRejectNS::ReasonInvalidParameterDataType;
     consumedBytes += ret;

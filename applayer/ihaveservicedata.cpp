@@ -63,12 +63,13 @@ qint32 IHaveServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
 
     //parse object identifier
     ret = _objId.fromRaw(bParser);
+    if (ret < 0)
         return -BacnetRejectNS::ReasonMissingRequiredParameter;
     consumedBytes += ret;
 
     //parse object name
     ret = bParser.parseNext();
-    if (ret < 0 || !bParser.isContextTag(AppTags::CharacterString))
+    if (ret < 0 || !bParser.isApplicationTag(AppTags::CharacterString))
         return -BacnetRejectNS::ReasonMissingRequiredParameter;
     _objName = bParser.toString(&convOk);
     if (!convOk)
