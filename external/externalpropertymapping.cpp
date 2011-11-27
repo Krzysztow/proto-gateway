@@ -2,7 +2,7 @@
 
 using namespace Bacnet;
 
-ExternalPropertyMapping::ExternalPropertyMapping(Property *mappedProperty, ExternalPropertyMapping::ReadAccessType type,
+ExternalPropertyMapping::ExternalPropertyMapping(PropertySubject *mappedProperty, ExternalPropertyMapping::ReadAccessType type,
                                                  BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, ObjIdNum objectId):
     mappedProperty(mappedProperty),
     objectId(objectId),

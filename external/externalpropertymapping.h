@@ -3,7 +3,7 @@
 
 #include "bacnetcommon.h"
 
-class Property;
+class PropertySubject;
 
 namespace Bacnet {
 
@@ -19,7 +19,7 @@ public:
     };
 
 public:
-    ExternalPropertyMapping(Property *mappedProperty = 0, ExternalPropertyMapping::ReadAccessType readAccessType = ReadRP,
+    ExternalPropertyMapping(PropertySubject *mappedProperty = 0, ExternalPropertyMapping::ReadAccessType readAccessType = ReadRP,
                             BacnetPropertyNS::Identifier propertyId = BacnetPropertyNS::UndefinedProperty, quint32 propertyArrayIdx = ArrayIndexNotPresent,
                             ObjIdNum objectId = invalidObjIdNum());
 
@@ -27,13 +27,15 @@ public:
     int jobInterval_ms();
 
 public:
-    Property *mappedProperty;
+    PropertySubject *mappedProperty;
     ObjIdNum objectId;
     BacnetPropertyNS::Identifier propertyId;
     quint32 propertyArrayIdx;
     ExternalPropertyMapping::ReadAccessType readAccessType;
     int _jobIntervalMs;
 };
+
+
 
 } // namespace Bacnet
 

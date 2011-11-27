@@ -102,7 +102,10 @@ SOURCES += main.cpp \
     applayer/covnotificationrequestdata.cpp \
     internal/internaliamservicehandler.cpp \
     externalconfirmedservicewrapper.cpp \
-    external/externalpropertymapping.cpp
+    external/externalpropertymapping.cpp \
+    external/externalobjectreadstrategy.cpp \
+    external/externalobjectwritestrategy.cpp \
+    external/subscribecovservicehandler.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -201,9 +204,18 @@ HEADERS += bacnetvirtuallinklayer.h \
     applayer/bacnetservicedata.h \
     internal/internaliamservicehandler.h \
     externalconfirmedservicewrapper.h \
-    external/externalpropertymapping.h
+    external/externalpropertymapping.h \
+    external/externalobjectreadstrategy.h \
+    external/externalobjectwritestrategy.h \
+    external/subscribecovservicehandler.h
 
 OTHER_FILES +=
+
+
+
+
+
+
 
 
 

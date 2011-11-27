@@ -5,11 +5,11 @@
 
 using namespace Bacnet;
 
-SubscribeCOVServiceData::SubscribeCOVServiceData():
-    _subscriberProcId(0),
-    _monitoredObjectId(),
-    _issueConfNotification(false),
-    _lifetime(0),
+SubscribeCOVServiceData::SubscribeCOVServiceData(quint32 subscriberProcessId, ObjIdNum monitoredObjectId, bool issueConfirmedNotifications, quint32 lifetime):
+    _subscriberProcId(subscriberProcessId),
+    _monitoredObjectId(monitoredObjectId),
+    _issueConfNotification(issueConfirmedNotifications),
+    _lifetime(lifetime),
     _propReference(0),
     _covIncrement(0),
     _flags(0)//nothing set yet
@@ -24,7 +24,13 @@ SubscribeCOVServiceData::~SubscribeCOVServiceData()
 
 bool SubscribeCOVServiceData::isCancellation()
 {
-    return ( isLifetimePresent() && isConfirmedNotificationPresent() );
+    return ( !isLifetimePresent() && !isConfirmedNotificationPresent() );
+}
+
+void SubscribeCOVServiceData::setIsCancellation()
+{
+    clearLifetimePresent();
+    clearConfirmedNotificationPresent();
 }
 
 qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
@@ -188,3 +194,4 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
 
     return consumedBytes;
 }
+

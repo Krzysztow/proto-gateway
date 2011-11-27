@@ -11,6 +11,7 @@
 /**
    This data is meant to be used both for SubscribeCOV service and SubscribeCOVProperty service. In the first case
    the pointer to BacnetPropertyReference and Increment is simply 0.
+   NOTE: According to standard, when IssueconfirmedNotifications and Lifetime are absent, then this is a cancellation request.
   */
 
 namespace Bacnet {
@@ -19,7 +20,7 @@ namespace Bacnet {
             public BacnetServiceData
     {
     public:
-        SubscribeCOVServiceData();
+        SubscribeCOVServiceData(quint32 subscriberProcessId = 0, ObjIdNum monitoredObjectId = invalidObjIdNum(), bool issueConfirmedNotifications = false, quint32 lifetime = 0);
         ~SubscribeCOVServiceData();
 
     public://implementations of BacnetServiceData interface.
@@ -35,6 +36,7 @@ namespace Bacnet {
         inline void setLifetimePresent() {_flags |= LifetimePresent;}
         inline void clearLifetimePresent() {_flags &= (~LifetimePresent);}
 
+        void setIsCancellation();
         bool isCancellation();
 
         inline bool hasPropertyReference() {return 0 != _propReference;}

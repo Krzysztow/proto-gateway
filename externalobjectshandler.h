@@ -18,22 +18,22 @@ namespace Bacnet {
     class ExternalConfirmedServiceHandler;
     class Error;
     class BacnetApplicationLayerHandler;
+    class CovReadStrategy;
 
     class ExternalObjectsHandler:
-//            public QObject,
+            public QObject,
             public PropertyOwner
     {
-//        Q_OBJECT
+        Q_OBJECT
     public:
         ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer);
         ~ExternalObjectsHandler();
 
-        void addMappedProperty(Property *property, ObjIdNum objectId,
-                               BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
-                               quint32 deviceId = BacnetObjectTypeNS::Undefined,
+        void addMappedProperty(PropertySubject *property, ObjIdNum objectId,
+                               BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,                               
                                ExternalPropertyMapping::ReadAccessType type = ExternalPropertyMapping::ReadRP);
 
-        ExternalPropertyMapping &mappingEntry(::Property *property, bool *found = 0);
+        ExternalPropertyMapping *mappingEntry(::Property *property);
 
         void handleResponse(ExternalConfirmedServiceHandler *act, BacnetReadPropertyAck &rp);
         void handleResponse(ExternalConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
@@ -59,19 +59,17 @@ namespace Bacnet {
          */
         virtual void propertyValueChanged(Property *property);
 
+    public:
+        int readProperty(ExternalPropertyMapping *readElement, bool askStrategy = true);
+        bool makeCovSubscription(ExternalPropertyMapping *readElement, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
+
     private:
-        int issueReadPropertyRequest(ExternalPropertyMapping &readElement, PropertySubject *property);
-
+        QHash<Property*, ExternalPropertyMapping*> _mappingTable;
 
     private:
-        QList<ExternalPropertyMapping> _routingTable;
+        QHash<int, ExternalPropertyMapping*> _subscribedCovs;
 
-        enum RequestType {
-            RequestWrite,
-            RequestRead,
-            RequestCOV
-        };
-
+    private:
         BacnetApplicationLayerHandler *_appLayer;
         QList<InternalAddress> _registeredAddresses;
     };
