@@ -2,13 +2,13 @@
 
 using namespace Bacnet;
 
-ExternalPropertyMapping::ExternalPropertyMapping(PropertySubject *mappedProperty, ExternalPropertyMapping::ReadAccessType type,
+ExternalPropertyMapping::ExternalPropertyMapping(PropertySubject *mappedProperty, ExternalObjectReadStrategy *readAccessStrategy,
                                                  BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, ObjIdNum objectId):
     mappedProperty(mappedProperty),
     objectId(objectId),
     propertyId(propertyId),
     propertyArrayIdx(propertyArrayIdx),
-    readAccessType(type)
+    readAccessStrategy(readAccessStrategy)
 {
 }
 

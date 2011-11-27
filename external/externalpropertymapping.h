@@ -7,6 +7,8 @@ class PropertySubject;
 
 namespace Bacnet {
 
+class ExternalObjectReadStrategy;
+
 class ExternalPropertyMapping
 {
 public:
@@ -19,7 +21,7 @@ public:
     };
 
 public:
-    ExternalPropertyMapping(PropertySubject *mappedProperty = 0, ExternalPropertyMapping::ReadAccessType readAccessType = ReadRP,
+    ExternalPropertyMapping(PropertySubject *mappedProperty, ExternalObjectReadStrategy *readAccessStrategy,
                             BacnetPropertyNS::Identifier propertyId = BacnetPropertyNS::UndefinedProperty, quint32 propertyArrayIdx = ArrayIndexNotPresent,
                             ObjIdNum objectId = invalidObjIdNum());
 
@@ -31,7 +33,7 @@ public:
     ObjIdNum objectId;
     BacnetPropertyNS::Identifier propertyId;
     quint32 propertyArrayIdx;
-    ExternalPropertyMapping::ReadAccessType readAccessType;
+    ExternalObjectReadStrategy *readAccessStrategy;
     int _jobIntervalMs;
 };
 

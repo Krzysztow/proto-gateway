@@ -14,11 +14,13 @@
 #include "externalpropertymapping.h"
 #include "subscribecovservicedata.h"
 #include "subscribecovservicehandler.h"
+#include "externalobjectreadstrategy.h"
 
 using namespace Bacnet;
 
 ExternalObjectsHandler::ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer):
-    _appLayer(appLayer)
+    _appLayer(appLayer),
+    _lastProcIdValueUsed(0)
 {
 }
 
@@ -29,7 +31,7 @@ ExternalObjectsHandler::~ExternalObjectsHandler()
 
 void ExternalObjectsHandler::addMappedProperty(PropertySubject *property, quint32 objectId,
                                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
-                                               ExternalPropertyMapping::ReadAccessType type)
+                                               ExternalObjectReadStrategy *readStrategy)
 {
     Q_CHECK_PTR(property);
     if (0 == property) {
@@ -44,7 +46,7 @@ void ExternalObjectsHandler::addMappedProperty(PropertySubject *property, quint3
     }
 
     property->setOwner(this);
-    _mappingTable.insert(property, new ExternalPropertyMapping(property, type, propertyId, propertyArrayIdx, objectId));
+    _mappingTable.insert(property, new ExternalPropertyMapping(property, readStrategy, propertyId, propertyArrayIdx, objectId));
 }
 
 ExternalPropertyMapping *ExternalObjectsHandler::mappingEntry(::Property *property)
@@ -92,7 +94,13 @@ int ExternalObjectsHandler::readProperty(ExternalPropertyMapping *readElement, b
         return Property::UnknownError;
     }
 
-#warning "We still don't care about reading strategy!"
+    Q_CHECK_PTR(readElement);
+    if (askStrategy) {
+        Q_CHECK_PTR(readElement->readAccessStrategy);
+        if (readElement->readAccessStrategy && readElement->readAccessStrategy->isValueReady())
+            return Property::ResultOk;
+    }
+
     //get new asynchronous id from data model
     int asynchId = DataModel::instance()->generateAsynchId();
     Q_ASSERT(asynchId >= 0);
@@ -315,8 +323,11 @@ bool ExternalObjectsHandler::makeCovSubscription(ExternalPropertyMapping *readEl
         return false;
     Q_ASSERT(readElement->isValid());
 
-#warning "Id not generated!"
-    quint8 generateProcId(0);
+    quint8 generateProcId = insertToSubscribeCovs(isConfirmedCovSubscription, readElement, covStreategy);
+    if (isConfirmedCovSubscription && (0 == generateProcId)) {
+        qDebug("%s : Couldn't generate Cov Process Id key.", __PRETTY_FUNCTION__);
+        return false;
+    }
 
     SubscribeCOVServiceData *serviceData =
             new SubscribeCOVServiceData(generateProcId, readElement->objectId, isConfirmedCovSubscription, lifetime_s);
@@ -332,4 +343,26 @@ bool ExternalObjectsHandler::makeCovSubscription(ExternalPropertyMapping *readEl
     _appLayer->send(objectId.objIdStruct(), fromAddr, BacnetServicesNS::SubscribeCOVProperty, serviceHandler, 1000);
 
     return true;
+}
+
+quint32 ExternalObjectsHandler::insertToSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy)
+{
+    if (confirmed) {
+        _subscribedCovs.insertMulti(0, qMakePair(propertyMapping, readStrategy));
+        return 0;
+    }
+
+    //look for the unique number
+    quint32 newId(_lastProcIdValueUsed + 1);
+    quint32 guard(0);
+    while (guard < MaximumConfirmedSubscriptions) {
+        if (_subscribedCovs.contains(newId))
+                ++newId;
+        else {
+            _lastProcIdValueUsed = newId;
+            return _lastProcIdValueUsed;
+        }
+    }
+
+    return 0;
 }

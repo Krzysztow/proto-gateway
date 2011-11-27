@@ -35,11 +35,11 @@ SOURCES += main.cpp \
     asynchowner.cpp \
     bacnettsm2.cpp \
 #    bacnetwritepropertyservice.cpp \
-    externalobjectshandler.cpp \
+    external/externalobjectshandler.cpp \
     cdm.cpp \
     bacnetwritepropertyservicehandler.cpp \
     bacnetreadpropertyservicehandler.cpp \
-    internalobjectshandler.cpp \
+    internal/internalobjectshandler.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \ # bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
@@ -130,9 +130,9 @@ HEADERS += bacnetvirtuallinklayer.h \
     property.h \
 #    bacnetwritepropertyservice.h \
     bacnetwritepropertyservicehandler.h \
-    externalobjectshandler.h \
+    external/externalobjectshandler.h \
     bacnettsm2.h \ # asynchronousconfirmedhandler.h \
-    internalobjectshandler.h \
+    internal/internalobjectshandler.h \
     asynchsetter.h \
     bacnettsm.h \
     bacnetreadpropertyack.h \

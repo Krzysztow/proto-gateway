@@ -19,6 +19,7 @@ namespace Bacnet {
     class Error;
     class BacnetApplicationLayerHandler;
     class CovReadStrategy;
+    class ExternalObjectReadStrategy;
 
     class ExternalObjectsHandler:
             public QObject,
@@ -31,7 +32,7 @@ namespace Bacnet {
 
         void addMappedProperty(PropertySubject *property, ObjIdNum objectId,
                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,                               
-                               ExternalPropertyMapping::ReadAccessType type = ExternalPropertyMapping::ReadRP);
+                               ExternalObjectReadStrategy *readStrategy = 0);
 
         ExternalPropertyMapping *mappingEntry(::Property *property);
 
@@ -67,7 +68,13 @@ namespace Bacnet {
         QHash<Property*, ExternalPropertyMapping*> _mappingTable;
 
     private:
-        QHash<int, ExternalPropertyMapping*> _subscribedCovs;
+        /**
+          The hash works as single key one, but 0 key. For zero it may have multiple values, which mean unconfirmed notifications.
+          */
+        QHash<quint32, QPair<ExternalPropertyMapping*, CovReadStrategy*> > _subscribedCovs;
+        static const quint32 MaximumConfirmedSubscriptions = 255;
+        quint32 _lastProcIdValueUsed;
+        quint32 insertToSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy);
 
     private:
         BacnetApplicationLayerHandler *_appLayer;
