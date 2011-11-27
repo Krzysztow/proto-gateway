@@ -187,7 +187,7 @@ bool BacnetApplicationLayerHandler::sendUnconfirmed(const ObjectIdStruct &destin
     }
 
     if (found) { //Here, if foud is true, then objIdNum is the device instance. If so, try to find device address
-        const RoutingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
+        const mappingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
         if (found) {
             sendUnconfirmed(re.address, source, data, serviceChoice);
         }
@@ -206,7 +206,7 @@ bool BacnetApplicationLayerHandler::sendUnconfirmedWithDiscovery(const ObjectIdS
     }
 
     if (found) { //Here, if foud is true, then objIdNum is the device instance. If so, try to find device address
-        const RoutingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
+        const mappingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
         if (found) {
             sendUnconfirmed(re.address, source, *data, serviceChoice);
             delete data;
@@ -240,7 +240,7 @@ bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedO
     }
 
     Q_ASSERT(InvalidInstanceNumber != numToObjId(objIdNum).instanceNum);
-    const RoutingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
+    const mappingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
     if (found) {
         send(re.address, sourceAddress, service, serviceToSend);
         return found;
@@ -340,12 +340,12 @@ void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, Ob
             ++it;
     }
 
-    _objectDeviceMapper.addOrUpdateRoutingEntry(objNum, devNum, isResponseForUs);
+    _objectDeviceMapper.addOrUpdatemappingEntry(objNum, devNum, isResponseForUs);
     /**
       If device was not in the devices list, add it. However, remember we don't have full information about the device - we insert some predicted defaults, which could be ok.
       To correct it, issue who-is and for a time being use those defaults.
       */
-    if (!_devicesRoutingTable.addOrUpdateRoutingEntry(devAddress, devNum, ApduMaxSize, SegmentedNOT, true, false)) {
+    if (!_devicesRoutingTable.addOrUpdatemappingEntry(devAddress, devNum, ApduMaxSize, SegmentedNOT, true, false)) {
         _awaitingDiscoveries.insertMulti(devNum, 0);
         discover(devNum);
     }
@@ -373,7 +373,7 @@ void BacnetApplicationLayerHandler::registerDevice(BacnetAddress &devAddress, Ba
             ++it;
     }
 
-    _devicesRoutingTable.addOrUpdateRoutingEntry(devAddress, devNum, maxApduSize, segmentationType, true, isResponseForUs);//force update, since this is for sure fine quality information!
+    _devicesRoutingTable.addOrUpdatemappingEntry(devAddress, devNum, maxApduSize, segmentationType, true, isResponseForUs);//force update, since this is for sure fine quality information!
 }
 
 

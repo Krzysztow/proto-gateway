@@ -4,6 +4,8 @@
 #include <QtCore>
 #include "bacnetcommon.h"
 
+class Property;
+
 namespace Bacnet {
 
     class ExternalConfirmedServiceHandler
@@ -23,6 +25,9 @@ namespace Bacnet {
         virtual void handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action) = 0;
         virtual void handleReject(quint8 *abortPtr, quint16 length, ActionToExecute *action) = 0;
         virtual quint32 handleTimeout(ActionToExecute *action) = 0;
+
+        virtual int asynchId() = 0;
+        virtual Property *property() = 0;
     };
 
 }

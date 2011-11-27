@@ -11,6 +11,7 @@
 #include "bacnetwritepropertyservicehandler.h"
 #include "bacnetdefaultobject.h"
 #include "bacnetapplicationlayer.h"
+#include "externalpropertymapping.h"
 
 using namespace Bacnet;
 
@@ -19,10 +20,15 @@ ExternalObjectsHandler::ExternalObjectsHandler(BacnetApplicationLayerHandler *ap
 {
 }
 
+ExternalObjectsHandler::~ExternalObjectsHandler()
+{
+
+}
+
 void ExternalObjectsHandler::addMappedProperty(Property *property, quint32 objectId,
                                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
                                                quint32 deviceId,
-                                               BacnetExternalObjects::ReadAccessType type)
+                                               ExternalPropertyMapping::ReadAccessType type)
 {
     Q_CHECK_PTR(property);
     if (0 == property) {
@@ -31,7 +37,7 @@ void ExternalObjectsHandler::addMappedProperty(Property *property, quint32 objec
     }
 
     bool foundOne;
-    routingEntry(property, &foundOne);
+    mappingEntry(property, &foundOne);
     if (foundOne) {
         qWarning("There are two same properties added!");
         Q_ASSERT(false);
@@ -39,33 +45,27 @@ void ExternalObjectsHandler::addMappedProperty(Property *property, quint32 objec
 
     property->setOwner(this);
 
-    BacnetExternalObjects::ExternalRoutingElement extObj = { property, deviceId, objectId,
-                                                             propertyId, propertyArrayIdx,
-                                                             type };
+    ExternalPropertyMapping propMapping(property, type, propertyId, propertyArrayIdx, objectId);
 
     //if type is read - COV -> subscribe & first read value.
 
-    _routingTable.append(extObj);
+    _routingTable.append(propMapping);
 }
 
-BacnetExternalObjects::ExternalRoutingElement &ExternalObjectsHandler::routingEntry(::Property *property, bool *found)
+ExternalPropertyMapping &ExternalObjectsHandler::mappingEntry(::Property *property, bool *found)
 {
-    QVector<BacnetExternalObjects::ExternalRoutingElement>::Iterator entryIt = _routingTable.begin();
-    QVector<BacnetExternalObjects::ExternalRoutingElement>::Iterator rtEnd = _routingTable.end();
+    QList<ExternalPropertyMapping>::Iterator entryIt = _routingTable.begin();
+    QList<ExternalPropertyMapping>::Iterator rtEnd = _routingTable.end();
 
     for (; entryIt != rtEnd; ++entryIt) {
-        if (entryIt->_property == property) {
+        if (entryIt->mappedProperty == property) {
             if (0 != found) *found = true;
             return *(entryIt);
         }
     }
 
     if (0 != found) *found = false;
-    static BacnetExternalObjects::ExternalRoutingElement wrongEntry = {
-        0, 0, BacnetObjectTypeNS::Undefined,
-        BacnetPropertyNS::UndefinedProperty, Bacnet::ArrayIndexNotPresent,
-        BacnetExternalObjects::Access_COV
-    };
+    static ExternalPropertyMapping wrongEntry;
     return wrongEntry;
 }
 
@@ -94,33 +94,32 @@ int ExternalObjectsHandler::getPropertyRequested(::PropertySubject *toBeGotten)
         return Property::UnknownError;
 
     bool isFound;
-    BacnetExternalObjects::ExternalRoutingElement rEntry = routingEntry(toBeGotten, &isFound);
+    ExternalPropertyMapping &rEntry = mappingEntry(toBeGotten, &isFound);
 
     if (!isFound)
         return Property::UnknownProperty;
 
-    switch (rEntry._read) {
-    case (BacnetExternalObjects::Access_COV_Uninitialized)://fall through
-    case (BacnetExternalObjects::Access_ReadRequest):
-        {
-            return readProperty(rEntry, toBeGotten);
-            break;
-        }
-    case (BacnetExternalObjects::Access_COV):
-        {
-            //the property is ready to be read
-            return Property::ResultOk;
-            break;
-        }
+    switch (rEntry.readAccessType) {
+    case (ExternalPropertyMapping::ReadCov_Uninitialized):  //fall through
+        //issue cov subscription request
+    case (ExternalPropertyMapping::ReadRP): {
+        return issueReadPropertyRequest(rEntry, toBeGotten);
+        break;
+    }
+    case (ExternalPropertyMapping::ReadCov_Confirmed):      //fall through
+    case (ExternalPropertyMapping::ReadCov_Unconfirmed):
+    {
+        //the property is ready to be read
+        return Property::ResultOk;
+        break;
+    }
     default:
         Q_ASSERT(false);
         return Property::UnknownError;
     }
-
-    return Property::UnknownError;
 }
 
-int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingElement &readElement, ::PropertySubject *property)
+int ExternalObjectsHandler::issueReadPropertyRequest(ExternalPropertyMapping &readElement, PropertySubject *property)
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {
@@ -138,16 +137,14 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
 
     //! \todo Itroduce BacnetObjId class with conversion functions
     ReadPropertyServiceData *service =
-            new ReadPropertyServiceData(numToObjId(readElement._objectIdentifier),
-                                          readElement._propertyId, readElement._propertyArrayIdx);
+            new ReadPropertyServiceData(numToObjId(readElement.objectId),
+                                        readElement.propertyId, readElement.propertyArrayIdx);
     Q_CHECK_PTR(service);
-    ReadPropertyServiceHandler *serviceHandler =
-            new ReadPropertyServiceHandler(service, this);
+    ExternalConfirmedServiceHandler *serviceHandler =
+            new ReadPropertyServiceHandler(service, this, asynchId, property);
     Q_CHECK_PTR(serviceHandler);
 
-    RequestInfo ri = {asynchId, RequestRead, property};
-    _bacnetPendingRequests.insert(serviceHandler, ri);
-    ObjectIdStruct objId = numToObjId(readElement._deviceIdentifier);
+    ObjectIdStruct objId = numToObjId(readElement.objectId);
     BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
     _appLayer->send(objId, fromAddr, BacnetServicesNS::ReadProperty, serviceHandler, 1000);
@@ -157,77 +154,101 @@ int ExternalObjectsHandler::readProperty(BacnetExternalObjects::ExternalRoutingE
 
 void ExternalObjectsHandler::handleResponse(ExternalConfirmedServiceHandler *act, bool ok)
 {
-    if (!_bacnetPendingRequests.contains(act))//this could happen, if the internal timeout has occured
-        return;
+    //    RequestInfo ri = _bacnetPendingRequests.take(act);
+    //    Q_CHECK_PTR(ri.concernedProperty);
+    //    Q_ASSERT(ri.asynchId > 0);
 
-    RequestInfo ri = _bacnetPendingRequests.take(act);
-    Q_CHECK_PTR(ri.concernedProperty);
-    Q_ASSERT(ri.asynchId > 0);
+    //    bool found;
+    //    BacnetExternalObjects::ExternalRoutingElement rEntry = mappingEntry(ri.concernedProperty, &found);
+    //    Q_ASSERT(found);
+    //    if (!found) {
+    //        qWarning("ExternalObjectsHandler::handleResponse() property not found");
+    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
+    //        return;
+    //    }
 
-    bool found;
-    BacnetExternalObjects::ExternalRoutingElement rEntry = routingEntry(ri.concernedProperty, &found);
-    Q_ASSERT(found);
-    if (!found) {
-        qWarning("ExternalObjectsHandler::handleResponse() property not found");
-        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-        return;
-    }
-
-    if (ri.reqType == RequestWrite) {
-        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
-    } else {
-        Q_ASSERT(false);
-    }
+    //    if (ri.reqType == RequestWrite) {
+    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
+    //    } else {
+    //        Q_ASSERT(false);
+    //    }
 }
 
 void ExternalObjectsHandler::handleResponse(ExternalConfirmedServiceHandler *act,
                                             BacnetReadPropertyAck &rp)
 {
-    if (!_bacnetPendingRequests.contains(act))//this could happen, if the internal timeout has occured
-        return;
+    //    if (!_bacnetPendingRequests.contains(act))//this could happen, if the internal timeout has occured
+    //        return;
 
-    RequestInfo ri = _bacnetPendingRequests.take(act);
-    Q_CHECK_PTR(ri.concernedProperty);
-    Q_ASSERT(ri.asynchId > 0);
+    //    RequestInfo ri = _bacnetPendingRequests.take(act);
+    //    Q_CHECK_PTR(ri.concernedProperty);
+    //    Q_ASSERT(ri.asynchId > 0);
 
-    bool found;
-    BacnetExternalObjects::ExternalRoutingElement rEntry = routingEntry(ri.concernedProperty, &found);
-    Q_ASSERT(found);
-    if (!found) {
-        qWarning("ExternalObjectsHandler::handleResponse() property not found");
-        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-        return;
-    }
+    //    bool found;
+    //    BacnetExternalObjects::ExternalRoutingElement rEntry = mappingEntry(ri.concernedProperty, &found);
+    //    Q_ASSERT(found);
+    //    if (!found) {
+    //        qWarning("ExternalObjectsHandler::handleResponse() property not found");
+    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
+    //        return;
+    //    }
 
-    BacnetDataInterfaceShared value = rp._data;
-    QVariant internalValue = value->toInternal();
-    ri.concernedProperty->setValueSilent(internalValue);
-    ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
+    //    BacnetDataInterfaceShared value = rp._data;
+    //    QVariant internalValue = value->toInternal();
+    //    ri.concernedProperty->setValueSilent(internalValue);
+    //    ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
 }
 
 void ExternalObjectsHandler::handleError(ExternalConfirmedServiceHandler *act, Error &error)
 {
-    RequestInfo ri = _bacnetPendingRequests.take(act);
-    if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
-        ri.asynchId = 0;
-        ri.concernedProperty = 0;
-        ri.reqType = RequestRead;
-    } else {
-        RequestInfo ri = _bacnetPendingRequests.take(act);
-        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-    }
+    //    RequestInfo ri = _bacnetPendingRequests.take(act);
+    //    if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
+    //        ri.asynchId = 0;
+    //        ri.concernedProperty = 0;
+    //        ri.reqType = RequestRead;
+    //    } else {
+    //        RequestInfo ri = _bacnetPendingRequests.take(act);
+    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
+    //    }
 
-    bool found;
-    BacnetExternalObjects::ExternalRoutingElement rElem = routingEntry(ri.concernedProperty, &found);
-    Q_ASSERT(found);
-    if (!found)
-    {
-        qDebug("ExternalObjectsHandler::handleError() - routing entry not found!");
-        return;
-    }
+    //    bool found;
+    //    BacnetExternalObjects::ExternalRoutingElement rElem = mappingEntry(ri.concernedProperty, &found);
+    //    Q_ASSERT(found);
+    //    if (!found)
+    //    {
+    //        qDebug("ExternalObjectsHandler::handleError() - routing entry not found!");
+    //        return;
+    //    }
 
-    qDebug("ExternalObjectsHandler::handleError() - Bacnet Error (class: %d, %d), while reading from object %d property %d",
-           error.errorClass, error.errorCode, rElem._deviceIdentifier, rElem._objectIdentifier);
+    //    qDebug("ExternalObjectsHandler::handleError() - Bacnet Error (class: %d, %d), while reading from object %d property %d",
+    //           error.errorClass, error.errorCode, rElem._deviceIdentifier, rElem._objectIdentifier);
+}
+
+void ExternalObjectsHandler::handleAbort(ExternalConfirmedServiceHandler *act,  quint8 abortReason)
+{
+    //    RequestInfo ri = _bacnetPendingRequests.take(act);
+    //    if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
+    //        ri.asynchId = 0;
+    //        ri.concernedProperty = 0;
+    //        ri.reqType = RequestRead;
+    //    } else {
+    //        RequestInfo ri = _bacnetPendingRequests.take(act);
+    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
+    //    }
+
+    //    bool found;
+    //    BacnetExternalObjects::ExternalRoutingElement rElem = mappingEntry(ri.concernedProperty, &found);
+    //    Q_ASSERT(found);
+    //    if (!found)
+    //    {
+    //        qDebug("ExternalObjectsHandler::handleAbort() - routing entry not found!");
+    //        return;
+    //    }
+
+    //    qDebug("ExternalObjectsHandler::handleAbort() - Bacnet Abort (%d), while %s from object %d property %d",
+    //           abortReason,
+    //           (ri.reqType == RequestWrite) ? "write" : ((ri.reqType == RequestRead) ? "read" : "cov subscription"),
+    //           rElem._deviceIdentifier, rElem._objectIdentifier);
 }
 
 bool ExternalObjectsHandler::isRegisteredAddress(InternalAddress &address)
@@ -247,33 +268,6 @@ void ExternalObjectsHandler::removeRegisteredAddress(InternalAddress &address)
     Q_ASSERT(!_registeredAddresses.contains(address));
 }
 
-void ExternalObjectsHandler::handleAbort(ExternalConfirmedServiceHandler *act,  quint8 abortReason)
-{
-    RequestInfo ri = _bacnetPendingRequests.take(act);
-    if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
-        ri.asynchId = 0;
-        ri.concernedProperty = 0;
-        ri.reqType = RequestRead;
-    } else {
-        RequestInfo ri = _bacnetPendingRequests.take(act);
-        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-    }
-
-    bool found;
-    BacnetExternalObjects::ExternalRoutingElement rElem = routingEntry(ri.concernedProperty, &found);
-    Q_ASSERT(found);
-    if (!found)
-    {
-        qDebug("ExternalObjectsHandler::handleAbort() - routing entry not found!");
-        return;
-    }
-
-    qDebug("ExternalObjectsHandler::handleAbort() - Bacnet Abort (%d), while %s from object %d property %d",
-           abortReason,
-           (ri.reqType == RequestWrite) ? "write" : ((ri.reqType == RequestRead) ? "read" : "cov subscription"),
-           rElem._deviceIdentifier, rElem._objectIdentifier);
-}
-
 int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVariant &value)
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
@@ -281,22 +275,28 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
         qDebug("ExternalObjectsHandler::setPropertyRequest() : can't send request, since we have no address.");
         return Property::UnknownError;
     }
-        Q_CHECK_PTR(toBeSet);
+    Q_CHECK_PTR(toBeSet);
     if (0 == toBeSet)
         return Property::UnknownError;
 
     bool isFound;
-    BacnetExternalObjects::ExternalRoutingElement rEntry = routingEntry(toBeSet, &isFound);
+    ExternalPropertyMapping &rEntry = mappingEntry(toBeSet, &isFound);
 
-    if (!isFound)
+    if (!isFound || !rEntry.isValid())
         return Property::UnknownProperty;
 
-    ObjectIdStruct objectId = numToObjId(rEntry._objectIdentifier);
+    int asynchId = DataModel::instance()->generateAsynchId();
+    Q_ASSERT(asynchId >= 0);
+    if (asynchId < 0) {
+        qWarning("Can't generate asynchronous id.");
+        return Property::UnknownError;
+    }
 
-    Bacnet::BacnetDataInterface *writeData = BacnetDefaultObject::createDataForObjectProperty(objectId.objectType, rEntry._propertyId, rEntry._propertyArrayIdx);
+    ObjectIdentifier objectId(rEntry.objectId);
+    Bacnet::BacnetDataInterface *writeData = BacnetDefaultObject::createDataForObjectProperty(objectId.type(), rEntry.propertyId, rEntry.propertyArrayIdx);
     Q_CHECK_PTR(writeData);
     if (0 == writeData) {
-        qWarning("Can't create appropriate value isntance for %d, %d", objectId.objectType, rEntry._propertyId);
+        qWarning("Can't create appropriate value isntance for %d, %d", objectId.type(), rEntry.propertyId);
         return Property::UnknownError;
     }
 
@@ -307,33 +307,22 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
         return Property::UnknownError;
     }
 
-    ObjectIdentifier devId(rEntry._objectIdentifier);
     WritePropertyServiceData *serviceData =
-            new WritePropertyServiceData(devId, rEntry._propertyId, writeData, rEntry._propertyArrayIdx);
+            new WritePropertyServiceData(objectId, rEntry.propertyId, writeData, rEntry.propertyArrayIdx);
     Q_CHECK_PTR(serviceData);
     BacnetWritePropertyServiceHandler *serviceHandler =
-            new BacnetWritePropertyServiceHandler(serviceData, this);
+            new BacnetWritePropertyServiceHandler(serviceData, this, toBeSet, asynchId);
     Q_CHECK_PTR(serviceHandler);
 
-    int asynchId = DataModel::instance()->generateAsynchId();
-    Q_ASSERT(asynchId >= 0);
-    if (asynchId < 0) {
-        delete serviceData;
-        delete serviceHandler;
-        delete writeData;
-        qWarning("Can't generate asynchronous id.");
-        return Property::UnknownError;
-    }
-
-    RequestInfo ri = {asynchId, RequestWrite, toBeSet};
-    _bacnetPendingRequests.insert(serviceHandler, ri);
-    ObjectIdStruct objId = numToObjId(rEntry._deviceIdentifier);
     BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
-    //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _appLayer->send(objId, fromAddr, BacnetServicesNS::WriteProperty, serviceHandler, 1000);
+    //the ownership isgiven to AppLayer. We just use pointers as Asynchronous tokens.
+    _appLayer->send(objectId.objIdStruct(), fromAddr, BacnetServicesNS::WriteProperty, serviceHandler, 1000);
 
     return asynchId;
 }
+
+//Bacnet::WritePropertyServiceData::WritePropertyServiceData(Bacnet::ObjectIdStruct&, BacnetPropertyNS::Identifier&, Bacnet::BacnetDataInterface*&, quint32&)’
+//Bacnet::WritePropertyServiceData::WritePropertyServiceData(Bacnet::ObjectIdentifier&, BacnetPropertyNS::Identifier, Bacnet::BacnetDataInterface*, quint32)
 
 BacnetAddress Bacnet::ExternalObjectsHandler::oneOfAddresses()
 {

@@ -44,7 +44,7 @@ SOURCES += main.cpp \
     bacnetreadpropertyack.cpp \ # bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
     bacnetobjectinternalsupport.cpp \
-    bacnetexternalobjects.cpp \
+    #bacnetexternalobjects.cpp \
     analoginputobject.cpp \
     bacnetdeviceobject.cpp \
     bacnetobject.cpp \
@@ -101,7 +101,8 @@ SOURCES += main.cpp \
     applayer/iamservicedata.cpp \
     applayer/covnotificationrequestdata.cpp \
     internal/internaliamservicehandler.cpp \
-    externalconfirmedservicewrapper.cpp
+    externalconfirmedservicewrapper.cpp \
+    external/externalpropertymapping.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -136,7 +137,7 @@ HEADERS += bacnetvirtuallinklayer.h \
     cdm.h \
     bacnetservice.h \ # bacneterrorack.h \
 # bacnetreadpropertyservice.h \
-    bacnetexternalobjects.h \
+    #bacnetexternalobjects.h \
     asynchowner.h \
     analoginputobject.h \
     bacnetobjectinternalsupport.h \
@@ -199,9 +200,12 @@ HEADERS += bacnetvirtuallinklayer.h \
     applayer/covnotificationrequestdata.h \
     applayer/bacnetservicedata.h \
     internal/internaliamservicehandler.h \
-    externalconfirmedservicewrapper.h
+    externalconfirmedservicewrapper.h \
+    external/externalpropertymapping.h
 
 OTHER_FILES +=
+
+
 
 
 

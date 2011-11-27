@@ -57,3 +57,15 @@ quint32 CovConfNotificationServiceHandler::handleTimeout(ActionToExecute *action
 void CovConfNotificationServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
 {
 }
+
+int CovConfNotificationServiceHandler::asynchId()
+{
+    Q_ASSERT(false);
+    return 0;
+}
+
+Property *CovConfNotificationServiceHandler::property()
+{
+    Q_ASSERT(false);
+    return 0;
+}

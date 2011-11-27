@@ -6,10 +6,12 @@
 
 using namespace Bacnet;
 
-BacnetWritePropertyServiceHandler::BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, ExternalObjectsHandler *respHandler):
-        _wData(wData),
-        sendTryOuts(3),
-        _responseHandler(respHandler)
+BacnetWritePropertyServiceHandler::BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, ExternalObjectsHandler *respHandler, Property *property, int asynchId):
+    _wData(wData),
+    sendTryOuts(3),
+    _responseHandler(respHandler),
+    _concernedProperty(property),
+    _asynchId(asynchId)
 {
     Q_CHECK_PTR(_wData);
     Q_CHECK_PTR(_responseHandler);
@@ -75,4 +77,14 @@ void BacnetWritePropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 le
 void BacnetWritePropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
 {
 
+}
+
+Property *BacnetWritePropertyServiceHandler::property()
+{
+    return _concernedProperty;
+}
+
+int BacnetWritePropertyServiceHandler::asynchId()
+{
+    return _asynchId;
 }

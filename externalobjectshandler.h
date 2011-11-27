@@ -6,7 +6,7 @@
 
 #include "propertyowner.h"
 #include "property.h"
-#include "bacnetexternalobjects.h"
+#include "externalpropertymapping.h"
 #include "bacnetcommon.h"
 #include "bacnetinternaladdresshelper.h"
 
@@ -20,19 +20,20 @@ namespace Bacnet {
     class BacnetApplicationLayerHandler;
 
     class ExternalObjectsHandler:
-            public QObject,
+//            public QObject,
             public PropertyOwner
     {
-        Q_OBJECT;
+//        Q_OBJECT
     public:
         ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer);
+        ~ExternalObjectsHandler();
 
-        void addMappedProperty(Property *property, quint32 objectId,
+        void addMappedProperty(Property *property, ObjIdNum objectId,
                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
                                quint32 deviceId = BacnetObjectTypeNS::Undefined,
-                               BacnetExternalObjects::ReadAccessType type = BacnetExternalObjects::Access_COV_Uninitialized);
+                               ExternalPropertyMapping::ReadAccessType type = ExternalPropertyMapping::ReadRP);
 
-        BacnetExternalObjects::ExternalRoutingElement &routingEntry(::Property *property, bool *found = 0);
+        ExternalPropertyMapping &mappingEntry(::Property *property, bool *found = 0);
 
         void handleResponse(ExternalConfirmedServiceHandler *act, BacnetReadPropertyAck &rp);
         void handleResponse(ExternalConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
@@ -59,25 +60,17 @@ namespace Bacnet {
         virtual void propertyValueChanged(Property *property);
 
     private:
-        int readProperty(BacnetExternalObjects::ExternalRoutingElement &readElement, PropertySubject *property);
+        int issueReadPropertyRequest(ExternalPropertyMapping &readElement, PropertySubject *property);
 
 
     private:
-        QVector<BacnetExternalObjects::ExternalRoutingElement> _routingTable;
+        QList<ExternalPropertyMapping> _routingTable;
 
         enum RequestType {
             RequestWrite,
             RequestRead,
             RequestCOV
         };
-
-        struct RequestInfo {
-            int asynchId;
-            RequestType reqType;
-            ::PropertySubject *concernedProperty;
-        };
-
-        QMap<ExternalConfirmedServiceHandler*, RequestInfo> _bacnetPendingRequests;
 
         BacnetApplicationLayerHandler *_appLayer;
         QList<InternalAddress> _registeredAddresses;

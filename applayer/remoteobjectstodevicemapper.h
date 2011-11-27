@@ -12,7 +12,7 @@ public:
     quint32 findEntry(quint32 objectId, bool *found);
 
     //! Adds element to the routing table. Returns true, if element existed.
-    bool addOrUpdateRoutingEntry(quint32 objectIdNum, quint32 deviceObjectIdNum, bool forceAdd = false);
+    bool addOrUpdatemappingEntry(quint32 objectIdNum, quint32 deviceObjectIdNum, bool forceAdd = false);
 
 private:
     static const int TableSizeWarningLimit = 10;

@@ -6,10 +6,10 @@
 
 namespace Bacnet {
 
-class RoutingEntry {
+class mappingEntry {
 public:
-    RoutingEntry();
-    RoutingEntry(BacnetAddress &address, quint32 devObjIdNum,int maxApduLengthAccepted, BacnetSegmentation segmentation);
+    mappingEntry();
+    mappingEntry(BacnetAddress &address, quint32 devObjIdNum,int maxApduLengthAccepted, BacnetSegmentation segmentation);
 
 public:
     BacnetAddress address;
@@ -23,22 +23,22 @@ class RoutingTable
 public:
     RoutingTable(int dynamicElementsSize);
 
-    const RoutingEntry &findEntry(const BacnetAddress &address, bool *found);
-    const RoutingEntry &findEntry(quint32 objIdNum, bool *found);
+    const mappingEntry &findEntry(const BacnetAddress &address, bool *found);
+    const mappingEntry &findEntry(quint32 objIdNum, bool *found);
 
     //! Adds entry to one of the internal lists. Returns true, if the element was already in the table.
-    bool addOrUpdateRoutingEntry(BacnetAddress &address, quint32 devObjIdNum, int maxApduLengthAccepted, BacnetSegmentation segmentation, bool addToDynamicTable = true, bool forceAdd = true);
+    bool addOrUpdatemappingEntry(BacnetAddress &address, quint32 devObjIdNum, int maxApduLengthAccepted, BacnetSegmentation segmentation, bool addToDynamicTable = true, bool forceAdd = true);
 
 private:
-    const RoutingEntry &findEntry_helper(QHash<quint32, RoutingEntry> &rTable, const BacnetAddress &address, bool *found);
-    const RoutingEntry &findEntry_helper(QHash<quint32, RoutingEntry> &rTable, ObjIdNum devObjjIdNum, bool *found);
+    const mappingEntry &findEntry_helper(QHash<quint32, mappingEntry> &rTable, const BacnetAddress &address, bool *found);
+    const mappingEntry &findEntry_helper(QHash<quint32, mappingEntry> &rTable, ObjIdNum devObjjIdNum, bool *found);
 
 private:
     static const int RoutingtableWarningLimit = 10;
-    QHash<quint32, RoutingEntry> _routingTable;
-    QHash<quint32, RoutingEntry> _routingTableDynamic;
+    QHash<quint32, mappingEntry> _routingTable;
+    QHash<quint32, mappingEntry> _routingTableDynamic;
 
-    RoutingEntry _invalidEntry;
+    mappingEntry _invalidEntry;
     int _dynamicElementsSize;
 };
 

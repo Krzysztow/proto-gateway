@@ -310,12 +310,15 @@ namespace Bacnet
         void setObjectIdNum(quint32 objIdNum);
         void setObjectId(ObjectIdStruct &value);
         quint32 objectIdNum() const;
+        Bacnet::ObjectIdStruct &objIdStruct() {return _value;}
 
         BacnetObjectTypeNS::ObjectType type() const {return _value.objectType;}
         bool operator==(const ObjectIdentifier &other) const {return ( (_value.instanceNum == other._value.instanceNum) &&
                                                                         (_value.objectType == other._value.objectType) );}
         bool operator==(const ObjectIdStruct &other) const { return ( (_value.instanceNum == other.instanceNum) &&
                                                                       (_value.objectType == other.objectType) );}
+
+
 
     public:
         Bacnet::ObjectIdStruct _value;

@@ -2,7 +2,7 @@
 
 using namespace Bacnet;
 
-RoutingEntry::RoutingEntry():
+mappingEntry::mappingEntry():
     //address gets default, uninitialized constructor
     devObjIdNum(Bacnet::invalidObjIdNum()),
     maxApduLengthAccepted(ApduMaxSize),
@@ -10,7 +10,7 @@ RoutingEntry::RoutingEntry():
 {
 }
 
-RoutingEntry::RoutingEntry(BacnetAddress &address, ObjIdNum devObjjIdNum, int maxApduLengthAccepted, Bacnet::BacnetSegmentation segmentation):
+mappingEntry::mappingEntry(BacnetAddress &address, ObjIdNum devObjjIdNum, int maxApduLengthAccepted, Bacnet::BacnetSegmentation segmentation):
     address(address),
     devObjIdNum(devObjjIdNum),
     maxApduLengthAccepted(maxApduLengthAccepted),
@@ -23,11 +23,11 @@ RoutingTable::RoutingTable(int dynamicElementsSize):
 {
 }
 
-const RoutingEntry &RoutingTable::findEntry_helper(QHash<quint32, RoutingEntry> &rTable, const BacnetAddress &address, bool *found)
+const mappingEntry &RoutingTable::findEntry_helper(QHash<quint32, mappingEntry> &rTable, const BacnetAddress &address, bool *found)
 {
     Q_CHECK_PTR(false);
-    QHash<quint32, RoutingEntry>::Iterator it = rTable.begin();
-    QHash<quint32, RoutingEntry>::Iterator itEnd = rTable.end();
+    QHash<quint32, mappingEntry>::Iterator it = rTable.begin();
+    QHash<quint32, mappingEntry>::Iterator itEnd = rTable.end();
 
     for (; it != itEnd; ++it) {
         if (it->address == address) {
@@ -40,7 +40,7 @@ const RoutingEntry &RoutingTable::findEntry_helper(QHash<quint32, RoutingEntry> 
     return _invalidEntry;
 }
 
-const RoutingEntry &RoutingTable::findEntry(const BacnetAddress &address, bool *found)
+const mappingEntry &RoutingTable::findEntry(const BacnetAddress &address, bool *found)
 {
     Q_CHECK_PTR(false);
 
@@ -49,7 +49,7 @@ const RoutingEntry &RoutingTable::findEntry(const BacnetAddress &address, bool *
         found = &ok;
 
     //first search static table
-    const RoutingEntry &re = findEntry_helper(_routingTable, address, found);
+    const mappingEntry &re = findEntry_helper(_routingTable, address, found);
     if (*found)
         return re;
 
@@ -57,9 +57,9 @@ const RoutingEntry &RoutingTable::findEntry(const BacnetAddress &address, bool *
     return findEntry_helper(_routingTableDynamic, address, found);
 }
 
-const RoutingEntry &RoutingTable::findEntry_helper(QHash<quint32, RoutingEntry> &rTable, quint32 objIdNum, bool *found)
+const mappingEntry &RoutingTable::findEntry_helper(QHash<quint32, mappingEntry> &rTable, quint32 objIdNum, bool *found)
 {
-    QHash<quint32, RoutingEntry>::Iterator  it = rTable.find(objIdNum);
+    QHash<quint32, mappingEntry>::Iterator  it = rTable.find(objIdNum);
     if (it != rTable.end()) {
         if (0 != found) *found = true;
         return it.value();
@@ -69,7 +69,7 @@ const RoutingEntry &RoutingTable::findEntry_helper(QHash<quint32, RoutingEntry> 
     return _invalidEntry;
 }
 
-const RoutingEntry &RoutingTable::findEntry(quint32 objIdNum, bool *found)
+const mappingEntry &RoutingTable::findEntry(quint32 objIdNum, bool *found)
 {
     Q_CHECK_PTR(false);
 
@@ -77,7 +77,7 @@ const RoutingEntry &RoutingTable::findEntry(quint32 objIdNum, bool *found)
     if (0 == found)
         found = &ok;
 
-    const RoutingEntry &re = findEntry_helper(_routingTable, objIdNum, found);
+    const mappingEntry &re = findEntry_helper(_routingTable, objIdNum, found);
     if (*found)
         return re;
 
@@ -86,16 +86,16 @@ const RoutingEntry &RoutingTable::findEntry(quint32 objIdNum, bool *found)
 
 }
 
-bool RoutingTable::addOrUpdateRoutingEntry(BacnetAddress &address, quint32 devObjIdNum, int maxApduLengthAccepted, BacnetSegmentation segmentation, bool toDynamicTable, bool forceAddOrUpdate)
+bool RoutingTable::addOrUpdatemappingEntry(BacnetAddress &address, quint32 devObjIdNum, int maxApduLengthAccepted, BacnetSegmentation segmentation, bool toDynamicTable, bool forceAddOrUpdate)
 {
-    QHash<quint32, RoutingEntry>::Iterator  it = _routingTable.find(devObjIdNum);
+    QHash<quint32, mappingEntry>::Iterator  it = _routingTable.find(devObjIdNum);
     if (_routingTable.end() != it) {//there was such an entry, so don't care about toDynamicTable flag and...
         if (forceAddOrUpdate) {//...and we want it to be updated.
-            *it = RoutingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation);
+            *it = mappingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation);
         }
         return true;
     } else if (!toDynamicTable) {//entry was not existing - we check, if the user wanted to insert it to the static tabe - !toDynamicTable
-        _routingTable.insert(devObjIdNum, RoutingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation));
+        _routingTable.insert(devObjIdNum, mappingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation));
         if (_routingTable.count() >= RoutingtableWarningLimit)
             qDebug("%s : Number of items in the static RT is %d", __PRETTY_FUNCTION__, _routingTable.count());
         return false;
@@ -106,12 +106,12 @@ bool RoutingTable::addOrUpdateRoutingEntry(BacnetAddress &address, quint32 devOb
     it = _routingTableDynamic.find(devObjIdNum);
     if (_routingTableDynamic.end() != it) {//the entry was there
         if (forceAddOrUpdate) {
-            *it = RoutingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation);
+            *it = mappingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation);
         }
         return true;
     } else {
         if (_routingTableDynamic.count() <= _dynamicElementsSize) {
-            _routingTableDynamic.insert(devObjIdNum, RoutingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation));
+            _routingTableDynamic.insert(devObjIdNum, mappingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation));
         } else if (forceAddOrUpdate) { //we have to insert this entry - choose some victim and replace it
             int victimNum = qrand()%_routingTableDynamic.count();
             it = _routingTableDynamic.begin();
@@ -119,7 +119,7 @@ bool RoutingTable::addOrUpdateRoutingEntry(BacnetAddress &address, quint32 devOb
             Q_ASSERT(_routingTableDynamic.contains(it.key()));
             _routingTableDynamic.erase(it);
             Q_ASSERT(!_routingTableDynamic.contains(it.key()));
-            _routingTableDynamic.insert(devObjIdNum, RoutingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation));
+            _routingTableDynamic.insert(devObjIdNum, mappingEntry(address, devObjIdNum, maxApduLengthAccepted, segmentation));
         } else
             qDebug("%s : Didn't have more space to insert routing entry and was not forced to replace with some other one", __PRETTY_FUNCTION__);
     }

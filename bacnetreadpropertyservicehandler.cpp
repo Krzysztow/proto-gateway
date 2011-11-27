@@ -7,10 +7,12 @@
 
 using namespace Bacnet;
 
-ReadPropertyServiceHandler::ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler):
-        _rpData(rpData),
-        sendTryOuts(3),
-        _responseHandler(respHandler)
+ReadPropertyServiceHandler::ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler, int asynchId, Property *property):
+    _rpData(rpData),
+    sendTryOuts(3),
+    _responseHandler(respHandler),
+    _asynchId(asynchId),
+    _property(property)
 {
     Q_CHECK_PTR(_rpData);
     Q_CHECK_PTR(_responseHandler);
@@ -80,4 +82,14 @@ void ReadPropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, A
 
 void ReadPropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
 {
+}
+
+int ReadPropertyServiceHandler::asynchId()
+{
+    return _asynchId;
+}
+
+Property *ReadPropertyServiceHandler::property()
+{
+    return _property;
 }

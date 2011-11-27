@@ -22,6 +22,10 @@ public://functions overridden from BacnetConfirmedServiceHandler
     virtual void handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action);
     virtual quint32 handleTimeout(ActionToExecute *action);
 
+    virtual int asynchId();
+    virtual Property *property();
+
+public:
     static const quint8 NumberOfRetransmissions = 3;
 
 private:
