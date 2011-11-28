@@ -119,16 +119,16 @@ void BacnetApplicationLayerHandler::processResponse(BacnetPci::BacnetPduType res
             switch (responseType) {
             case (BacnetPci::TypeSimpleAck):        //fall through
             case (BacnetPci::TypeComplexAck):
-                it.value().handler->handleAck(dataPtr, dataLength, &action);
+                action = it.value().handler->handleAck(dataPtr, dataLength);
                 break;
             case (BacnetPci::TypeError):
-                it.value().handler->handleError(dataPtr, dataLength, &action);
+                action = it.value().handler->handleError(dataPtr, dataLength);
                 break;
             case (BacnetPci::TypeReject):
-                it.value().handler->handleReject(dataPtr, dataLength, &action);
+                action = it.value().handler->handleReject(dataPtr, dataLength);
                 break;
             case (BacnetPci::TypeAbort):
-                it.value().handler->handleAbort(dataPtr, dataLength, &action);
+                action = it.value().handler->handleAbort(dataPtr, dataLength);
                 break;
             default:
                 qDebug("%s : wrong response type %d", __PRETTY_FUNCTION__, responseType);
@@ -159,8 +159,7 @@ void Bacnet::BacnetApplicationLayerHandler::processTimeout(BacnetAddress &remote
     if ( it != _awaitingConfirmedServices.end() ) {
         if (0 != it->handler) {
             //delete handlers if necessary.
-            ExternalConfirmedServiceHandler::ActionToExecute action;
-            serviceAct->handleTimeout(&action);
+            ExternalConfirmedServiceHandler::ActionToExecute action = serviceAct->handleTimeout();
             if (ExternalConfirmedServiceHandler::DeleteServiceHandler == action) {
                 delete it->handler;
             } else if (ExternalConfirmedServiceHandler::DoNothing == action) {
@@ -399,6 +398,7 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
             action = (*it)->handleTimeout(this);
             if (DiscoveryWrapper::DeleteMe == action) {
                 it = _awaitingDiscoveries.erase(it);
+
                 delete (*it);
             } else {
                 Q_ASSERT(DiscoveryWrapper::LeaveMeInQueue == action);

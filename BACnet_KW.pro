@@ -104,7 +104,6 @@ SOURCES += main.cpp \
     externalconfirmedservicewrapper.cpp \
     external/externalpropertymapping.cpp \
     external/externalobjectreadstrategy.cpp \
-    external/externalobjectwritestrategy.cpp \
     external/subscribecovservicehandler.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
@@ -206,7 +205,6 @@ HEADERS += bacnetvirtuallinklayer.h \
     externalconfirmedservicewrapper.h \
     external/externalpropertymapping.h \
     external/externalobjectreadstrategy.h \
-    external/externalobjectwritestrategy.h \
     external/subscribecovservicehandler.h
 
 OTHER_FILES +=

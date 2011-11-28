@@ -22,8 +22,7 @@ DiscoveryWrapper::Action ConfirmedDiscoveryWrapper::handleTimeout(BacnetApplicat
 {
     Q_CHECK_PTR(appLayer);
     if (0 != _serviceToSend) {
-        ExternalConfirmedServiceHandler::ActionToExecute todo;
-        _serviceToSend->handleTimeout(&todo);
+        ExternalConfirmedServiceHandler::ActionToExecute todo = _serviceToSend->handleTimeout();
         if (ExternalConfirmedServiceHandler::ResendService == todo) {
             if (0 != appLayer) {
                 appLayer->discover(_destinedObject);

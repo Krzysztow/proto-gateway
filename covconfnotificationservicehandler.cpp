@@ -5,8 +5,7 @@
 using namespace Bacnet;
 
 CovConfNotificationServiceHandler::CovConfNotificationServiceHandler(CovNotificationRequestData *data):
-    _data(data),
-    _sendTryOuts(NumberOfRetransmissions)
+    _data(data)
 {
 }
 
@@ -23,39 +22,35 @@ qint32 CovConfNotificationServiceHandler::toRaw(quint8 *buffer, quint16 length)
     return -1;
 }
 
-void CovConfNotificationServiceHandler::handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleAck(quint8 *ackPtr, quint16 length)
 {
     //! \what to do? Unsubscribe?
-    Q_UNUSED(ackPtr); Q_UNUSED(length); Q_UNUSED(action);
+    Q_UNUSED(ackPtr); Q_UNUSED(length);
+    return DeleteServiceHandler;
 }
 
-void CovConfNotificationServiceHandler::handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleError(quint8 *errorPtr, quint16 length)
 {
     //! \what to do? Unsubscribe?
-    Q_UNUSED(errorPtr); Q_UNUSED(length); Q_UNUSED(action);
+    Q_UNUSED(errorPtr); Q_UNUSED(length);
+    return DeleteServiceHandler;
 }
 
-void CovConfNotificationServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
 {
     //! \what to do? Unsubscribe?
-    Q_UNUSED(abortPtr); Q_UNUSED(length); Q_UNUSED(action);
+    Q_UNUSED(abortPtr); Q_UNUSED(length);
+    return DeleteServiceHandler;
 }
 
-quint32 CovConfNotificationServiceHandler::handleTimeout(ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleTimeout()
 {
-    Q_CHECK_PTR(action);
-    --_sendTryOuts;
-    if (0 == _sendTryOuts) {
-        *action = ExternalConfirmedServiceHandler::DeleteServiceHandler;
-        return 0;
-    }
-
-    *action = ExternalConfirmedServiceHandler::ResendService;
-    return 1000;
+    return DeleteServiceHandler;
 }
 
-void CovConfNotificationServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
 {
+    return DeleteServiceHandler;
 }
 
 int CovConfNotificationServiceHandler::asynchId()

@@ -16,11 +16,11 @@ public:
 
 public://functions overridden from BacnetConfirmedServiceHandler
     virtual qint32 toRaw(quint8 *buffer, quint16 length);
-    virtual void handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action);
-    virtual void handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action);
-    virtual void handleReject(quint8 *abortPtr, quint16 length, ActionToExecute *action);
-    virtual void handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action);
-    virtual quint32 handleTimeout(ActionToExecute *action);
+    virtual ActionToExecute handleAck(quint8 *ackPtr, quint16 length);
+    virtual ActionToExecute handleError(quint8 *errorPtr, quint16 length);
+    virtual ActionToExecute handleReject(quint8 *abortPtr, quint16 length);
+    virtual ActionToExecute handleAbort(quint8 *abortPtr, quint16 length);
+    virtual ActionToExecute handleTimeout();
 
     virtual int asynchId();
     virtual Property *property();
@@ -30,7 +30,6 @@ public:
 
 private:
     CovNotificationRequestData *_data;
-    quint8 _sendTryOuts;
 };
 
 }

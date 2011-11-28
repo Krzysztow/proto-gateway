@@ -5,8 +5,7 @@
 using namespace Bacnet;
 
 SubscribeCovServiceHandler::SubscribeCovServiceHandler(SubscribeCOVServiceData *serviceData):
-    _serviceData(serviceData),
-    _sendTryOut(DefaultTimeoutRetries)
+    _serviceData(serviceData)
 {
 }
 
@@ -26,33 +25,32 @@ Property *SubscribeCovServiceHandler::property()
     return 0;
 }
 
-quint32 SubscribeCovServiceHandler::handleTimeout(ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleTimeout()
 {
-    Q_CHECK_PTR(action);
-    --_sendTryOut;
-    if (0 == _sendTryOut) {
-        *action = ExternalConfirmedServiceHandler::DeleteServiceHandler;
-        return 0;
-    }
-
-    *action = ExternalConfirmedServiceHandler::ResendService;
-    return 1000;
+    return DeleteServiceHandler;
 }
 
-void SubscribeCovServiceHandler::handleAck(quint8 *ackPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleAck(quint8 *ackPtr, quint16 length)
 {
+    Q_CHECK_PTR(ackPtr);
+    Q_ASSERT(0 == length);
+
+    return DeleteServiceHandler;
 }
 
-void SubscribeCovServiceHandler::handleError(quint8 *errorPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleError(quint8 *errorPtr, quint16 length)
 {
+    return DeleteServiceHandler;
 }
 
-void SubscribeCovServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
 {
+    return DeleteServiceHandler;
 }
 
-void SubscribeCovServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
 {
+    return DeleteServiceHandler;
 }
 
 qint32 SubscribeCovServiceHandler::toRaw(quint8 *buffer, quint16 length)

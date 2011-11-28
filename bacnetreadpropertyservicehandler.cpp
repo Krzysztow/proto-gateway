@@ -9,7 +9,6 @@ using namespace Bacnet;
 
 ReadPropertyServiceHandler::ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler, int asynchId, Property *property):
     _rpData(rpData),
-    sendTryOuts(3),
     _responseHandler(respHandler),
     _asynchId(asynchId),
     _property(property)
@@ -30,27 +29,18 @@ qint32 ReadPropertyServiceHandler::toRaw(quint8 *buffer, quint16 length)
     return _rpData->toRaw(buffer, length);
 }
 
-quint32 ReadPropertyServiceHandler::handleTimeout(ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleTimeout()
 {
-    Q_CHECK_PTR(action);
-    --sendTryOuts;
-    if (0 == sendTryOuts) {
-        *action = ExternalConfirmedServiceHandler::DeleteServiceHandler;
-        return 0;
-    }
-
-    *action = ExternalConfirmedServiceHandler::ResendService;
-    return 1000;
+    return ExternalConfirmedServiceHandler::DeleteServiceHandler;
 }
 
-void ReadPropertyServiceHandler::handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleAck(quint8 *ackPtr, quint16 length)
 {
-    Q_CHECK_PTR(action);
     BacnetReadPropertyAck ack;
     qint32 ret = ack.fromRaw(ackPtr, length);
     if (ret < 0) {
         qWarning("ReadPropertyServiceHandler::handleAck() - ack received, but problem on parsing %d", ret);
-        *action = DeleteServiceHandler;//we are done - parent may delete us
+        return DeleteServiceHandler;//we are done - parent may delete us
     }
 
     Q_ASSERT(_rpData->objId.instanceNum == ack._readData.objId.instanceNum);
@@ -61,27 +51,28 @@ void ReadPropertyServiceHandler::handleAck(quint8 *ackPtr, quint16 length, Actio
 
     _responseHandler->handleResponse(this, ack);
 
-    *action = DeleteServiceHandler;//we are done - parent may delete us
+    return DeleteServiceHandler;//we are done - parent may delete us
 }
 
-void ReadPropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length)
 {
     //! \todo parse Error message.
     Error error;
     error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeUnknownObject);
     _responseHandler->handleError(this, error);
-    *action = DeleteServiceHandler;
+    return DeleteServiceHandler;
 }
 
-void ReadPropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
 {
     //! \todo parse Abort message.
     _responseHandler->handleAbort(this, 0);
-    *action = DeleteServiceHandler;
+    return DeleteServiceHandler;
 }
 
-void ReadPropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
 {
+    return DeleteServiceHandler;
 }
 
 int ReadPropertyServiceHandler::asynchId()

@@ -29,54 +29,47 @@ qint32 BacnetWritePropertyServiceHandler::toRaw(quint8 *buffer, quint16 length)
     return _wData->toRaw(buffer, length);
 }
 
-quint32 BacnetWritePropertyServiceHandler::handleTimeout(ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleTimeout()
 {
-    Q_CHECK_PTR(action);
-    --sendTryOuts;
-    if (0 == sendTryOuts) {
-        *action = ExternalConfirmedServiceHandler::DeleteServiceHandler;
-        return 0;
-    }
-
-    *action = ExternalConfirmedServiceHandler::ResendService;
-    return 1000;
+#warning "ExternalConfirmedServiceHandler::ActionToExecute"
+    return ExternalConfirmedServiceHandler::DeleteServiceHandler;
 }
 
-void BacnetWritePropertyServiceHandler::handleAck(quint8 *ackPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleAck(quint8 *ackPtr, quint16 length)
 {
-    Q_CHECK_PTR(action);
+    Q_CHECK_PTR(ackPtr);
     Q_ASSERT(0 == length);
-
     Q_UNUSED(ackPtr);
 
     if (length > 0) {
         qWarning("BacnetWritePropertyServiceHandler::handleAck() - ack received, but has some additional data");
-        *action = DeleteServiceHandler;//we are done - parent may delete us
+        return DeleteServiceHandler;//we are done - parent may delete us
     }
 
     _responseHandler->handleResponse(this, true);
-    *action = DeleteServiceHandler;//we are done - parent may delete us
+    return DeleteServiceHandler;//we are done - parent may delete us
 }
 
-void BacnetWritePropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length)
 {
     //! \todo parse Error message.
     Error error;
     error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeUnknownObject);
     _responseHandler->handleError(this, error);
-    *action = DeleteServiceHandler;
+    return DeleteServiceHandler;
 }
 
-void BacnetWritePropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length, ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
 {
     //! \todo parse Abort message.
     _responseHandler->handleAbort(this, 0);
-    *action = DeleteServiceHandler;
+    return DeleteServiceHandler;
 }
 
-void BacnetWritePropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length, ExternalConfirmedServiceHandler::ActionToExecute *action)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
 {
-
+#warning "ExternalConfirmedServiceHandler::ActionToExecute"
+    return DeleteServiceHandler;
 }
 
 Property *BacnetWritePropertyServiceHandler::property()
