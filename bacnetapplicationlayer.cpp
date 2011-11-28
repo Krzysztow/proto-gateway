@@ -349,6 +349,11 @@ void BacnetApplicationLayerHandler::discover(quint32 objectId, bool forceToHave)
         _awaitingDiscoveries.insertMulti(objectId, 0);
 }
 
+void BacnetApplicationLayerHandler::registerObject(ObjectIdentifier &devId, ObjectIdentifier &objId)
+{
+    _objectDeviceMapper.addOrUpdatemappingEntry(objId.objectIdNum(), devId.objectIdNum(), true);
+}
+
 void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName)
 {
     ObjIdNum devNum = devId.objectIdNum();
@@ -479,6 +484,7 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "cdm.h"
 #include "bacnetproperty.h"
 #include "bacnetbipaddress.h"
+#include "externalobjectreadstrategy.h"
 
 int main(int argc, char *argv[])
 {
@@ -665,6 +671,20 @@ int main(int argc, char *argv[])
 //    broadAddr.setGlobalBroadcast();
 
 //    appHandler->indication(iAmData, iAmDataSize, srcAddr, broadAddr);
+
+    BacnetAddress covDeviceAddress(srcAddr);
+    ObjectIdentifier covDeviceIdentifier(BacnetObjectTypeNS::Device, 2);
+
+    ObjectIdentifier covPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 10);
+    PropertySubject *covPropSubject = DataModel::instance()->createProperty(5, QVariant::Double);
+
+    appHandler->registerObject(covDeviceIdentifier, covPropertyIdentifier);
+    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, Bacnet::SegmentedNOT, 99);
+
+    CovReadStrategy *covStrategy = new CovReadStrategy(60000, true);
+    covStrategy->setHasIncrement(true, 1.0);
+    extHandler->addMappedProperty(covPropSubject, covPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
+                                  covStrategy);
 
     return a.exec();
 }

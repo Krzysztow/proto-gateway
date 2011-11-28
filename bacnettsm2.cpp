@@ -43,7 +43,7 @@ bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sour
     quint8 *buffStart = buffer.bodyPtr();
     quint16 buffLength = buffer.bodyLength();
 
-    BacnetConfirmedRequestData reqData(BacnetConfirmedRequestData::Length_1476Octets, invokeId, service);
+    BacnetConfirmedRequestData reqData(BacnetConfirmedRequestData::Length_206Octets/*BacnetConfirmedRequestData::Length_1476Octets*/, invokeId, service);
     qint32 ret = reqData.toRaw(buffStart, buffLength);
     Q_ASSERT(ret > 0);
     if (ret <= 0) {
@@ -61,8 +61,7 @@ bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sour
     buffStart += ret;
     buffer.setBodyLength(buffStart - buffer.bodyPtr());
 
-    HelperCoder::printArray(buffStart, buffer.bodyLength(), "Request to be sent: ");
-    qDebug("Length sent %d", ret);
+    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Request to be sent: ");
 
     _netHandler->sendApdu(&buffer, true, &destination, &sourceAddress);
     Q_ASSERT(_confiremedEntriesList.contains(invokeId));
@@ -482,6 +481,8 @@ void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
 int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice service)
 {
     int invokeId = _generator.generateId();
+#warning "CHANGED TEMPORARILY"
+    invokeId = 15;
     if (invokeId < 0) {
         qDebug("%s : cannot generate id!", __PRETTY_FUNCTION__);
         return invokeId;

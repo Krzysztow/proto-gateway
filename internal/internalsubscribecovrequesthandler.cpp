@@ -6,6 +6,7 @@
 #include "bacnetdeviceobject.h"
 #include "bacnetobject.h"
 #include "bacnettsm2.h"
+#include "subscribecovservicedata.h"
 
 using namespace Bacnet;
 
@@ -15,6 +16,7 @@ InternalSubscribeCOVRequestHandler::InternalSubscribeCOVRequestHandler(BacnetCon
     InternalConfirmedRequestHandler(crData, requester, destination),
     _device(device),
     _appLayer(appLayer),
+    _data(),
     _error(BacnetServicesNS::SubscribeCOVProperty)
 {
 }

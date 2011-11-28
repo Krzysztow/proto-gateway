@@ -61,6 +61,9 @@ public:
     CovIncrementHandler(T &covIncremenet);
     CovIncrementHandler();
 
+    void setIncrementValue(V &covIncrement);
+    const V &incrementValue();
+
 public:
     V _lastInformedValue;
     T _covIncrement;

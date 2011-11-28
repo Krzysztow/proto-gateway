@@ -57,8 +57,8 @@ private:
     static DataModel *_instance;
 
     //value given in 1/10 of second. Default timeout is 1 second.
-    static const int DEFAULT_TIMEOUT = 20;
-    int _internalTimeout100ms;
+    static const int DEFAULT_TIMEOUT = 2000;
+    int _internalTimeout_ms;
 
     QMap<quint32, PropertySubject*> _properties;
     /** This is an array saying which ids are currently in use. Its size is as great as is necessarry to store MAX_ASYNCH_ID bits.

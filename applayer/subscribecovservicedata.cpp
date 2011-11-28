@@ -5,7 +5,29 @@
 
 using namespace Bacnet;
 
-SubscribeCOVServiceData::SubscribeCOVServiceData(quint32 subscriberProcessId, ObjIdNum monitoredObjectId, bool issueConfirmedNotifications, quint32 lifetime):
+SubscribeCOVServiceData::SubscribeCOVServiceData():
+    _subscriberProcId(0),
+    _monitoredObjectId(invalidObjIdNum()),
+    _issueConfNotification(false),
+    _lifetime(IndefiniteLifetime),
+    _propReference(0),
+    _covIncrement(0),
+    _flags(0)//timeout and issueCfrmdNotifs not present
+{
+}
+
+SubscribeCOVServiceData::SubscribeCOVServiceData(quint32 subscriberProcessId, ObjIdNum monitoredObjectId):
+    _subscriberProcId(subscriberProcessId),
+    _monitoredObjectId(monitoredObjectId),
+    _issueConfNotification(false),
+    _lifetime(IndefiniteLifetime)
+{
+    clearConfirmedNotificationPresent();
+    clearLifetimePresent();
+}
+
+SubscribeCOVServiceData::SubscribeCOVServiceData(quint32 subscriberProcessId, ObjIdNum monitoredObjectId, bool issueConfirmedNotifications, bool hasLifetime, quint32 lifetime,
+                                                 BacnetPropertyNS::Identifier propertyId, quint32 propIdx):
     _subscriberProcId(subscriberProcessId),
     _monitoredObjectId(monitoredObjectId),
     _issueConfNotification(issueConfirmedNotifications),
@@ -14,6 +36,11 @@ SubscribeCOVServiceData::SubscribeCOVServiceData(quint32 subscriberProcessId, Ob
     _covIncrement(0),
     _flags(0)//nothing set yet
 {
+    setConfirmedNotificationPresent();
+    if (hasLifetime)
+        setLifetimePresent();
+    if (BacnetPropertyNS::UndefinedProperty != propertyId)
+        _propReference = new PropertyReference(propertyId, propIdx);
 }
 
 SubscribeCOVServiceData::~SubscribeCOVServiceData()
@@ -96,7 +123,7 @@ qint32 SubscribeCOVServiceData::toRaw(quint8 *startPtr, quint16 buffLength)
         leftLength -= ret;
 
         if (hasCovIncrement()) {
-            ret = _propReference->toRaw(actualPtr, leftLength, 5);
+            ret = _covIncrement->toRaw(actualPtr, leftLength, 5);
             if (ret <= 0) {
                 Q_ASSERT_X(false, "SubscribeCOVServiceData::toRaw()", "Cannot encode cov increment.");
                 qDebug("%s : Cannot encode cov increment: %d", __PRETTY_FUNCTION__, ret);
@@ -193,5 +220,14 @@ qint32 SubscribeCOVServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
         return -BacnetRejectNS::ReasonTooManyArguments;
 
     return consumedBytes;
+}
+
+void SubscribeCOVServiceData::setCovIncrement(float value)
+{
+    if (!hasCovIncrement()) {
+        _covIncrement = new CovRealIcnrementHandler();
+    }
+    _covIncrement->setIncrementValue(value);
+
 }
 

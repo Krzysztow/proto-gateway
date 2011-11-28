@@ -19,6 +19,7 @@
 using namespace Bacnet;
 
 ExternalObjectsHandler::ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer):
+    _interval_ms(DefaultInterval_ms),
     _lastProcIdValueUsed(0),
     _appLayer(appLayer)
 {
@@ -46,7 +47,15 @@ void ExternalObjectsHandler::addMappedProperty(PropertySubject *property, quint3
     }
 
     property->setOwner(this);
-    _mappingTable.insert(property, new ExternalPropertyMapping(property, readStrategy, propertyId, propertyArrayIdx, objectId));
+    ExternalPropertyMapping *propMapping = new ExternalPropertyMapping(property, readStrategy, propertyId, propertyArrayIdx, objectId);
+    _mappingTable.insert(property, propMapping);
+    if (0 != readStrategy && readStrategy->isPeriodic()) {
+        Q_ASSERT(!_timeDependantJobs.contains(qMakePair(readStrategy, propMapping)));
+        _timeDependantJobs.append(qMakePair(readStrategy, propMapping));
+
+        if (!_timer.isActive() && !_timeDependantJobs.isEmpty())
+            _timer.start(_interval_ms, this);
+    }
 }
 
 ExternalPropertyMapping *ExternalObjectsHandler::mappingEntry(::Property *property)
@@ -330,7 +339,11 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
     }
 
     SubscribeCOVServiceData *serviceData =
-            new SubscribeCOVServiceData(generateProcId, propertyMapping->objectId, isConfirmedCovSubscription, lifetime_s);
+            new SubscribeCOVServiceData(generateProcId, propertyMapping->objectId, isConfirmedCovSubscription, true, lifetime_s,
+                                        propertyMapping->propertyId, propertyMapping->propertyArrayIdx);
+    if (covStreategy->hasIncrement())
+        serviceData->setCovIncrement(covStreategy->incrementValue());
+
     Q_CHECK_PTR(serviceData);
 
     SubscribeCovServiceHandler *serviceHandler =
@@ -392,9 +405,17 @@ int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, External
                 }
             }
         }
+
+#warning "For testing purposes. REMOVE later!"
+        Q_ASSERT(!_subscribedCovs.contains(15));
+        returnProcId = 18;
+
+        //the key was found, insert us
+        Q_ASSERT(!_subscribedCovs.contains(returnProcId));
+        _subscribedCovs.insert(returnProcId, qMakePair(propertyMapping, readStrategy));
     }
 
-    if ( (valueToCheck >= 0) && (returnProcId != valueToCheck) ) {//we have to take care, that we remove the valueToCheck if occures
+    if ( (valueToCheck >= 0) && (returnProcId != valueToCheck) ) {//we have to take care, that we remove the valueToCheck if it represents CovReadStrategy
         QHash<int, TCovMappinPair>::Iterator checkIt = _subscribedCovs.find(valueToCheck);
         QHash<int, TCovMappinPair>::Iterator checkItEnd = _subscribedCovs.end();
         for (; checkIt != checkItEnd; ++checkIt) {
@@ -435,5 +456,17 @@ void ExternalObjectsHandler::subscriptionProcessFinished(int subscribeProcId, Ex
     }
 
     readStrategy->setSubscriptionInitiated(ok, subscribeProcId, isCritical);
+}
+
+void ExternalObjectsHandler::timerEvent(QTimerEvent *)
+{
+    //iterate over jobs and tell then the time has passed
+    QList<TTimeDependantPair>::Iterator it = _timeDependantJobs.begin();
+    QList<TTimeDependantPair>::Iterator itEnd = _timeDependantJobs.end();
+
+    for (; it != itEnd; ++it) {
+        if (it->first->timePassed(_interval_ms))
+            it->first->doAction(it->second, this);
+    }
 }
 

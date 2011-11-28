@@ -20,14 +20,22 @@ namespace Bacnet {
             public BacnetServiceData
     {
     public:
-        SubscribeCOVServiceData(quint32 subscriberProcessId = 0, ObjIdNum monitoredObjectId = invalidObjIdNum(), bool issueConfirmedNotifications = false, quint32 lifetime = 0);
+        //! Sets default value. Would be used for parsing.
+        SubscribeCOVServiceData();
+        //! Prepares data as unsubscription.
+        SubscribeCOVServiceData(quint32 subscriberProcessId, ObjIdNum monitoredObjectId);
+        //! Creates data as -/re-subscription.
+        SubscribeCOVServiceData(quint32 subscriberProcessId, ObjIdNum monitoredObjectId, bool issueConfirmedNotifications, bool hasLifetime, quint32 lifetime = IndefiniteLifetime,
+                                BacnetPropertyNS::Identifier propId = BacnetPropertyNS::UndefinedProperty, quint32 propIdx = ArrayIndexNotPresent);
         ~SubscribeCOVServiceData();
+
+        static const quint32 IndefiniteLifetime = 0;
 
     public://implementations of BacnetServiceData interface.
         virtual qint32 toRaw(quint8 *startPtr, quint16 buffLength);
         virtual qint32 fromRaw(quint8 *serviceData, quint16 buffLength);
 
-    public:
+    public:        
         inline bool isConfirmedNotificationPresent() {return _flags & IssueConfNotifPresent;}
         inline void setConfirmedNotificationPresent() {_flags |= IssueConfNotifPresent;}
         inline void clearConfirmedNotificationPresent() {_flags &= (~IssueConfNotifPresent);}
@@ -46,6 +54,7 @@ namespace Bacnet {
         inline bool hasCovIncrement() {return 0 != _covIncrement;}
         inline void clearCovIncrement() {delete _covIncrement; _covIncrement = 0;}
         inline CovRealIcnrementHandler *takeCovIncrement() {CovRealIcnrementHandler *tmp = _covIncrement; _covIncrement = 0; return tmp;}
+        void setCovIncrement(float value);
 
     public://is there any reason we should make it private?
         quint32 _subscriberProcId;

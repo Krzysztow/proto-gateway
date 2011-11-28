@@ -35,7 +35,7 @@ Property *SubscribeCovServiceHandler::property()
 
 ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleTimeout()
 {
-    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, true, false);
+    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
     return DeleteServiceHandler;
 }
 

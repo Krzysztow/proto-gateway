@@ -66,6 +66,8 @@ class CovReadStrategy:
         public ExternalObjectReadStrategy
 {
 public:
+    static const int DefaultInterval = 10000;
+public:
     CovReadStrategy(int resubscriptionInterval_ms = DefaultInterval, bool isConfirmed = false, bool readTimelyWhenError = false);
 
     void setTimeDependantReadingWhenError(bool set);
@@ -73,6 +75,10 @@ public:
 
     void setIsConfirmed(bool isConfirmed);
     inline bool isConfirmed() {return _settingsFlags & Flag_CovConfirmed;}
+
+    void setHasIncrement(bool hasIncrement, float incrValue = 0);
+    inline bool hasIncrement() {return _settingsFlags & Flag_CovHasIncrement;}
+    inline float incrementValue() {return _increment;}
 
     inline bool isSubscriptionInitiated() {return _settingsFlags & Flag_CovInitialized;}
     void setSubscriptionInitiated(bool success, int subscriptionId, bool setError = false);
@@ -98,8 +104,9 @@ public:
         Flag_CovInitialized     = 0x04,
         Flag_CovError           = 0x08,
         Flag_CovTimeReadEnable  = 0x10,
+        Flag_CovHasIncrement    = 0x20,
 
-        CHECK_SIZE              = 0x20 - 1
+        CHECK_SIZE
     };
 
 private:
@@ -108,10 +115,10 @@ private:
     inline bool hasError() {return _settingsFlags & Flag_CovError;}
 
 private:
-    static const int DefaultInterval = 10000;
     int _resubscriptionInterval_ms;
     int _timeToAction_ms;
     int _subscriptionId;
+    float _increment;
     typedef quint8 FlagsContainer;
     FlagsContainer _settingsFlags;
 };

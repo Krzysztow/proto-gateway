@@ -71,8 +71,6 @@ const mappingEntry &RoutingTable::findEntry_helper(QHash<quint32, mappingEntry> 
 
 const mappingEntry &RoutingTable::findEntry(quint32 objIdNum, bool *found)
 {
-    Q_CHECK_PTR(false);
-
     bool ok;
     if (0 == found)
         found = &ok;

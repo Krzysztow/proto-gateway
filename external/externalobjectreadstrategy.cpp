@@ -66,6 +66,7 @@ void SimpleWithTimeReadStrategy::doAction(ExternalPropertyMapping *propertyMappi
     Q_CHECK_PTR(propertyMapping->mappedProperty);
 
     externalHandler->readProperty(propertyMapping, false);
+    _timeToAction_ms = _interval_ms;
 }
 
 void SimpleWithTimeReadStrategy::setInterval(int interval_ms)
@@ -89,7 +90,7 @@ CovReadStrategy::CovReadStrategy(int resubscriptionInterval_ms, bool isConfirmed
     _subscriptionId(-1),
     _settingsFlags(0)
 {
-    Q_ASSERT(sizeof (FlagsContainer) >= sizeof (CovReadStrategyFlags));
+    Q_ASSERT( (1 << (int)log2(CHECK_SIZE)) > 8*sizeof(FlagsContainer) );
     setIsConfirmed(isConfirmed);
     setTimeDependantReadingWhenError(readTimelyWhenError);
 }
@@ -120,9 +121,11 @@ void Bacnet::CovReadStrategy::doAction(Bacnet::ExternalPropertyMapping *property
 {
     Q_ASSERT(propertyMapping);
     Q_ASSERT(externalHandler);
-    if (!hasError())
+    if (!hasError()) {
         externalHandler->startCovSubscriptionProcess(propertyMapping, isConfirmed(), _resubscriptionInterval_ms/1000, this);
-    else if (hasTimeDependantReadingWhenError())
+        qDebug("Subscribes cov with interval %d", _resubscriptionInterval_ms/1000);
+        _timeToAction_ms = _resubscriptionInterval_ms;
+    } else if (hasTimeDependantReadingWhenError())
         externalHandler->readProperty(propertyMapping, false);
 }
 
@@ -177,5 +180,14 @@ void CovReadStrategy::setHasError(bool hasError)
 int CovReadStrategy::subscriptionProcId()
 {
     return _subscriptionId;
+}
+
+void Bacnet::CovReadStrategy::setHasIncrement(bool hasIncrement, float incrValue)
+{
+    if (hasIncrement) {
+        _increment = incrValue;
+        _settingsFlags |= Flag_CovHasIncrement;
+    } else
+        _settingsFlags &= ~(Flag_CovHasIncrement);
 }
 

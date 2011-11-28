@@ -62,12 +62,21 @@ namespace Bacnet {
 
     public:
         int readProperty(ExternalPropertyMapping *readElement, bool askStrategy = true);
-        bool startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
-        void subscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical = false);
-
     private:
         QHash<Property*, ExternalPropertyMapping*> _mappingTable;
 
+    protected:
+        void timerEvent(QTimerEvent *);
+    private:
+        typedef QPair<ExternalObjectReadStrategy*,ExternalPropertyMapping*> TTimeDependantPair;
+        QList<TTimeDependantPair> _timeDependantJobs;
+        QBasicTimer _timer;
+        static const int DefaultInterval_ms = 500;
+        int _interval_ms;
+
+    public:
+        bool startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
+        void subscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical = false);
     private:
         /**
           The hash works as single key one, but 0 key. For zero it may have multiple values, which mean unconfirmed notifications.

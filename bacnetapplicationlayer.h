@@ -81,6 +81,7 @@ private:
     void discover(quint32 objectId, bool forceToHave = false);
     QHash<ObjIdNum, DiscoveryWrapper*> _awaitingDiscoveries;
 public:
+    void registerObject(ObjectIdentifier &devId, ObjectIdentifier &objId);
     void registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName);
     void registerDevice(BacnetAddress &devAddress, ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId);
 

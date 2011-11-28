@@ -140,7 +140,7 @@ class PropertyReference:
         public BacnetDataInterface
 {
 public:
-    PropertyReference();
+    PropertyReference(BacnetPropertyNS::Identifier propId = BacnetPropertyNS::UndefinedProperty, quint32 arrayIdx = ArrayIndexNotPresent);
     virtual ~PropertyReference();
 
 public://iverridden BacnetDataInterface methods.

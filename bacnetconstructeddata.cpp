@@ -241,9 +241,9 @@ DataType::DataType TimeStamp::typeId()
 
 
 ////////////// PropertyReference /////////////
-PropertyReference::PropertyReference():
-        _identifier(BacnetPropertyNS::UndefinedProperty),
-        _arrayIdx(ArrayIndexNotPresent)
+PropertyReference::PropertyReference(BacnetPropertyNS::Identifier propId, quint32 arrayIdx):
+        _identifier(propId),
+        _arrayIdx(arrayIdx)
 {
 }
 
