@@ -14,7 +14,8 @@ InternalSubscribeCOVRequestHandler::InternalSubscribeCOVRequestHandler(BacnetCon
                                                                        BacnetApplicationLayerHandler *appLayer):
     InternalConfirmedRequestHandler(crData, requester, destination),
     _device(device),
-    _appLayer(appLayer)
+    _appLayer(appLayer),
+    _error(BacnetServicesNS::SubscribeCOVProperty)
 {
 }
 
@@ -80,5 +81,10 @@ Bacnet::BacnetServiceData *InternalSubscribeCOVRequestHandler::takeResponseData(
 
 qint32 InternalSubscribeCOVRequestHandler::fromRaw(quint8 *servicePtr, quint16 length)
 {
-    return _data.fromRaw(servicePtr, length);
+    qint32 ret = _data.fromRaw(servicePtr, length);
+    if (_data.hasPropertyReference())
+        _error.setErrorChoice(BacnetServicesNS::SubscribeCOVProperty);
+    else
+        _error.setErrorChoice(BacnetServicesNS::SubscribeCOV);
+    return ret;
 }

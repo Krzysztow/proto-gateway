@@ -54,23 +54,21 @@ ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::han
     return DeleteServiceHandler;//we are done - parent may delete us
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleError(Error &error)
 {
     //! \todo parse Error message.
-    Error error;
-    error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeUnknownObject);
     _responseHandler->handleError(this, error);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleAbort()
 {
     //! \todo parse Abort message.
     _responseHandler->handleAbort(this, 0);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
     return DeleteServiceHandler;
 }

@@ -17,9 +17,9 @@ public:
 public://functions overridden from BacnetConfirmedServiceHandler
     virtual qint32 toRaw(quint8 *buffer, quint16 length);
     virtual ActionToExecute handleAck(quint8 *ackPtr, quint16 length);
-    virtual ActionToExecute handleError(quint8 *errorPtr, quint16 length);
-    virtual ActionToExecute handleReject(quint8 *abortPtr, quint16 length);
-    virtual ActionToExecute handleAbort(quint8 *abortPtr, quint16 length);
+    virtual ActionToExecute handleError(Error &error);
+    virtual ActionToExecute handleReject(BacnetRejectNS::RejectReason rejectReason);
+    virtual ActionToExecute handleAbort();
     virtual ActionToExecute handleTimeout();
 
     virtual int asynchId();

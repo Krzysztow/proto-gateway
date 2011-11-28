@@ -62,7 +62,8 @@ namespace Bacnet {
 
     public:
         int readProperty(ExternalPropertyMapping *readElement, bool askStrategy = true);
-        bool makeCovSubscription(ExternalPropertyMapping *readElement, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
+        bool startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
+        void subscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical = false);
 
     private:
         QHash<Property*, ExternalPropertyMapping*> _mappingTable;
@@ -71,10 +72,12 @@ namespace Bacnet {
         /**
           The hash works as single key one, but 0 key. For zero it may have multiple values, which mean unconfirmed notifications.
           */
-        QHash<quint32, QPair<ExternalPropertyMapping*, CovReadStrategy*> > _subscribedCovs;
+        typedef QPair<ExternalPropertyMapping*, CovReadStrategy*> TCovMappinPair;
+        QHash<int, TCovMappinPair> _subscribedCovs;
+        static const int UnconfirmedProcIdValue = 0;
         static const quint32 MaximumConfirmedSubscriptions = 255;
-        quint32 _lastProcIdValueUsed;
-        quint32 insertToSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy);
+        int _lastProcIdValueUsed;
+        int insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueToCheck = -1);
 
     private:
         BacnetApplicationLayerHandler *_appLayer;

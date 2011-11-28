@@ -48,7 +48,10 @@ public:
 
     void processConfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetConfirmedRequestData *crData);
     void processUnconfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, BacnetUnconfirmedRequestData &ucrData);
-    void processResponse(BacnetPci::BacnetPduType responseType, BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processAck(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct);
+    void processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, ExternalConfirmedServiceHandler *serviceAct);
+    void processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, BacnetRejectNS::RejectReason reason, ExternalConfirmedServiceHandler *serviceAct);
+    void processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, Error &error, ExternalConfirmedServiceHandler *serviceAct);
     void processTimeout(BacnetAddress &remoteDestination, BacnetAddress &localSource, ExternalConfirmedServiceHandler *serviceAct);
 
     //! tries to send the data. When there is no translation entry obj id -> address, returns false. When discovery is to be used, when such case happens, use \sa sendUnconfirmedWithDiscovery()
@@ -83,6 +86,7 @@ public:
 
 private:
     QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper> _awaitingConfirmedServices;
+    void cleanUpService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 action, QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator &it);
 
 protected:
     void timerEvent(QTimerEvent *);

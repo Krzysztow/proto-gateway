@@ -29,17 +29,15 @@ ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandl
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleError(quint8 *errorPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleError(Error &error)
 {
     //! \what to do? Unsubscribe?
-    Q_UNUSED(errorPtr); Q_UNUSED(length);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleAbort()
 {
     //! \what to do? Unsubscribe?
-    Q_UNUSED(abortPtr); Q_UNUSED(length);
     return DeleteServiceHandler;
 }
 
@@ -48,7 +46,7 @@ ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandl
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
     return DeleteServiceHandler;
 }

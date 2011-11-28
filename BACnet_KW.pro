@@ -34,12 +34,7 @@ SOURCES += main.cpp \
     property.cpp \
     asynchowner.cpp \
     bacnettsm2.cpp \
-#    bacnetwritepropertyservice.cpp \
-    external/externalobjectshandler.cpp \
     cdm.cpp \
-    bacnetwritepropertyservicehandler.cpp \
-    bacnetreadpropertyservicehandler.cpp \
-    internal/internalobjectshandler.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \ # bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
@@ -80,6 +75,7 @@ SOURCES += main.cpp \
     internal/internalunconfirmedrequesthandler.cpp \
     internal/internalwhoisrequesthandler.cpp \
     internal/internalwhohasrequesthandler.cpp \
+    internal/internalobjectshandler.cpp \
     internal/internalsubscribecovservicehandler.cpp \
     internal/internalrprequesthandler.cpp \
     internal/bacnetobject2.cpp \
@@ -90,6 +86,9 @@ SOURCES += main.cpp \
     internal/internalihaveservicehandler.cpp \
     \
     external/externalservicehandler.cpp \
+    external/bacnetwritepropertyservicehandler.cpp \
+    external/bacnetreadpropertyservicehandler.cpp \
+    external/externalobjectshandler.cpp \
     \
     applayer/writepropertyservicedata.cpp \
     applayer/whoisservicedata.cpp \
@@ -127,15 +126,10 @@ HEADERS += bacnetvirtuallinklayer.h \
     services/bacnetreadproperty.h \
     bacnettagparser.h \
     property.h \
-#    bacnetwritepropertyservice.h \
-    bacnetwritepropertyservicehandler.h \
-    external/externalobjectshandler.h \
     bacnettsm2.h \ # asynchronousconfirmedhandler.h \
-    internal/internalobjectshandler.h \
     asynchsetter.h \
     bacnettsm.h \
     bacnetreadpropertyack.h \
-    bacnetreadpropertyservicehandler.h \
     cdm.h \
     bacnetservice.h \ # bacneterrorack.h \
 # bacnetreadpropertyservice.h \
@@ -180,6 +174,7 @@ HEADERS += bacnetvirtuallinklayer.h \
     internal/internalwprequesthandler.h \
     internal/internalsubscribecovrequesthandler.h \
     internal/internalsubscribecovservicehandler.h \
+    internal/internalobjectshandler.h \
     internal/internalrprequesthandler.h \
     internal/bacnetobject2.h \
     internal/deviceobject.h \
@@ -190,6 +185,9 @@ HEADERS += bacnetvirtuallinklayer.h \
     \
     external/externalservicehandler.h \
     external/externalconfirmedservicehandler.h \
+    external/bacnetwritepropertyservicehandler.h \
+    external/externalobjectshandler.h \
+    external/bacnetreadpropertyservicehandler.h \
     \
     applayer/writepropertyservicedata.h \
     applayer/whoisservicedata.h \

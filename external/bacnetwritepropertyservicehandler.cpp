@@ -50,23 +50,21 @@ ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandl
     return DeleteServiceHandler;//we are done - parent may delete us
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleError(quint8 *errorPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleError(Error &error)
 {
     //! \todo parse Error message.
-    Error error;
-    error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeUnknownObject);
     _responseHandler->handleError(this, error);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleAbort()
 {
     //! \todo parse Abort message.
     _responseHandler->handleAbort(this, 0);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
 #warning "ExternalConfirmedServiceHandler::ActionToExecute"
     return DeleteServiceHandler;

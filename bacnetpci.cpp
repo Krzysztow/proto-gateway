@@ -509,3 +509,8 @@ qint16 BacnetErrorData::toRaw(quint8 *dataPtr, quint16 length)
     ++actualPtr;
     return (actualPtr - dataPtr);
 }
+
+quint8 BacnetErrorData::errorChoice()
+{
+    return _errorChoice;
+}

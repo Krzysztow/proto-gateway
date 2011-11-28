@@ -188,7 +188,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, saData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
         break;
     }
     case (BacnetPci::TypeComplexAck):
@@ -216,7 +216,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, cplxData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
         else
             sendAbort(remoteSource, localDestination, cplxData.invokeId(), BacnetAbortNS::ReasonInvalidApduInThisState, true);
         return;
@@ -257,10 +257,17 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
+        Error error((BacnetServicesNS::BacnetErrorChoice)errData.errorChoice());
+        ret = error.appPartFromRaw(data + ret, dataLength - ret);
+        if (ret < 0) {
+            qDebug("%s : Had problems to analyze error!", __PRETTY_FUNCTION__);
+            error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeOther);
+        }
+
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, errData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processError(remoteSource, localDestination, error, service);
     }
         break;
     case (BacnetPci::TypeReject):
@@ -278,7 +285,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, rjctData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processReject(remoteSource, localDestination, (BacnetRejectNS::RejectReason) rjctData.rejectReason(), service);
     }
         break;
     case (BacnetPci::TypeAbort):
@@ -294,7 +301,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
         ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, abrtData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
-            _appLayer->processResponse(pduType, remoteSource, localDestination, data + ret, dataLength - ret, service);
+            _appLayer->processAbort(remoteSource, localDestination, service);
     }
         break;
     default: {
@@ -391,13 +398,18 @@ void BacnetTSM2::sendError(BacnetAddress &remoteDestination, BacnetAddress &loca
     Q_ASSERT(ret > 0);
     if (ret < 0) {
         qDebug("BacnetTSM2::sendAck() - can't encode %d", ret);
+        Q_ASSERT(false);
         return;
     }
     actualPtr += ret;
-    *actualPtr = error.errorClass;
-    ++actualPtr;
-    *actualPtr = error.errorCode;
-    ++actualPtr;
+    buffLength -= ret;
+    ret = error.appPartToRaw(actualPtr, buffLength);
+    if (ret < 0) {
+        qDebug("%s : Error while reading error.", __PRETTY_FUNCTION__);
+        Q_ASSERT(false);
+        return;
+    }
+    actualPtr += ret;
 
     buffer.setBodyLength(actualPtr - buffer.bodyPtr());
     _netHandler->sendApdu(&buffer, false, &remoteDestination, &localSource);

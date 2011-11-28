@@ -11,11 +11,12 @@ using namespace Bacnet;
 InternalRPRequestHandler::InternalRPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                                    BacnetDeviceObject *device,
                                                    BacnetApplicationLayerHandler *appLayer):
-InternalConfirmedRequestHandler(crData, requester, destination),
-_device(device),
-_appLayer(appLayer),
-_asynchId(-1),
-_response(0)
+    InternalConfirmedRequestHandler(crData, requester, destination),
+    _device(device),
+    _appLayer(appLayer),
+    _asynchId(-1),
+    _error(BacnetServicesNS::ReadProperty),
+    _response(0)
 {
 }
 

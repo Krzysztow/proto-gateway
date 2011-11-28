@@ -12,6 +12,7 @@
 #include "whohasservicedata.h"
 #include "discoverywrapper.h"
 #include "externalconfirmedservicehandler.h"
+#include "error.h"
 
 using namespace Bacnet;
 
@@ -104,7 +105,71 @@ void BacnetApplicationLayerHandler::processUnconfirmedRequest(BacnetAddress &rem
     }
 }
 
-void BacnetApplicationLayerHandler::processResponse(BacnetPci::BacnetPduType responseType, BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct)
+void BacnetApplicationLayerHandler::processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, ExternalConfirmedServiceHandler *serviceAct)
+{
+    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
+    Q_ASSERT(it != _awaitingConfirmedServices.end());
+
+    if (it == _awaitingConfirmedServices.end()) {
+        qDebug("%s : gotten abort to an unexpected service!", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
+    if (!it.value().handler)
+        action = it.value().handler->handleAbort();
+    cleanUpService(remoteSource, localDestination, action, it);
+}
+
+void BacnetApplicationLayerHandler::processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, BacnetRejectNS::RejectReason reason, ExternalConfirmedServiceHandler *serviceAct)
+{
+    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
+    Q_ASSERT(it != _awaitingConfirmedServices.end());
+
+    if (it == _awaitingConfirmedServices.end()) {
+        qDebug("%s : gotten reject to an unexpected service!", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
+    if (!it.value().handler)
+        action = it.value().handler->handleReject(reason);
+    cleanUpService(remoteSource, localDestination, action, it);
+}
+
+void BacnetApplicationLayerHandler::processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, Error &error, ExternalConfirmedServiceHandler *serviceAct)
+{
+    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
+    Q_ASSERT(it != _awaitingConfirmedServices.end());
+
+    if (it == _awaitingConfirmedServices.end()) {
+        qDebug("%s : gotten error to an unexpected service!", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
+    if (!it.value().handler)
+        action = it.value().handler->handleError(error);
+    cleanUpService(remoteSource, localDestination, action, it);
+}
+
+void BacnetApplicationLayerHandler::cleanUpService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 action, QHash<ExternalConfirmedServiceHandler *, ExternalConfirmedServiceWrapper>::Iterator &it)
+{
+    //delete handlers if necessary.
+    if (ExternalConfirmedServiceHandler::DeleteServiceHandler == action) {
+        delete it.value().handler;
+    } else if (ExternalConfirmedServiceHandler::DoNothing == action) {
+        ;
+    } else if (ExternalConfirmedServiceHandler::ResendService == action) {
+        send(remoteSource, localDestination, it.value().serviceType, it.value().handler);
+    }
+
+    //remove ACT from the hash
+    _awaitingConfirmedServices.erase(it);
+}
+
+
+void BacnetApplicationLayerHandler::processAck(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *dataPtr, quint16 dataLength, ExternalConfirmedServiceHandler *serviceAct)
 {
     Q_UNUSED(remoteSource);
     Q_UNUSED(localDestination);
@@ -113,39 +178,10 @@ void BacnetApplicationLayerHandler::processResponse(BacnetPci::BacnetPduType res
     QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
     Q_ASSERT(it != _awaitingConfirmedServices.end());
     if (it != _awaitingConfirmedServices.end()) {
-        if (0 != it.value().handler) {
-            ExternalConfirmedServiceHandler::ActionToExecute action;
-            //dispatch data to handlers
-            switch (responseType) {
-            case (BacnetPci::TypeSimpleAck):        //fall through
-            case (BacnetPci::TypeComplexAck):
-                action = it.value().handler->handleAck(dataPtr, dataLength);
-                break;
-            case (BacnetPci::TypeError):
-                action = it.value().handler->handleError(dataPtr, dataLength);
-                break;
-            case (BacnetPci::TypeReject):
-                action = it.value().handler->handleReject(dataPtr, dataLength);
-                break;
-            case (BacnetPci::TypeAbort):
-                action = it.value().handler->handleAbort(dataPtr, dataLength);
-                break;
-            default:
-                qDebug("%s : wrong response type %d", __PRETTY_FUNCTION__, responseType);
-                Q_ASSERT(false);
-            }
-
-            //delete handlers if necessary.
-            if (ExternalConfirmedServiceHandler::DeleteServiceHandler == action) {
-                delete it.value().handler;
-            } else if (ExternalConfirmedServiceHandler::DoNothing == action) {
-                ;
-            } else if (ExternalConfirmedServiceHandler::ResendService == action) {
-                send(remoteSource, localDestination, it.value().serviceType, it.value().handler);
-            }
-        }
-        //remove ACT from the hash
-        _awaitingConfirmedServices.erase(it);
+        ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
+        if (0 != it.value().handler)
+            action = it.value().handler->handleAck(dataPtr, dataLength);
+        cleanUpService(remoteSource, localDestination, action, it);
     } else {
         qDebug("%s : service not in a list, but gotten! ERROR!", __PRETTY_FUNCTION__);
     }

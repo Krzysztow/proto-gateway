@@ -74,6 +74,10 @@ public:
     void setIsConfirmed(bool isConfirmed);
     inline bool isConfirmed() {return _settingsFlags & Flag_CovConfirmed;}
 
+    inline bool isSubscriptionInitiated() {return _settingsFlags & Flag_CovInitialized;}
+    void setSubscriptionInitiated(bool success, int subscriptionId, bool setError = false);
+    int subscriptionProcId();
+
 public://time-dependant behaviour
     //! returns true, if the action is periodic
     virtual bool isPeriodic();
@@ -99,8 +103,6 @@ public:
     };
 
 private:
-    inline bool isSubscriptionInitiated() {return _settingsFlags & Flag_CovInitialized;}
-    void setSubscriptionInitiated(bool success, bool setError = false);
 
     void setHasError(bool hasError);
     inline bool hasError() {return _settingsFlags & Flag_CovError;}
@@ -109,6 +111,7 @@ private:
     static const int DefaultInterval = 10000;
     int _resubscriptionInterval_ms;
     int _timeToAction_ms;
+    int _subscriptionId;
     typedef quint8 FlagsContainer;
     FlagsContainer _settingsFlags;
 };

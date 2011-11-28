@@ -19,8 +19,8 @@
 using namespace Bacnet;
 
 ExternalObjectsHandler::ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer):
-    _appLayer(appLayer),
-    _lastProcIdValueUsed(0)
+    _lastProcIdValueUsed(0),
+    _appLayer(appLayer)
 {
 }
 
@@ -310,7 +310,7 @@ BacnetAddress Bacnet::ExternalObjectsHandler::oneOfAddresses()
         return BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
 }
 
-bool ExternalObjectsHandler::makeCovSubscription(ExternalPropertyMapping *readElement, bool isConfirmedCovSubscription, quint32 lifetime_s, CovReadStrategy *covStreategy)
+bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription, quint32 lifetime_s, CovReadStrategy *covStreategy)
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {
@@ -318,51 +318,122 @@ bool ExternalObjectsHandler::makeCovSubscription(ExternalPropertyMapping *readEl
         return false;
     }
 
-    Q_CHECK_PTR(readElement);
-    if (0 == readElement)
+    Q_CHECK_PTR(propertyMapping);
+    if (0 == propertyMapping)
         return false;
-    Q_ASSERT(readElement->isValid());
+    Q_ASSERT(propertyMapping->isValid());
 
-    quint8 generateProcId = insertToSubscribeCovs(isConfirmedCovSubscription, readElement, covStreategy);
+    quint8 generateProcId = insertToOrFindSubscribeCovs(isConfirmedCovSubscription, propertyMapping, covStreategy);
     if (isConfirmedCovSubscription && (0 == generateProcId)) {
         qDebug("%s : Couldn't generate Cov Process Id key.", __PRETTY_FUNCTION__);
         return false;
     }
 
     SubscribeCOVServiceData *serviceData =
-            new SubscribeCOVServiceData(generateProcId, readElement->objectId, isConfirmedCovSubscription, lifetime_s);
+            new SubscribeCOVServiceData(generateProcId, propertyMapping->objectId, isConfirmedCovSubscription, lifetime_s);
     Q_CHECK_PTR(serviceData);
 
     SubscribeCovServiceHandler *serviceHandler =
-            new SubscribeCovServiceHandler(serviceData);
+            new SubscribeCovServiceHandler(serviceData, this, propertyMapping, covStreategy);
     Q_CHECK_PTR(serviceHandler);
 
     BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
-    ObjectIdentifier objectId(readElement->objectId);
+    ObjectIdentifier objectId(propertyMapping->objectId);
     //the ownership isgiven to AppLayer. We just use pointers as Asynchronous tokens.
     _appLayer->send(objectId.objIdStruct(), fromAddr, BacnetServicesNS::SubscribeCOVProperty, serviceHandler, 1000);
 
     return true;
 }
 
-quint32 ExternalObjectsHandler::insertToSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy)
+int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueToCheck)
 {
-    if (confirmed) {
-        _subscribedCovs.insertMulti(0, qMakePair(propertyMapping, readStrategy));
-        return 0;
-    }
+    int returnProcId(-1);
+    if (!confirmed) {
+        {
+            //check if we are there already. QHash::find(key) returns iterator to the most recent element inserted. If there are others, their are accessible by incremenation.
+            const int key = UnconfirmedProcIdValue;
+            QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(key);
+            QHash<int, TCovMappinPair>::Iterator itEnd = _subscribedCovs.end();
+            for (; it != itEnd; ++it) {
+                if (it.key() != UnconfirmedProcIdValue)
+                    break;
+                if ( (it->first == propertyMapping) &&
+                     (it->second == readStrategy) ) {
+                    returnProcId = UnconfirmedProcIdValue;
+                    break;
+                }
+            }
+        }
 
-    //look for the unique number
-    quint32 newId(_lastProcIdValueUsed + 1);
-    quint32 guard(0);
-    while (guard < MaximumConfirmedSubscriptions) {
-        if (_subscribedCovs.contains(newId))
-                ++newId;
-        else {
-            _lastProcIdValueUsed = newId;
-            return _lastProcIdValueUsed;
+        //if we were not found, insert us
+        if (returnProcId != UnconfirmedProcIdValue) {
+            const int key = UnconfirmedProcIdValue;
+            _subscribedCovs.insertMulti(key, qMakePair(propertyMapping, readStrategy));
+            returnProcId = UnconfirmedProcIdValue;
+        }
+    } else {
+        if (valueToCheck >= 0) {
+            QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(valueToCheck);
+            if ( (it->first == propertyMapping) && (it->second == readStrategy) )
+                returnProcId = valueToCheck;
+        }
+
+        //we still have to look for the unique number
+        if (returnProcId < 0) {
+            quint32 newId(_lastProcIdValueUsed + 1);
+            quint32 guard(0);
+            while (guard < MaximumConfirmedSubscriptions) {
+                if (_subscribedCovs.contains(newId))
+                    ++newId;
+                else {
+                    _lastProcIdValueUsed = newId;
+                    returnProcId = _lastProcIdValueUsed;
+                    break;
+                }
+            }
         }
     }
 
-    return 0;
+    if ( (valueToCheck >= 0) && (returnProcId != valueToCheck) ) {//we have to take care, that we remove the valueToCheck if occures
+        QHash<int, TCovMappinPair>::Iterator checkIt = _subscribedCovs.find(valueToCheck);
+        QHash<int, TCovMappinPair>::Iterator checkItEnd = _subscribedCovs.end();
+        for (; checkIt != checkItEnd; ++checkIt) {
+            if (checkIt.key() != valueToCheck)
+                break;
+            if ( (checkIt->first == propertyMapping) && (checkIt->second == readStrategy) ) {
+                _subscribedCovs.erase(checkIt);
+                break;
+            }
+
+        }
+    }
+
+    return returnProcId;
+
 }
+
+void ExternalObjectsHandler::subscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical)
+{
+    QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(subscribeProcId);
+
+    if (0 == subscribeProcId) {
+        QHash<int, TCovMappinPair>::Iterator itEnd = _subscribedCovs.end();
+        for (; it != itEnd; ++it) {
+            if (it.key() != subscribeProcId) {
+                it = _subscribedCovs.end();
+                break;
+            }
+            if ( (propertyMapping == it->first) && (readStrategy == it->second) )
+                break;
+        }
+    }
+
+    if (_subscribedCovs.end() == it) {
+        qDebug("%s : subscription finished, but we got wrong parameters", __PRETTY_FUNCTION__);
+        Q_ASSERT(false);
+        return;
+    }
+
+    readStrategy->setSubscriptionInitiated(ok, subscribeProcId, isCritical);
+}
+

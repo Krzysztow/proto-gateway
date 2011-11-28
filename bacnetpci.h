@@ -187,6 +187,8 @@ public:
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
     inline quint8 invokeId() {return _origInvokeId;}
 
+    quint8 errorChoice();
+
 public://overridden from BacnetPciData
     virtual quint8 pduType();
     virtual qint16 toRaw(quint8 *buffer, quint16 length);
@@ -204,6 +206,8 @@ public:
     BacnetRejectData(quint8 originalInvokeId, quint8 rejectReason);
     qint16 fromRaw(quint8 *dataPtr, quint16 length);
     inline quint8 invokeId() {return _origInvokeId;}
+
+    inline quint8 rejectReason() {return _rejectReason;}
 
 public://overridden from BacnetPciData
     virtual quint8 pduType();

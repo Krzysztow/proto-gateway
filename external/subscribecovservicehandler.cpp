@@ -1,12 +1,20 @@
 #include "subscribecovservicehandler.h"
 
 #include "subscribecovservicedata.h"
+#include "externalobjectshandler.h"
+#include "error.h"
 
 using namespace Bacnet;
 
-SubscribeCovServiceHandler::SubscribeCovServiceHandler(SubscribeCOVServiceData *serviceData):
-    _serviceData(serviceData)
+SubscribeCovServiceHandler::SubscribeCovServiceHandler(SubscribeCOVServiceData *serviceData, ExternalObjectsHandler *handler,
+                                                       ExternalPropertyMapping *propertyMapping, CovReadStrategy *covStrategy):
+    _serviceData(serviceData),
+    _handler(handler),
+    _propertyMapping(propertyMapping),
+    _readStrategy(covStrategy)
 {
+    Q_CHECK_PTR(_serviceData);
+    Q_CHECK_PTR(_handler);
 }
 
 SubscribeCovServiceHandler::~SubscribeCovServiceHandler()
@@ -27,6 +35,7 @@ Property *SubscribeCovServiceHandler::property()
 
 ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleTimeout()
 {
+    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, true, false);
     return DeleteServiceHandler;
 }
 
@@ -35,21 +44,42 @@ ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::han
     Q_CHECK_PTR(ackPtr);
     Q_ASSERT(0 == length);
 
+    Q_UNUSED(ackPtr);
+    Q_UNUSED(length);
+
+    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, true, false);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleError(quint8 *errorPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleError(Error &error)
 {
+    bool errorCritical(false);
+
+    switch (error.errorCode) {
+    case (BacnetErrorNS::CodeNotCovProperty):
+    case (BacnetErrorNS::CodeNoSpaceToAddListElement):
+    case (BacnetErrorNS::CodeInconsistentParameters):
+    case (BacnetErrorNS::CodeMissingRequiredParameter):
+            errorCritical = true;
+    default:;
+    }
+
+    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, errorCritical);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleAbort(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleAbort()
 {
+    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
     return DeleteServiceHandler;
 }
 
-ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleReject(quint8 *abortPtr, quint16 length)
+ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
+    Q_UNUSED(rejectReason);
+    //when device aborts the request, that means something really bad happens - it's critical. Most probably our message was ill formed.
+
+    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, true);
     return DeleteServiceHandler;
 }
 

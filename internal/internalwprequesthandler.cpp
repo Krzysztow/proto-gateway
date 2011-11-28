@@ -12,10 +12,11 @@ using namespace Bacnet;
 InternalWPRequestHandler::InternalWPRequestHandler(BacnetConfirmedRequestData *crData, BacnetAddress &requester, BacnetAddress &destination,
                                                    BacnetDeviceObject *device,
                                                    BacnetApplicationLayerHandler *appLayer):
-InternalConfirmedRequestHandler(crData, requester, destination),
-_device(device),
-_appLayer(appLayer),
-_asynchId(-1)
+    InternalConfirmedRequestHandler(crData, requester, destination),
+    _device(device),
+    _appLayer(appLayer),
+    _asynchId(-1),
+    _error(BacnetServicesNS::WriteProperty)
 {
 }
 

@@ -170,7 +170,7 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
         NotChecked,
         Inform,
         DontInform } defaultIncrementState(NotChecked);
-    Bacnet::Error error;
+    Bacnet::Error error(BacnetServicesNS::AcknowledgeAlarm);
 
     for (; it != itEnd; ++it) {
         if ((*it)->isCovObjectSubscription() || (*it)->isCovPropertySubscription(propId, propArrayIdx)) {
