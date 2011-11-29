@@ -5,6 +5,7 @@
 #include "error.h"
 #include "externalpropertymapping.h"
 #include "property.h"
+#include "externalobjectreadstrategy.h"
 
 using namespace Bacnet;
 
@@ -33,6 +34,8 @@ ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::han
 {
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::Timeout);
+    if (0 != _propertyMapping->readAccessStrategy)
+        _propertyMapping->readAccessStrategy->actionFinished(ExternalObjectReadStrategy::FinishedWithError);
     return ExternalConfirmedServiceHandler::DeleteServiceHandler;
 }
 
@@ -60,6 +63,9 @@ ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::han
             _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::ResultOk);
         } else
             _propertyMapping->mappedProperty->setValue(internalValue);
+
+        if (0 != _propertyMapping->readAccessStrategy)
+            _propertyMapping->readAccessStrategy->actionFinished(ExternalObjectReadStrategy::FinishedOk);
     }
 
     return DeleteServiceHandler;//we are done - parent may delete us
@@ -67,9 +73,12 @@ ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::han
 
 ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleError(Error &error)
 {
+    Q_UNUSED(error);
     //! \todo parse Error message.
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+    if (0 != _propertyMapping->readAccessStrategy)
+        _propertyMapping->readAccessStrategy->actionFinished(ExternalObjectReadStrategy::FinishedWithError);
     return DeleteServiceHandler;
 }
 
@@ -78,12 +87,22 @@ ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::han
     //! \todo parse Abort message.
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+    if (0 != _propertyMapping->readAccessStrategy)
+        _propertyMapping->readAccessStrategy->actionFinished(ExternalObjectReadStrategy::FinishedCritical);
     return DeleteServiceHandler;
 }
 
 ExternalConfirmedServiceHandler::ActionToExecute ReadPropertyServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
+    Q_UNUSED(rejectReason);
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+    if (0 != _propertyMapping->readAccessStrategy)
+        _propertyMapping->readAccessStrategy->actionFinished(ExternalObjectReadStrategy::FinishedWithError);
     return DeleteServiceHandler;
+}
+
+BacnetServicesNS::BacnetConfirmedServiceChoice ReadPropertyServiceHandler::serviceChoice()
+{
+    return BacnetServicesNS::ReadProperty;
 }

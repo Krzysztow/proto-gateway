@@ -111,7 +111,9 @@ SOURCES += main.cpp \
     internal/internaluncfrdmcovnotifhandler.cpp \
     tests/rpanswerer.cpp \
     external/externalobjectwritestrategy.cpp \
-    external/externaltimedepjob.cpp
+    external/externaltimedepjob.cpp \
+    tests/wprequester.cpp \
+    tests/wpacknowledger.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -218,9 +220,15 @@ HEADERS += bacnetvirtuallinklayer.h \
     internal/internaluncfrdmcovnotifhandler.h \
     tests/rpanswerer.h \
     external/externalobjectwritestrategy.h \
-    external/externaltimedepjob.h
+    external/externaltimedepjob.h \
+    tests/wprequester.h \
+    tests/wpacknowledger.h
 
 OTHER_FILES +=
+
+
+
+
 
 
 

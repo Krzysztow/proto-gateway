@@ -51,14 +51,7 @@ ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandl
     return DeleteServiceHandler;
 }
 
-int CovConfNotificationServiceHandler::asynchId()
+BacnetServicesNS::BacnetConfirmedServiceChoice CovConfNotificationServiceHandler::serviceChoice()
 {
-    Q_ASSERT(false);
-    return 0;
-}
-
-Property *CovConfNotificationServiceHandler::property()
-{
-    Q_ASSERT(false);
-    return 0;
+    return BacnetServicesNS::ConfirmedCOVNotification;
 }

@@ -64,12 +64,13 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
     //send it
     if (subscription.isIssueConfirmedNotifications()) {
         Bacnet::CovConfNotificationServiceHandler *hndlr = new Bacnet::CovConfNotificationServiceHandler(covData);//takes ownership
-        if (subscription.recipientHasAddress()) {
-            _appLayer->send(subscription.recipientAddress()->address(), devAddress, BacnetServicesNS::ConfirmedCOVNotification, hndlr);
-        } else {
-            Q_ASSERT(0 != subscription.recipientObjId());
-            _appLayer->send(subscription.recipientObjId()->_value, device->address(), BacnetServicesNS::ConfirmedCOVNotification, hndlr);
-        }
+        _appLayer->send(subscription.recipientAddress()->address(), devAddress, hndlr);
+//        if (subscription.recipientHasAddress()) {
+//            _appLayer->send(subscription.recipientAddress()->address(), devAddress, BacnetServicesNS::ConfirmedCOVNotification, hndlr);
+//        } else {
+//            Q_ASSERT(0 != subscription.recipientObjId());
+//            _appLayer->send(subscription.recipientObjId()->_value, device->address(), BacnetServicesNS::ConfirmedCOVNotification, hndlr);
+//        }
 #warning "Get rid of _value dependency (ObjIdStruct)"
     } else {
         if (subscription.recipientHasAddress()) {

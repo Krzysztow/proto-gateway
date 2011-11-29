@@ -22,6 +22,8 @@ class Error;
         virtual ~ExternalConfirmedServiceHandler() {}
 
         virtual qint32 toRaw(quint8 *buffer, quint16 length) = 0;
+        virtual BacnetServicesNS::BacnetConfirmedServiceChoice serviceChoice() = 0;
+
         virtual ActionToExecute handleAck(quint8 *ackPtr, quint16 length) = 0;
         virtual ActionToExecute handleError(Error &error) = 0;
         virtual ActionToExecute handleAbort() = 0;

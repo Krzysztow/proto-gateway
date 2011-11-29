@@ -107,65 +107,70 @@ void BacnetApplicationLayerHandler::processUnconfirmedRequest(BacnetAddress &rem
 
 void BacnetApplicationLayerHandler::processAbort(BacnetAddress &remoteSource, BacnetAddress &localDestination, ExternalConfirmedServiceHandler *serviceAct)
 {
-    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
-    Q_ASSERT(it != _awaitingConfirmedServices.end());
+    int idx = _awaitingConfirmedServices.indexOf(serviceAct);
+    Q_ASSERT(idx >= 0);
 
-    if (it == _awaitingConfirmedServices.end()) {
+    if (idx < 0) {
         qDebug("%s : gotten abort to an unexpected service!", __PRETTY_FUNCTION__);
         return;
     }
 
     ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
-    if (!it.value().handler)
-        action = it.value().handler->handleAbort();
-    cleanUpService(remoteSource, localDestination, action, it);
+    ExternalConfirmedServiceHandler *handler = serviceAct;
+    if (0 != handler)
+        action = handler->handleAbort();
+    cleanUpService(remoteSource, localDestination, action, idx);
 }
 
 void BacnetApplicationLayerHandler::processReject(BacnetAddress &remoteSource, BacnetAddress &localDestination, BacnetRejectNS::RejectReason reason, ExternalConfirmedServiceHandler *serviceAct)
 {
-    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
-    Q_ASSERT(it != _awaitingConfirmedServices.end());
+    int idx = _awaitingConfirmedServices.indexOf(serviceAct);
+    Q_ASSERT(idx >= 0);
 
-    if (it == _awaitingConfirmedServices.end()) {
+    if (idx < 0) {
         qDebug("%s : gotten reject to an unexpected service!", __PRETTY_FUNCTION__);
         return;
     }
 
     ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
-    if (!it.value().handler)
-        action = it.value().handler->handleReject(reason);
-    cleanUpService(remoteSource, localDestination, action, it);
+    ExternalConfirmedServiceHandler *handler = serviceAct;
+    if (0 != handler)
+        action = handler->handleReject(reason);
+    cleanUpService(remoteSource, localDestination, action, idx);
 }
 
 void BacnetApplicationLayerHandler::processError(BacnetAddress &remoteSource, BacnetAddress &localDestination, Error &error, ExternalConfirmedServiceHandler *serviceAct)
 {
-    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
-    Q_ASSERT(it != _awaitingConfirmedServices.end());
+    int idx = _awaitingConfirmedServices.indexOf(serviceAct);
+    Q_ASSERT(idx >= 0);
 
-    if (it == _awaitingConfirmedServices.end()) {
+    if (idx < 0) {
         qDebug("%s : gotten error to an unexpected service!", __PRETTY_FUNCTION__);
         return;
     }
 
     ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
-    if (!it.value().handler)
-        action = it.value().handler->handleError(error);
-    cleanUpService(remoteSource, localDestination, action, it);
+    ExternalConfirmedServiceHandler *handler = serviceAct;
+    if (0 != handler)
+        action = handler->handleError(error);
+    cleanUpService(remoteSource, localDestination, action, idx);
 }
 
-void BacnetApplicationLayerHandler::cleanUpService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 action, QHash<ExternalConfirmedServiceHandler *, ExternalConfirmedServiceWrapper>::Iterator &it)
+void BacnetApplicationLayerHandler::cleanUpService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 action, int idx)
 {
+    Q_ASSERT(idx >= 0);
+    Q_ASSERT(idx < _awaitingConfirmedServices.count());
     //delete handlers if necessary.
     if (ExternalConfirmedServiceHandler::DeleteServiceHandler == action) {
-        delete it.value().handler;
+        delete _awaitingConfirmedServices[idx];
     } else if (ExternalConfirmedServiceHandler::DoNothing == action) {
         ;
     } else if (ExternalConfirmedServiceHandler::ResendService == action) {
-        send(remoteSource, localDestination, it.value().serviceType, it.value().handler);
+        send(remoteSource, localDestination, _awaitingConfirmedServices[idx]);
     }
 
     //remove ACT from the hash
-    _awaitingConfirmedServices.erase(it);
+    _awaitingConfirmedServices.removeAt(idx);
 }
 
 
@@ -175,13 +180,14 @@ void BacnetApplicationLayerHandler::processAck(BacnetAddress &remoteSource, Bacn
     Q_UNUSED(localDestination);
     Q_CHECK_PTR(serviceAct);
     Q_CHECK_PTR(dataPtr);
-    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
-    Q_ASSERT(it != _awaitingConfirmedServices.end());
-    if (it != _awaitingConfirmedServices.end()) {
+    int idx = _awaitingConfirmedServices.indexOf(serviceAct);
+    Q_ASSERT(idx >= 0);
+    if (idx >= 0) {
         ExternalConfirmedServiceHandler::ActionToExecute action(ExternalConfirmedServiceHandler::DoNothing);
-        if (0 != it.value().handler)
-            action = it.value().handler->handleAck(dataPtr, dataLength);
-        cleanUpService(remoteSource, localDestination, action, it);
+        ExternalConfirmedServiceHandler *handler = serviceAct;
+        if (0 != handler)
+            action = handler->handleAck(dataPtr, dataLength);
+        cleanUpService(remoteSource, localDestination, action, idx);
     } else {
         qDebug("%s : service not in a list, but gotten! ERROR!", __PRETTY_FUNCTION__);
     }
@@ -190,24 +196,25 @@ void BacnetApplicationLayerHandler::processAck(BacnetAddress &remoteSource, Bacn
 void Bacnet::BacnetApplicationLayerHandler::processTimeout(BacnetAddress &remoteDestination, BacnetAddress &localSource, ExternalConfirmedServiceHandler *serviceAct)
 {
     Q_CHECK_PTR(serviceAct);
-    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator it = _awaitingConfirmedServices.find(serviceAct);
-    Q_ASSERT(it != _awaitingConfirmedServices.end());
-    if ( it != _awaitingConfirmedServices.end() ) {
-        if (0 != it->handler) {
+    int idx = _awaitingConfirmedServices.indexOf(serviceAct);
+    Q_ASSERT(idx >= 0);
+    if ( idx >= 0 ) {
+        ExternalConfirmedServiceHandler *handler = serviceAct;
+        if (0 != handler) {
             //delete handlers if necessary.
-            ExternalConfirmedServiceHandler::ActionToExecute action = serviceAct->handleTimeout();
+            ExternalConfirmedServiceHandler::ActionToExecute action = handler->handleTimeout();
             if (ExternalConfirmedServiceHandler::DeleteServiceHandler == action) {
-                delete it->handler;
+                delete handler;
             } else if (ExternalConfirmedServiceHandler::DoNothing == action) {
                 ;
             } else if (ExternalConfirmedServiceHandler::ResendService == action) {
-                send(remoteDestination, localSource, it->serviceType, it->handler);
+                send(remoteDestination, localSource, handler);
             }
         } else {
             qDebug("%s : service not in a list, but gotten! ERROR!", __PRETTY_FUNCTION__);
         }
         //remove ACT from the hash
-        _awaitingConfirmedServices.erase(it);
+        _awaitingConfirmedServices.removeAt(idx);
     } else {
         qDebug("%s : Timeout of the confirmed request, which was not in the list!", __PRETTY_FUNCTION__);
     }
@@ -266,7 +273,7 @@ void BacnetApplicationLayerHandler::sendUnconfirmed(const BacnetAddress &destina
     _tsm->sendUnconfirmed(destination, source, data, serviceChoice);
 }
 
-bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend)
 {
     bool found(false);
     quint32 objIdNum = objIdToNum(destinedObject);
@@ -277,7 +284,7 @@ bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedO
     Q_ASSERT(InvalidInstanceNumber != numToObjId(objIdNum).instanceNum);
     const mappingEntry &re = _devicesRoutingTable.findEntry(objIdNum, &found);//note that here objIdNum is id of the device
     if (found) {
-        send(re.address, sourceAddress, service, serviceToSend);
+        send(re.address, sourceAddress, serviceToSend);
         return found;
     }
 
@@ -285,17 +292,17 @@ bool BacnetApplicationLayerHandler::send(const Bacnet::ObjectIdStruct &destinedO
       Otherwise objIdNum is the object to be looked for itself. Create wrapper for a BacnetServiceData and send discovery request (whois or whohas -
       type depends on the objId Num value)
     */
-    ConfirmedDiscoveryWrapper *cdw = new ConfirmedDiscoveryWrapper(objIdNum, sourceAddress, service, serviceToSend);
+    ConfirmedDiscoveryWrapper *cdw = new ConfirmedDiscoveryWrapper(objIdNum, sourceAddress, serviceToSend);
     _awaitingDiscoveries.insertMulti(objIdNum, cdw);
     discover(objIdNum);
 
     return found;
 }
 
-bool BacnetApplicationLayerHandler::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
+bool BacnetApplicationLayerHandler::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend)
 {
-    _awaitingConfirmedServices.insert(serviceToSend, ExternalConfirmedServiceWrapper(serviceToSend, service));
-    return _tsm->send(destination, sourceAddress, service, serviceToSend);
+    _awaitingConfirmedServices.append(serviceToSend);
+    return _tsm->send(destination, sourceAddress, serviceToSend);
 }
 
 void BacnetApplicationLayerHandler::indication(quint8 *data, quint16 length, BacnetAddress &srcAddr, BacnetAddress &destAddr)
@@ -485,8 +492,11 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "bacnetproperty.h"
 #include "bacnetbipaddress.h"
 #include "externalobjectreadstrategy.h"
+#include "externalobjectwritestrategy.h"
 #include "covanswerer.h"
 #include "rpanswerer.h"
+#include "wprequester.h"
+#include "wpacknowledger.h"
 
 int main(int argc, char *argv[])
 {
@@ -725,6 +735,39 @@ int main(int argc, char *argv[])
     timer.start(987);
 #endif
 #undef EXT_RP_TEST
+
+//#define EXT_WP_TEST
+#ifdef EXT_WP_TEST
+    //to make it work, define EXT_RP_TEST in BacnetTsm2.cpp
+    ObjectIdentifier wpPropertyIdentifier(BacnetObjectTypeNS::AnalogValue, 1);
+
+    PropertySubject *wpPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
+    Property *wpObserver = DataModel::instance()->createPropertyObserver(5);
+
+    appHandler->registerObject(covDeviceIdentifier, wpPropertyIdentifier);
+    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
+
+//    SimpleWithTimeReadStrategy *creadStrategy = new SimpleWithTimeReadStrategy(60000);
+    SimpleReadStrategy *creadStrategy = new SimpleReadStrategy();
+    ExternalObjectWriteStrategy *writeStrategy = new ExternalObjectWriteStrategy();
+    extHandler->addMappedProperty(wpPropSubject, wpPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
+                                  creadStrategy, writeStrategy);
+
+    BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
+    QVariant value = (float)180.0;
+    WpRequester *wpReq = new WpRequester(wpObserver, value);
+
+    QTimer timer;
+    timer.setSingleShot(true);
+    QObject::connect(&timer, SIGNAL(timeout()), wpReq, SLOT(writeValue()));
+    timer.start(987);
+
+    QTimer timer2;
+    timer2.setSingleShot(true);
+    WpAcknowledger *wpAcknowledger = new WpAcknowledger(0x00, covDeviceAddress, extHandlerAddress, appHandler);
+    QObject::connect(&timer2, SIGNAL(timeout()), wpAcknowledger, SLOT(answer()));
+    timer2.start(1500);
+#endif
 
 
     return a.exec();

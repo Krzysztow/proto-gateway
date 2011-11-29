@@ -10,10 +10,9 @@ DiscoveryWrapper::DiscoveryWrapper()
 {
 }
 
-ConfirmedDiscoveryWrapper::ConfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend):
+ConfirmedDiscoveryWrapper::ConfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend):
     _destinedObject(destinedObject),
     _sourceAddress(sourceAddress),
-    _service(service),
     _serviceToSend(serviceToSend)
 {
 }
@@ -45,7 +44,7 @@ DiscoveryWrapper::Action ConfirmedDiscoveryWrapper::handleTimeout(BacnetApplicat
 void ConfirmedDiscoveryWrapper::discoveryFinished(BacnetApplicationLayerHandler *appLayer, BacnetAddress &responderAddress)
 {
     Q_CHECK_PTR(appLayer);
-    appLayer->send(responderAddress, _sourceAddress, _service, _serviceToSend);
+    appLayer->send(responderAddress, _sourceAddress, _serviceToSend);
 }
 
 UnconfirmedDiscoveryWrapper::UnconfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice, int retryCount):

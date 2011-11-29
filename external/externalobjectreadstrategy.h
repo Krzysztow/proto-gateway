@@ -20,6 +20,14 @@ public://time-dependant behaviour / implemented ExternalTimeDepJob methods
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
 
+    enum FinishStatus {
+        FinishedOk,
+        FinishedWithError,
+        FinishedCritical
+    };
+
+    virtual void actionFinished(FinishStatus finishStatus);
+
 public://methods considering property readyness to be read
     virtual int readProperty(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler, bool generateAsynchId = false);
 };
@@ -46,6 +54,8 @@ public://time-dependant behaviour
     virtual bool timePassed(int timePassed_ms);
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
+
+    virtual void actionFinished(FinishStatus finishStatus);
 
     //readProperty() is taken from ExternalObjectReadStrategy
 
@@ -100,6 +110,9 @@ public://time-dependant behaviour
     virtual bool timePassed(int timePassed_ms);
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
+
+    virtual void actionFinished(FinishStatus finishStatus);
+
 public:
     virtual int readProperty(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler, bool generateAsynchId);
 

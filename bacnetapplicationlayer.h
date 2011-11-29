@@ -60,8 +60,8 @@ public:
     bool sendUnconfirmedWithDiscovery(const ObjectIdStruct &destinedObject, BacnetAddress &source, BacnetServiceData *data, quint8 serviceChoice);
 
     void sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice);
-    bool send(const ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
-    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms = 1000);
+    bool send(const ObjectIdStruct &destinedObject, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend);
+    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend);
     inline void sendAck(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetServiceData *data, BacnetConfirmedRequestData *reqData) {_tsm->sendAck(remoteDestination, localSource, data, reqData);}
     inline void sendReject(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetRejectNS::RejectReason reason, quint8 invokeId) {_tsm->sendReject(remoteDestination, localSource, reason, invokeId);}
     inline void sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId, BacnetServicesNS::BacnetErrorChoice errorChoice, Error &error) {_tsm->sendError(remoteDestination, localSource, invokeId, errorChoice, error);}
@@ -86,8 +86,8 @@ public:
     void registerDevice(BacnetAddress &devAddress, ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId);
 
 private:
-    QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper> _awaitingConfirmedServices;
-    void cleanUpService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 action, QHash<ExternalConfirmedServiceHandler*, ExternalConfirmedServiceWrapper>::Iterator &it);
+    QList<ExternalConfirmedServiceHandler*> _awaitingConfirmedServices;
+    void cleanUpService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 action, int idx);
 
 protected:
     void timerEvent(QTimerEvent *);

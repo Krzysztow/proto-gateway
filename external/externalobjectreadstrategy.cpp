@@ -65,6 +65,11 @@ int ExternalObjectReadStrategy::readProperty(ExternalPropertyMapping *propertyMa
     return asynchId;
 }
 
+void ExternalObjectReadStrategy::actionFinished(ExternalObjectReadStrategy::FinishStatus finishStatus)
+{
+    Q_UNUSED(finishStatus);
+    //do nothing, but could be used, for disabling when there is no way to read.
+}
 
 ////////////////////////////////////////////////////
 ///////////////SimpleReadStrategy///////////////////
@@ -103,6 +108,12 @@ void SimpleWithTimeReadStrategy::doAction(ExternalPropertyMapping *propertyMappi
 
     readProperty(propertyMapping, externalHandler, false);
     _timeToAction_ms = _interval_ms;
+}
+
+void SimpleWithTimeReadStrategy::actionFinished(ExternalObjectReadStrategy::FinishStatus finishStatus)
+{
+    if (ExternalObjectReadStrategy::FinishedOk == finishStatus)
+        _timeToAction_ms = _interval_ms;
 }
 
 void SimpleWithTimeReadStrategy::setInterval(int interval_ms)
@@ -160,18 +171,21 @@ void CovReadStrategy::doAction(ExternalPropertyMapping *propertyMapping, Externa
     if (!hasError()) {
         externalHandler->startCovSubscriptionProcess(propertyMapping, isConfirmed(), _resubscriptionInterval_ms/1000, this);
         qDebug("Subscribes cov with interval %d", _resubscriptionInterval_ms/1000);
-        _timeToAction_ms = _resubscriptionInterval_ms;
     } else if (hasTimeDependantReadingWhenError())
         readProperty(propertyMapping, externalHandler, false);
+    _timeToAction_ms = _resubscriptionInterval_ms;
 }
 
-//bool CovReadStrategy::isValueReady()
-//{
-//    if (isSubscriptionInitiated())
-//        return true;
-//    else
-//        return false;
-//}
+void CovReadStrategy::actionFinished(ExternalObjectReadStrategy::FinishStatus finishStatus)
+{
+    if (!hasError()) {
+        qDebug("%s : this action should not be called!", __PRETTY_FUNCTION__);
+        Q_ASSERT(false);
+    } else {
+        if (ExternalObjectReadStrategy::FinishedOk == finishStatus)
+            _timeToAction_ms = _resubscriptionInterval_ms;
+    }
+}
 
 void CovReadStrategy::setInterval(int interval_ms)
 {
@@ -242,5 +256,7 @@ int CovReadStrategy::readProperty(Bacnet::ExternalPropertyMapping *propertyMappi
     else
         return ExternalObjectReadStrategy::readProperty(propertyMapping, externalHandler, generateAsynchId);
 }
+
+
 
 

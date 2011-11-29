@@ -74,3 +74,8 @@ void ExternalObjectWriteStrategy::doAction(ExternalPropertyMapping *propertyMapp
     qDebug("%s : Don't call me", __PRETTY_FUNCTION__);
     Q_ASSERT(false);
 }
+
+void ExternalObjectWriteStrategy::actionFinished(ExternalObjectWriteStrategy::FinishStatus finishStatus)
+{
+    Q_UNUSED(finishStatus);
+}

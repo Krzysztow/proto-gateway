@@ -23,6 +23,14 @@ public://time-dependant behaviour
     virtual bool timePassed(int timePassed_ms);
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
+
+public:
+    enum FinishStatus {
+        FinishedOk,
+        FinishedWithError,
+        FinishedCritical
+    };
+    virtual void actionFinished(FinishStatus finishStatus);
 };
 
 } // namespace Bacnet

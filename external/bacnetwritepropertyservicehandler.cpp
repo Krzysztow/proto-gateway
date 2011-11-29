@@ -3,6 +3,7 @@
 #include "writepropertyservicedata.h"
 #include "externalobjectshandler.h"
 #include "error.h"
+#include "externalobjectwritestrategy.h"
 
 using namespace Bacnet;
 
@@ -32,6 +33,8 @@ ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandl
 {
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::Timeout);
+    if (0 != _propertyMapping->writeStrategy)
+        _propertyMapping->writeStrategy->actionFinished(ExternalObjectWriteStrategy::FinishedWithError);
     return ExternalConfirmedServiceHandler::DeleteServiceHandler;
 }
 
@@ -43,21 +46,30 @@ ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandl
 
     if (length > 0) {
         qWarning("BacnetWritePropertyServiceHandler::handleAck() - ack received, but has some additional data");
+        Q_ASSERT(false);
         if (_asynchId > 0)
             _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+        if (0 != _propertyMapping->writeStrategy)
+            _propertyMapping->writeStrategy->actionFinished(ExternalObjectWriteStrategy::FinishedWithError);
         return DeleteServiceHandler;//we are done - parent may delete us
     }
 
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::ResultOk);
+    if (0 != _propertyMapping->writeStrategy)
+        _propertyMapping->writeStrategy->actionFinished(ExternalObjectWriteStrategy::FinishedOk);
     return DeleteServiceHandler;//we are done - parent may delete us
 }
 
 ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleError(Error &error)
 {
+    Q_UNUSED(error);
     //! \todo parse Error message and tell strategy what to do!
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+    if (0 != _propertyMapping->writeStrategy)
+        _propertyMapping->writeStrategy->actionFinished(ExternalObjectWriteStrategy::FinishedWithError);
+
     return DeleteServiceHandler;
 }
 
@@ -66,13 +78,22 @@ ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandl
     //! \todo parse Abort message and tell strategy what to do!
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+    if (0 != _propertyMapping->writeStrategy)
+        _propertyMapping->writeStrategy->actionFinished(ExternalObjectWriteStrategy::FinishedCritical);
     return DeleteServiceHandler;
 }
 
 ExternalConfirmedServiceHandler::ActionToExecute BacnetWritePropertyServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
-#warning "ExternalConfirmedServiceHandler::ActionToExecute"
+    Q_UNUSED(rejectReason);
     if (_asynchId > 0)
         _propertyMapping->mappedProperty->asynchActionFinished(_asynchId, Property::UnknownError);
+    if (0 != _propertyMapping->writeStrategy)
+        _propertyMapping->writeStrategy->actionFinished(ExternalObjectWriteStrategy::FinishedWithError);
     return DeleteServiceHandler;
+}
+
+BacnetServicesNS::BacnetConfirmedServiceChoice BacnetWritePropertyServiceHandler::serviceChoice()
+{
+    return BacnetServicesNS::WriteProperty;
 }

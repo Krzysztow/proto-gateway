@@ -86,7 +86,6 @@ void ExternalObjectsHandler::propertyValueChanged(Property *property)
                "This function should never be called, since it owns only PropertySubjects instances.");
 }
 
-
 int ExternalObjectsHandler::getPropertyRequested(::PropertySubject *toBeGotten)
 {
     Q_CHECK_PTR(toBeGotten);
@@ -112,38 +111,9 @@ bool ExternalObjectsHandler::send(ExternalConfirmedServiceHandler *serviceHandle
         return false;
     }
 
-//    Q_CHECK_PTR(readElement);
-//    if (askStrategy) {
-//        Q_CHECK_PTR(readElement->readAccessStrategy);
-//        if (readElement->readAccessStrategy && readElement->readAccessStrategy->isValueReady())
-//            return Property::ResultOk;
-//    }
-
-//    //get new asynchronous id from data model
-//    int asynchId(0);
-//    if (generateId)
-//        asynchId = DataModel::instance()->generateAsynchId();
-//    Q_ASSERT(asynchId >= 0);
-//    if (asynchId < 0) {
-//        qWarning("Can't generate asynchronous id.");
-//        return Property::UnknownError;
-//    }
-
-//    //! \todo Itroduce BacnetObjId class with conversion functions
-//    ReadPropertyServiceData *service =
-//            new ReadPropertyServiceData(numToObjId(readElement->objectId),
-//                                        readElement->propertyId, readElement->propertyArrayIdx);
-//    Q_CHECK_PTR(service);
-//    ExternalConfirmedServiceHandler *serviceHandler =
-//            new ReadPropertyServiceHandler(service, asynchId, readElement);
-//    Q_CHECK_PTR(serviceHandler);
-
-//    ObjectIdStruct objId = numToObjId(readElement->objectId);
-    //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-
     ObjectIdentifier objId(destinedObject);
     BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
-    return _appLayer->send(objId.objIdStruct(), fromAddr, BacnetServicesNS::ReadProperty, serviceHandler);
+    return _appLayer->send(objId.objIdStruct(), fromAddr, serviceHandler);
 }
 
 bool ExternalObjectsHandler::isRegisteredAddress(InternalAddress &address)
@@ -185,9 +155,6 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
     Q_CHECK_PTR(rEntry->writeStrategy);
     return rEntry->writeStrategy->writeProperty(rEntry, this, value, true);
 }
-
-//WritePropertyServiceData::WritePropertyServiceData(ObjectIdStruct&, BacnetPropertyNS::Identifier&, BacnetDataInterface*&, quint32&)’
-//WritePropertyServiceData::WritePropertyServiceData(ObjectIdentifier&, BacnetPropertyNS::Identifier, BacnetDataInterface*, quint32)
 
 BacnetAddress ExternalObjectsHandler::oneOfAddresses()
 {
@@ -233,7 +200,7 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
     BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
     ObjectIdentifier objectId(propertyMapping->objectId);
     //the ownership isgiven to AppLayer. We just use pointers as Asynchronous tokens.
-    _appLayer->send(objectId.objIdStruct(), fromAddr, BacnetServicesNS::SubscribeCOVProperty, serviceHandler, 1000);
+    _appLayer->send(objectId.objIdStruct(), fromAddr, serviceHandler);
 
     return true;
 }

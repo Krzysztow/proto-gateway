@@ -34,7 +34,7 @@ InternalAddress &BacnetTSM2::myAddress()
     return _myRequestAddress;
 }
 
-bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId)
+bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId)
 {
     //get buffer
     Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::ApplicationLayer);
@@ -43,7 +43,7 @@ bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sour
     quint8 *buffStart = buffer.bodyPtr();
     quint16 buffLength = buffer.bodyLength();
 
-    BacnetConfirmedRequestData reqData(BacnetConfirmedRequestData::Length_206Octets/*BacnetConfirmedRequestData::Length_1476Octets*/, invokeId, service);
+    BacnetConfirmedRequestData reqData(BacnetConfirmedRequestData::Length_206Octets/*BacnetConfirmedRequestData::Length_1476Octets*/, invokeId, serviceToSend->serviceChoice());
     qint32 ret = reqData.toRaw(buffStart, buffLength);
     Q_ASSERT(ret > 0);
     if (ret <= 0) {
@@ -68,16 +68,16 @@ bool BacnetTSM2::send_hlpr(const BacnetAddress &destination, BacnetAddress &sour
     return true;
 }
 
-bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend)
+bool BacnetTSM2::send(const BacnetAddress &destination, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend)
 {
     //generate invoke id.
-    int invokeId = queueConfirmedRequest(serviceToSend, destination, sourceAddress, service);
+    int invokeId = queueConfirmedRequest(serviceToSend, destination, sourceAddress);
     if (invokeId < 0) {//can't generate
         qDebug("BacnetTSM2::send() : can't generate invoke id. Think about introducing another requesting object.");
         return false;
     }
 
-    return send_hlpr(destination, sourceAddress, service, serviceToSend, invokeId);
+    return send_hlpr(destination, sourceAddress, serviceToSend, invokeId);
 }
 
 void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, BacnetRejectNS::RejectReason reason, quint8 invokeId)
@@ -446,13 +446,12 @@ void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "sendUnconfirmed: ");
 }
 
-Bacnet::BacnetTSM2::ConfirmedRequestEntry::ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice serviceCode):
+Bacnet::BacnetTSM2::ConfirmedRequestEntry::ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source):
     handler(handler),
     timeLeft_ms(timeout_ms),
     retriesLeft(retriesNum),
     dst(destination),
-    src(source),
-    service(serviceCode)
+    src(source)
 {
 }
 
@@ -467,7 +466,7 @@ void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
             --(it->retriesLeft);
             if (it->retriesLeft > 0) {//resend
                 it->timeLeft_ms = _requestTimeout_ms;
-                send_hlpr(it->dst, it->src, it->service, it->handler, it.key());
+                send_hlpr(it->dst, it->src, it->handler, it.key());
             } else {
                 _appLayer->processTimeout(it->dst, it->src, it->handler);
                 it = _confiremedEntriesList.erase(it);
@@ -478,7 +477,7 @@ void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
     }
 }
 
-int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice service)
+int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source)
 {
     int invokeId = _generator.generateId();
 
@@ -503,7 +502,7 @@ int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, 
     }
 
     Q_ASSERT(!_confiremedEntriesList.contains(invokeId));
-    _confiremedEntriesList.insert(invokeId, ConfirmedRequestEntry(handler, _requestTimeout_ms, _requestRetriesCount, destination, source, service));
+    _confiremedEntriesList.insert(invokeId, ConfirmedRequestEntry(handler, _requestTimeout_ms, _requestRetriesCount, destination, source));
     return invokeId;
 }
 

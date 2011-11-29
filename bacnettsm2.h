@@ -42,7 +42,7 @@ private:
     BacnetApplicationLayerHandler *_appLayer;
 
 public:
-    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend);
+    bool send(const BacnetAddress &destination, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend);
 
     void sendAck(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetServiceData *data, BacnetConfirmedRequestData *reqData);
     void sendReject(BacnetAddress &remoteDestination, BacnetAddress &localSource, BacnetRejectNS::RejectReason reason, quint8 invokeId);
@@ -55,7 +55,7 @@ public:
     InternalAddress &myAddress();
 
 private:
-    bool send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId);
+    bool send_hlpr(const BacnetAddress &destination, BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend, quint8 invokeId);
 
 
 protected:
@@ -70,7 +70,7 @@ private:
     {
     public:
         //invoke id is a key
-        ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice serviceCode);
+        ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source);
 
     public:
         ExternalConfirmedServiceHandler *handler;
@@ -78,9 +78,8 @@ private:
         int retriesLeft;
         BacnetAddress dst;
         BacnetAddress src;
-        BacnetServicesNS::BacnetConfirmedServiceChoice service;
     };
-    int queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice service);
+    int queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source);
     QHash<int, ConfirmedRequestEntry> _confiremedEntriesList;
 
     QBasicTimer _timer;

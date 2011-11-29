@@ -27,7 +27,7 @@ class ConfirmedDiscoveryWrapper:
         public DiscoveryWrapper
 {
 public:
-    ConfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &sourceAddress, BacnetServicesNS::BacnetConfirmedServiceChoice service, ExternalConfirmedServiceHandler *serviceToSend);
+    ConfirmedDiscoveryWrapper(const ObjIdNum destinedObject, const BacnetAddress &sourceAddress, ExternalConfirmedServiceHandler *serviceToSend);
 
 public://DiscoveryWrapper interface
     virtual Action handleTimeout(BacnetApplicationLayerHandler *appLayer);
@@ -36,7 +36,6 @@ public://DiscoveryWrapper interface
 public:
     ObjIdNum _destinedObject;
     BacnetAddress _sourceAddress;
-    BacnetServicesNS::BacnetConfirmedServiceChoice _service;
     ExternalConfirmedServiceHandler *_serviceToSend;
 };
 

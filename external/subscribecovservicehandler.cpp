@@ -23,16 +23,6 @@ SubscribeCovServiceHandler::~SubscribeCovServiceHandler()
     _serviceData = 0;
 }
 
-int SubscribeCovServiceHandler::asynchId()
-{
-    return 0;
-}
-
-Property *SubscribeCovServiceHandler::property()
-{
-    return 0;
-}
-
 ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleTimeout()
 {
     _handler->covSubscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
@@ -86,4 +76,12 @@ ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::han
 qint32 SubscribeCovServiceHandler::toRaw(quint8 *buffer, quint16 length)
 {
     return _serviceData->toRaw(buffer, length);
+}
+
+BacnetServicesNS::BacnetConfirmedServiceChoice SubscribeCovServiceHandler::serviceChoice()
+{
+    if (_serviceData->hasPropertyReference())
+        return BacnetServicesNS::SubscribeCOVProperty;
+    else
+        return BacnetServicesNS::SubscribeCOV;
 }
