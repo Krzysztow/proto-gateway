@@ -11,7 +11,8 @@ TEMPLATE = app
 
 INCLUDEPATH += internal \
     external \
-    applayer
+    applayer \
+    tests
 
 SOURCES += main.cpp \
     bacnetvirtuallinklayer.cpp \
@@ -103,7 +104,10 @@ SOURCES += main.cpp \
     externalconfirmedservicewrapper.cpp \
     external/externalpropertymapping.cpp \
     external/externalobjectreadstrategy.cpp \
-    external/subscribecovservicehandler.cpp
+    external/subscribecovservicehandler.cpp \
+    tests/covanswerer.cpp \
+    internal/internalconfirmedcovnotifhandler.cpp \
+    applayer/bacnetarrayvisitor.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -203,9 +207,18 @@ HEADERS += bacnetvirtuallinklayer.h \
     externalconfirmedservicewrapper.h \
     external/externalpropertymapping.h \
     external/externalobjectreadstrategy.h \
-    external/subscribecovservicehandler.h
+    external/subscribecovservicehandler.h \
+    tests/covanswerer.h \
+    internal/internalconfirmedcovnotifhandler.h \
+    applayer/bacnetarrayvisitor.h
 
 OTHER_FILES +=
+
+
+
+
+
+
 
 
 

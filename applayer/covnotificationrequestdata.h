@@ -1,5 +1,5 @@
-#ifndef CovNotificationRequestData_H
-#define CovNotificationRequestData_H
+#ifndef COVNOTIFICATIONREQUESTDATA_H
+#define COVNOTIFICATIONREQUESTDATA_H
 
 #include <QtCore>
 
@@ -17,7 +17,7 @@ namespace Bacnet {
     public:
         CovNotificationRequestData();
 
-        CovNotificationRequestData(quint8 subscrProcId, const Bacnet::ObjectIdentifier &initiatingObjectId, const Bacnet::ObjectIdentifier &monitoredObjectId,
+        CovNotificationRequestData(quint8 subscrProcId, const ObjectIdentifier &initiatingObjectId, const ObjectIdentifier &monitoredObjectId,
                                    quint32 timeLeft = 0x00);
 
     public://implementations of BacnetServiceData interface.
@@ -27,11 +27,11 @@ namespace Bacnet {
     public:
         quint8 _subscribProcess;
 
-        Bacnet::ObjectIdentifier _initiatingObjectId;
-        Bacnet::ObjectIdentifier _monitoredObjectId;
+        ObjectIdentifier _initiatingDevObjtId;
+        ObjectIdentifier _monitoredObjectId;
         quint32 _timeLeft;
         SequenceOf<PropertyValue> _listOfValues;
     };
 }
 
-#endif // CovNotificationRequestData_H
+#endif // COVNOTIFICATIONREQUESTDATA_H

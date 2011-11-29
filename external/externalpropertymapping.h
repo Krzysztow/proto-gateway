@@ -22,15 +22,15 @@ public:
 
 public:
     ExternalPropertyMapping(PropertySubject *mappedProperty, ExternalObjectReadStrategy *readAccessStrategy,
-                            BacnetPropertyNS::Identifier propertyId = BacnetPropertyNS::UndefinedProperty, quint32 propertyArrayIdx = ArrayIndexNotPresent,
-                            ObjIdNum objectId = invalidObjIdNum());
+                            BacnetPropertyNS::Identifier propertyId = BacnetPropertyNS::UndefinedProperty, quint32 propertyArrayIdx = Bacnet::ArrayIndexNotPresent,
+                            Bacnet::ObjIdNum objectId = Bacnet::invalidObjIdNum());
 
     bool isValid();
     int jobInterval_ms();
 
 public:
     PropertySubject *mappedProperty;
-    ObjIdNum objectId;
+    Bacnet::ObjIdNum objectId;
     BacnetPropertyNS::Identifier propertyId;
     quint32 propertyArrayIdx;
     ExternalObjectReadStrategy *readAccessStrategy;

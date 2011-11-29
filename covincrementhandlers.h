@@ -34,6 +34,7 @@ public://visitor interfaces
     virtual void visit(Double &data);
     virtual void visit(UnsignedInteger &data);
     virtual void visit(SignedInteger &data);
+    virtual void visit(BacnetArray &data);
     //general for unhandled cases
     virtual void visit(BacnetDataInterface &data);
 
@@ -62,7 +63,7 @@ public:
     CovIncrementHandler();
 
     void setIncrementValue(V &covIncrement);
-    const V &incrementValue();
+    V incrementValue();
 
 public:
     V _lastInformedValue;

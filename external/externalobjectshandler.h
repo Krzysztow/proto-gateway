@@ -10,6 +10,7 @@
 #include "bacnetcommon.h"
 #include "bacnetinternaladdresshelper.h"
 
+#include "covnotificationrequestdata.h"
 
 namespace Bacnet {
 
@@ -20,6 +21,7 @@ namespace Bacnet {
     class BacnetApplicationLayerHandler;
     class CovReadStrategy;
     class ExternalObjectReadStrategy;
+//    class CovNotificationRequestData;
 
     class ExternalObjectsHandler:
             public QObject,
@@ -30,7 +32,7 @@ namespace Bacnet {
         ExternalObjectsHandler(BacnetApplicationLayerHandler *appLayer);
         ~ExternalObjectsHandler();
 
-        void addMappedProperty(PropertySubject *property, ObjIdNum objectId,
+        void addMappedProperty(PropertySubject *property, Bacnet::ObjIdNum objectId,
                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,                               
                                ExternalObjectReadStrategy *readStrategy = 0);
 
@@ -76,7 +78,9 @@ namespace Bacnet {
 
     public:
         bool startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
-        void subscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical = false);
+        void covSubscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical = false);
+        void covValueChangeNotification(Bacnet::CovNotificationRequestData &data, bool isConfirmed, Error *error = 0);
+
     private:
         /**
           The hash works as single key one, but 0 key. For zero it may have multiple values, which mean unconfirmed notifications.
@@ -86,7 +90,7 @@ namespace Bacnet {
         static const int UnconfirmedProcIdValue = 0;
         static const quint32 MaximumConfirmedSubscriptions = 255;
         int _lastProcIdValueUsed;
-        int insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueToCheck = -1);
+        int insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint = -1);
 
     private:
         BacnetApplicationLayerHandler *_appLayer;

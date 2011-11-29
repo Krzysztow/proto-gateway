@@ -22,7 +22,7 @@ namespace Bacnet {
     private:
         quint8 _subscribProcess;
 
-        Bacnet::ObjectIdStruct _initiatingObjectId;
+        Bacnet::ObjectIdStruct _initiatingDevObjtId;
         Bacnet::ObjectIdStruct _monitoredObjectId;
         quint32 _timeLeft;
         SequenceOf<PropertyValue> _listOfValues;

@@ -58,7 +58,7 @@ bool InternalConfirmedCovNotifHandler::execute()
     return true;
 }
 
-qint32 InternalConfirmedCovNotifHandler::frormRaw(quint8 *servicePtr, quint16 length)
+qint32 InternalConfirmedCovNotifHandler::fromRaw(quint8 *servicePtr, quint16 length)
 {
     return _data.fromRaw(servicePtr, length);
 }

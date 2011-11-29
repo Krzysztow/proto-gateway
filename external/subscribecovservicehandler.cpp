@@ -35,7 +35,7 @@ Property *SubscribeCovServiceHandler::property()
 
 ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleTimeout()
 {
-    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
+    _handler->covSubscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
     return DeleteServiceHandler;
 }
 
@@ -47,7 +47,7 @@ ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::han
     Q_UNUSED(ackPtr);
     Q_UNUSED(length);
 
-    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, true, false);
+    _handler->covSubscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, true, false);
     return DeleteServiceHandler;
 }
 
@@ -64,13 +64,13 @@ ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::han
     default:;
     }
 
-    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, errorCritical);
+    _handler->covSubscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, errorCritical);
     return DeleteServiceHandler;
 }
 
 ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::handleAbort()
 {
-    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
+    _handler->covSubscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, false);
     return DeleteServiceHandler;
 }
 
@@ -79,7 +79,7 @@ ExternalConfirmedServiceHandler::ActionToExecute SubscribeCovServiceHandler::han
     Q_UNUSED(rejectReason);
     //when device aborts the request, that means something really bad happens - it's critical. Most probably our message was ill formed.
 
-    _handler->subscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, true);
+    _handler->covSubscriptionProcessFinished(_serviceData->_subscriberProcId, _propertyMapping, _readStrategy, false, true);
     return DeleteServiceHandler;
 }
 

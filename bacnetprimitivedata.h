@@ -387,6 +387,8 @@ namespace Bacnet
 
         virtual DataType::DataType typeId();
 
+        DECLARE_VISITABLE_FUNCTION(BacnetArray)
+
     public:
 //        BacnetDataInterface *createElementAt(quint8 position);
     };

@@ -8,7 +8,7 @@ CovNotificationRequestData::CovNotificationRequestData()
 
 CovNotificationRequestData::CovNotificationRequestData(quint8 subscrProcId, const Bacnet::ObjectIdentifier &initiatingObjectId, const Bacnet::ObjectIdentifier &monitoredObjectId, quint32 timeLeft):
 _subscribProcess(subscrProcId),
-_initiatingObjectId(initiatingObjectId),
+_initiatingDevObjtId(initiatingObjectId),
 _monitoredObjectId(monitoredObjectId),
 _timeLeft(timeLeft)
 {
@@ -30,7 +30,7 @@ qint32 CovNotificationRequestData::fromRaw(quint8 *serviceData, quint16 buffLeng
     actualPtr += ret;
 
     //get object identifier
-    ret = _initiatingObjectId.fromRaw(bParser, 1);
+    ret = _initiatingDevObjtId.fromRaw(bParser, 1);
     if (ret <= 0) //not enough data, not context tag or not this tag
         return -BacnetRejectNS::ReasonMissingRequiredParameter;
     actualPtr += ret;
@@ -75,7 +75,7 @@ qint32 CovNotificationRequestData::toRaw(quint8 *startPtr, quint16 buffLength)
     buffLength -= ret;
 
     //set object identifier
-    ret = _initiatingObjectId.toRaw(actualPtr, buffLength, 1);
+    ret = _initiatingDevObjtId.toRaw(actualPtr, buffLength, 1);
     if (ret <= 0) {//something wrong?
         Q_ASSERT_X(false, "CovNotificationRequestData::toRaw()", "Cannot encode init obj id.");
         qDebug("CovNotificationRequestData::toRaw() : Cannot encode init obj id: %d", ret);
@@ -164,7 +164,7 @@ int main()
 
     CovNotificationRequestData covData2;
     covData2._subscribProcess = 18;
-    covData2._initiatingObjectId.setObjectIdNum(BacnetObjectType::Device << 22 | 0x04);
+    covData2._initiatingDevObjtId.setObjectIdNum(BacnetObjectType::Device << 22 | 0x04);
     covData2._monitoredObjectId.setObjectIdNum((BacnetObjectType::AnalogInput << 22) | 0x0a);
     covData2._timeLeft = 0x00;
 

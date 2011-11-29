@@ -11,7 +11,14 @@
 /**
    This data is meant to be used both for SubscribeCOV service and SubscribeCOVProperty service. In the first case
    the pointer to BacnetPropertyReference and Increment is simply 0.
-   NOTE: According to standard, when IssueconfirmedNotifications and Lifetime are absent, then this is a cancellation request.
+
+
+   NOTE:
+ # According to standard, when IssueconfirmedNotifications and Lifetime are absent, then this is a cancellation request.
+ # If the lifetime parameteri is present, and device supports no automatic cancellations, it returns (-) result. Here also issueConfirmedNofitications shall be present.
+ # if lifetime not present, but issueConfirmedNotifications is present - it's fine, unless object doesn't support COV notifications
+
+ When object has subscription with such parameters (context), it treats the requests as a resubscrition.
   */
 
 namespace Bacnet {

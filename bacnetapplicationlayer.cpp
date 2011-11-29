@@ -485,6 +485,7 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "bacnetproperty.h"
 #include "bacnetbipaddress.h"
 #include "externalobjectreadstrategy.h"
+#include "covanswerer.h"
 
 int main(int argc, char *argv[])
 {
@@ -496,11 +497,10 @@ int main(int argc, char *argv[])
     BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(netHandler);
 
     InternalObjectsHandler *intHandler = appHandler->internalHandler();
-    Bacnet::ExternalObjectsHandler *extHandler = appHandler->externalHandler();
+    ExternalObjectsHandler *extHandler = appHandler->externalHandler();
 
     InternalAddress extObjHandlerAddress = 32;
     extHandler->addRegisteredAddress(extObjHandlerAddress);
-
 
     QVariant test;
     test.setValue((double)72.3);
@@ -520,11 +520,11 @@ int main(int argc, char *argv[])
     subject->setValue(test);
     proto2->addProperty(subject);
 
-    Bacnet::BacnetDeviceObject *device = new Bacnet::BacnetDeviceObject(1, destAddr);
+    BacnetDeviceObject *device = new BacnetDeviceObject(1, destAddr);
     HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Device 1 address");
     device->setObjectName("BacnetTestDevice");
     PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
-    Bacnet::ProxyInternalProperty propProxy(obs, AppTags::Real, QVariant::Double, device);
+    ProxyInternalProperty propProxy(obs, AppTags::Real, QVariant::Double, device);
     device->addProperty(BacnetPropertyNS::PresentValue, &propProxy);
     intHandler->addDevice(device->address(), device);
 
@@ -536,13 +536,13 @@ int main(int argc, char *argv[])
     BacnetObject *aio = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 5, device);
     //    AnalogInputObject *aio = new AnalogInputObject(5, device);
     aio->setObjectName("OATemp");
-    Bacnet::ProxyInternalProperty propProxy2(obs2, AppTags::Real, QVariant::Double, aio);
+    ProxyInternalProperty propProxy2(obs2, AppTags::Real, QVariant::Double, aio);
     aio->addProperty(BacnetPropertyNS::PresentValue, &propProxy2);
 
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
     BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
-    Bacnet::BacnetDeviceObject *device1 = new Bacnet::BacnetDeviceObject(8, bAddr);
+    BacnetDeviceObject *device1 = new BacnetDeviceObject(8, bAddr);
     intHandler->addDevice(device1->address(), device1);
     device1->setObjectName("BestDeviceEver");
 
@@ -552,9 +552,9 @@ int main(int argc, char *argv[])
 
     //    PropertySubject *extSubject = DataModel::instance()->createProperty(3, QVariant::Double);
     //    extHandler->addMappedProperty(extSubject, BacnetObjectType::AnalogValue << 22 | 0x01,
-    //                                  BacnetProperty::PresentValue, Bacnet::ArrayIndexNotPresent,
+    //                                  BacnetProperty::PresentValue, ArrayIndexNotPresent,
     //                                  0x00000001,
-    //                                  Bacnet::BacnetExternalObjects::Access_ReadRequest);
+    //                                  BacnetExternalObjects::Access_ReadRequest);
 
     //    PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
     //    proto2->addProperty(extObserver);
@@ -676,18 +676,25 @@ int main(int argc, char *argv[])
     ObjectIdentifier covDeviceIdentifier(BacnetObjectTypeNS::Device, 2);
 
     ObjectIdentifier covPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 10);
-    PropertySubject *covPropSubject = DataModel::instance()->createProperty(5, QVariant::Double);
+
+    PropertySubject *covPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
 
     appHandler->registerObject(covDeviceIdentifier, covPropertyIdentifier);
-    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, Bacnet::SegmentedNOT, 99);
+    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
 
     CovReadStrategy *covStrategy = new CovReadStrategy(60000, true);
     covStrategy->setHasIncrement(true, 1.0);
     extHandler->addMappedProperty(covPropSubject, covPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
                                   covStrategy);
 
+
+    BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
+    CovAnswerer *covAns = new CovAnswerer(15, covDeviceAddress, extHandlerAddress, appHandler);
+    QTimer timer;
+    QObject::connect(&timer, SIGNAL(timeout()), covAns, SLOT(answer()));
+    timer.start(987);
+
     return a.exec();
 }
-
 
 #endif

@@ -278,7 +278,7 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
     }
 
     ObjectIdentifier objectId(rEntry->objectId);
-    Bacnet::BacnetDataInterface *writeData = BacnetDefaultObject::createDataForObjectProperty(objectId.type(), rEntry->propertyId, rEntry->propertyArrayIdx);
+    BacnetDataInterface *writeData = BacnetDefaultObject::createDataForObjectProperty(objectId.type(), rEntry->propertyId, rEntry->propertyArrayIdx);
     Q_CHECK_PTR(writeData);
     if (0 == writeData) {
         qWarning("Can't create appropriate value isntance for %d, %d", objectId.type(), rEntry->propertyId);
@@ -306,10 +306,10 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
     return asynchId;
 }
 
-//Bacnet::WritePropertyServiceData::WritePropertyServiceData(Bacnet::ObjectIdStruct&, BacnetPropertyNS::Identifier&, Bacnet::BacnetDataInterface*&, quint32&)’
-//Bacnet::WritePropertyServiceData::WritePropertyServiceData(Bacnet::ObjectIdentifier&, BacnetPropertyNS::Identifier, Bacnet::BacnetDataInterface*, quint32)
+//WritePropertyServiceData::WritePropertyServiceData(ObjectIdStruct&, BacnetPropertyNS::Identifier&, BacnetDataInterface*&, quint32&)’
+//WritePropertyServiceData::WritePropertyServiceData(ObjectIdentifier&, BacnetPropertyNS::Identifier, BacnetDataInterface*, quint32)
 
-BacnetAddress Bacnet::ExternalObjectsHandler::oneOfAddresses()
+BacnetAddress ExternalObjectsHandler::oneOfAddresses()
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {
@@ -358,74 +358,73 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
     return true;
 }
 
-int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueToCheck)
+int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint)
 {
     int returnProcId(-1);
-    if (!confirmed) {
-        {
-            //check if we are there already. QHash::find(key) returns iterator to the most recent element inserted. If there are others, their are accessible by incremenation.
-            const int key = UnconfirmedProcIdValue;
-            QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(key);
-            QHash<int, TCovMappinPair>::Iterator itEnd = _subscribedCovs.end();
-            for (; it != itEnd; ++it) {
-                if (it.key() != UnconfirmedProcIdValue)
-                    break;
-                if ( (it->first == propertyMapping) &&
-                     (it->second == readStrategy) ) {
-                    returnProcId = UnconfirmedProcIdValue;
-                    break;
-                }
+    //    if (!confirmed) {
+    //        {
+    //            //check if we are there already. QHash::find(key) returns iterator to the most recent element inserted. If there are others, their are accessible by incremenation.
+    //            const int key = UnconfirmedProcIdValue;
+    //            QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(key);
+    //            QHash<int, TCovMappinPair>::Iterator itEnd = _subscribedCovs.end();
+    //            for (; it != itEnd; ++it) {
+    //                if (it.key() != UnconfirmedProcIdValue)
+    //                    break;
+    //                if ( (it->first == propertyMapping) &&
+    //                     (it->second == readStrategy) ) {
+    //                    returnProcId = UnconfirmedProcIdValue;
+    //                    break;
+    //                }
+    //            }
+    //        }
+
+    //        //if we were not found, insert us
+    //        if (returnProcId != UnconfirmedProcIdValue) {
+    //            const int key = UnconfirmedProcIdValue;
+    //            _subscribedCovs.insertMulti(key, qMakePair(propertyMapping, readStrategy));
+    //            returnProcId = UnconfirmedProcIdValue;
+    //        }
+    //    } else {
+    if (valueHint >= 0) {
+        QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(valueHint);
+        if ( (it->first == propertyMapping) && (it->second == readStrategy) )
+            returnProcId = valueHint;
+    }
+
+    //we still have to look for the unique number
+    if (returnProcId < 0) {
+        quint32 newId(_lastProcIdValueUsed + 1);
+        quint32 guard(0);
+        while (guard < MaximumConfirmedSubscriptions) {
+            if (_subscribedCovs.contains(newId))
+                ++newId;
+            else {
+                _lastProcIdValueUsed = newId;
+                returnProcId = _lastProcIdValueUsed;
+                break;
             }
         }
 
-        //if we were not found, insert us
-        if (returnProcId != UnconfirmedProcIdValue) {
-            const int key = UnconfirmedProcIdValue;
-            _subscribedCovs.insertMulti(key, qMakePair(propertyMapping, readStrategy));
-            returnProcId = UnconfirmedProcIdValue;
-        }
-    } else {
-        if (valueToCheck >= 0) {
-            QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(valueToCheck);
-            if ( (it->first == propertyMapping) && (it->second == readStrategy) )
-                returnProcId = valueToCheck;
-        }
-
-        //we still have to look for the unique number
-        if (returnProcId < 0) {
-            quint32 newId(_lastProcIdValueUsed + 1);
-            quint32 guard(0);
-            while (guard < MaximumConfirmedSubscriptions) {
-                if (_subscribedCovs.contains(newId))
-                    ++newId;
-                else {
-                    _lastProcIdValueUsed = newId;
-                    returnProcId = _lastProcIdValueUsed;
-                    break;
-                }
-            }
-        }
-
-#warning "For testing purposes. REMOVE later!"
+#warning "For testing purposes set 15 (like in examples). REMOVE later!"
         Q_ASSERT(!_subscribedCovs.contains(15));
         returnProcId = 18;
 
         //the key was found, insert us
         Q_ASSERT(!_subscribedCovs.contains(returnProcId));
         _subscribedCovs.insert(returnProcId, qMakePair(propertyMapping, readStrategy));
-    }
 
-    if ( (valueToCheck >= 0) && (returnProcId != valueToCheck) ) {//we have to take care, that we remove the valueToCheck if it represents CovReadStrategy
-        QHash<int, TCovMappinPair>::Iterator checkIt = _subscribedCovs.find(valueToCheck);
-        QHash<int, TCovMappinPair>::Iterator checkItEnd = _subscribedCovs.end();
-        for (; checkIt != checkItEnd; ++checkIt) {
-            if (checkIt.key() != valueToCheck)
-                break;
-            if ( (checkIt->first == propertyMapping) && (checkIt->second == readStrategy) ) {
-                _subscribedCovs.erase(checkIt);
-                break;
+        if ( (valueHint >= 0) && (returnProcId != valueHint) ) {//we have to take care, that we remove the valueHint if it represents CovReadStrategy
+            QHash<int, TCovMappinPair>::Iterator checkIt = _subscribedCovs.find(valueHint);
+            QHash<int, TCovMappinPair>::Iterator checkItEnd = _subscribedCovs.end();
+            for (; checkIt != checkItEnd; ++checkIt) {
+                if (checkIt.key() != valueHint)
+                    break;
+                if ( (checkIt->first == propertyMapping) && (checkIt->second == readStrategy) ) {
+                    _subscribedCovs.erase(checkIt);
+                    break;
+                }
+
             }
-
         }
     }
 
@@ -433,28 +432,32 @@ int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, External
 
 }
 
-void ExternalObjectsHandler::subscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical)
+void ExternalObjectsHandler::covSubscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical)
 {
+
+    //    if (0 == subscribeProcId) {
+    //        QHash<int, TCovMappinPair>::Iterator itEnd = _subscribedCovs.end();
+    //        for (; it != itEnd; ++it) {
+    //            if (it.key() != subscribeProcId) {
+    //                it = _subscribedCovs.end();
+    //                break;
+    //            }
+    //            if ( (propertyMapping == it->first) && (readStrategy == it->second) )
+    //                break;
+    //        }
+    //    }
+
+    Q_ASSERT(0 != subscribeProcId);
     QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(subscribeProcId);
-
-    if (0 == subscribeProcId) {
-        QHash<int, TCovMappinPair>::Iterator itEnd = _subscribedCovs.end();
-        for (; it != itEnd; ++it) {
-            if (it.key() != subscribeProcId) {
-                it = _subscribedCovs.end();
-                break;
-            }
-            if ( (propertyMapping == it->first) && (readStrategy == it->second) )
-                break;
-        }
-    }
-
     if (_subscribedCovs.end() == it) {
         qDebug("%s : subscription finished, but we got wrong parameters", __PRETTY_FUNCTION__);
         Q_ASSERT(false);
         return;
     }
+    Q_ASSERT((propertyMapping == it->first) && (readStrategy == it->second));
 
+    if (!ok)
+        _subscribedCovs.erase(it);
     readStrategy->setSubscriptionInitiated(ok, subscribeProcId, isCritical);
 }
 
@@ -470,3 +473,76 @@ void ExternalObjectsHandler::timerEvent(QTimerEvent *)
     }
 }
 
+#include "bacnetarrayvisitor.h"
+
+void ExternalObjectsHandler::covValueChangeNotification(CovNotificationRequestData &data, bool isConfirmed, Error *error)
+{
+    QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(data._subscribProcess);
+    if (_subscribedCovs.end() == it) {
+        qDebug("%s : No such cov subscription!", __PRETTY_FUNCTION__);
+        if (0 != error)
+            error->setError(BacnetErrorNS::ClassServices, BacnetErrorNS::CodeOther);
+        return;
+    }
+
+    Q_CHECK_PTR(it->first);
+    Q_CHECK_PTR(it->second);
+
+
+    ExternalPropertyMapping *mapping = it->first;
+    CovReadStrategy *covStrategy = it->second;
+    Q_ASSERT(_mappingTable.contains(mapping->mappedProperty));
+    Q_ASSERT(_mappingTable[mapping->mappedProperty]->objectId == mapping->objectId);
+    Q_ASSERT(_mappingTable[mapping->mappedProperty]->propertyArrayIdx == mapping->propertyArrayIdx);
+    if (!_mappingTable.contains(mapping->mappedProperty)) {
+        qDebug("%s : mapping not found!", __PRETTY_FUNCTION__);
+        _subscribedCovs.erase(it);
+        if (0 != error)
+            error->setError(BacnetErrorNS::ClassServices, BacnetErrorNS::CodeOther);
+        return;
+    }
+
+    if (data._monitoredObjectId.objectIdNum() != mapping->objectId) {//this is a notification being meant not for us!
+        qDebug("%s : cov notification not for us, but for obj with id 0x%x", __PRETTY_FUNCTION__, data._initiatingDevObjtId.objectIdNum());
+        Q_ASSERT(false);
+        if (0 != error)
+            error->setError(BacnetErrorNS::ClassServices, BacnetErrorNS::CodeOther);
+        return;
+    }
+
+    QList<PropertyValueShared> valuesList = data._listOfValues.value();
+    for (int i = 0; i < valuesList.count(); ++i) {
+        PropertyValueShared &propValue = valuesList[i];
+        if (propValue->_propertyId == mapping->propertyId) {
+            BacnetDataInterfaceShared value;
+            if ( (ArrayIndexNotPresent == propValue->_arrayIndex) &&
+                 (ArrayIndexNotPresent != mapping->propertyArrayIdx) ) {//we want specific array element, but have entire array
+                BacnetArrayVisitor visitor(mapping->propertyArrayIdx);
+                propValue->_value->accept(&visitor);
+                if (0 == visitor.dataGotten()) {//we got nothing - error
+                    qDebug("%s : Couldn't read array index %d from property id %d. No error send back, since it's config problem.", __PRETTY_FUNCTION__, mapping->propertyArrayIdx, mapping->propertyId);
+                    continue;
+                } else
+                    value = visitor.dataGotten();
+            } else
+                value = propValue->_value;
+
+            if (!value.isNull()) {
+                QVariant internalValue = value->toInternal();
+                if (internalValue.isValid()) {
+                    Q_CHECK_PTR(mapping->mappedProperty);
+                    int result = mapping->mappedProperty->setValue(internalValue);
+                    Q_ASSERT(Property::ResultOk == result);
+                } else {
+                    qDebug("%s : Cannot convert read property %d (array idx: %d) of object 0x%x to internal!",
+                           __PRETTY_FUNCTION__, mapping->propertyId, mapping->propertyArrayIdx, mapping->objectId);
+                    Q_ASSERT(false);
+                }
+
+            }
+        }
+    }
+
+    Q_CHECK_PTR(covStrategy);
+    covStrategy->notificationReceived(data, isConfirmed);
+}

@@ -7,6 +7,7 @@
 #include "internalsubscribecovrequesthandler.h"
 #include "internalihaveservicehandler.h"
 #include "internaliamservicehandler.h"
+#include "internalconfirmedcovnotifhandler.h"
 #include "bacnetpci.h"
 
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
@@ -28,6 +29,10 @@
     case (BacnetServicesNS::SubscribeCOVProperty):
     {
         return new Bacnet::InternalSubscribeCOVRequestHandler(pciData, requester, destination, device, appLayer);
+    }
+    case (BacnetServicesNS::ConfirmedCOVNotification):
+    {
+        return new Bacnet::InternalConfirmedCovNotifHandler(pciData, requester, destination, appLayer);
     }
     default:
         Q_ASSERT(false);

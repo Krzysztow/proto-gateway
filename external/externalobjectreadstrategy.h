@@ -62,10 +62,13 @@ private:
     are tried each covResubscription interval.
   */
 
+class CovNotificationRequestData;
+
 class CovReadStrategy:
         public ExternalObjectReadStrategy
 {
 public:
+    static const int SubscrInfiniteTime = 0;
     static const int DefaultInterval = 10000;
 public:
     CovReadStrategy(int resubscriptionInterval_ms = DefaultInterval, bool isConfirmed = false, bool readTimelyWhenError = false);
@@ -83,6 +86,8 @@ public:
     inline bool isSubscriptionInitiated() {return _settingsFlags & Flag_CovInitialized;}
     void setSubscriptionInitiated(bool success, int subscriptionId, bool setError = false);
     int subscriptionProcId();
+
+    void notificationReceived(CovNotificationRequestData &data, bool confirmed);
 
 public://time-dependant behaviour
     //! returns true, if the action is periodic

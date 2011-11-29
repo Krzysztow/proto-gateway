@@ -49,7 +49,7 @@ public:
     //
     static qint16 parseStructuredData(BacnetTagParser &bParser,
                                       BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId, quint32 arrayIndex,
-                                      quint8 tagToParse, Bacnet::BacnetDataInterfaceShared &resultData);
+                                      quint8 tagToParse, BacnetDataInterfaceShared &resultData);
 
     //default copy constructor is ok, when we need to have our own copy of data, call copyData()
     ~BacnetTagParser()
@@ -126,7 +126,7 @@ public:
     QDate toDate(bool *ok = 0);
     QTime toTime(bool *ok = 0);
 
-    Bacnet::ObjectIdStruct toObjectId(bool *ok = 0);
+    ObjectIdStruct toObjectId(bool *ok = 0);
 
     /**
       Returns QString with decoded value from token value we are currently at (if the token is string).

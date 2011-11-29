@@ -24,6 +24,9 @@ public:
     DataType::DataType typeId();
 
 public:
+    QList<QSharedPointer<T> > &value() {return _sequence;}
+
+public:
     void append(QSharedPointer<T> &t);
 
 public:

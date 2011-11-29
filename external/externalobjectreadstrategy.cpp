@@ -95,12 +95,12 @@ CovReadStrategy::CovReadStrategy(int resubscriptionInterval_ms, bool isConfirmed
     setTimeDependantReadingWhenError(readTimelyWhenError);
 }
 
-bool Bacnet::CovReadStrategy::isPeriodic()
+bool CovReadStrategy::isPeriodic()
 {
     return true;
 }
 
-void Bacnet::CovReadStrategy::setIsConfirmed(bool isConfirmed)
+void CovReadStrategy::setIsConfirmed(bool isConfirmed)
 {
     if (isConfirmed) {
         _settingsFlags |= Flag_CovConfirmed;
@@ -111,13 +111,13 @@ void Bacnet::CovReadStrategy::setIsConfirmed(bool isConfirmed)
     }
 }
 
-bool Bacnet::CovReadStrategy::timePassed(int timePassed_ms)
+bool CovReadStrategy::timePassed(int timePassed_ms)
 {
     _timeToAction_ms -= timePassed_ms;
     return (_timeToAction_ms < 0);
 }
 
-void Bacnet::CovReadStrategy::doAction(Bacnet::ExternalPropertyMapping *propertyMapping, Bacnet::ExternalObjectsHandler *externalHandler)
+void CovReadStrategy::doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler)
 {
     Q_ASSERT(propertyMapping);
     Q_ASSERT(externalHandler);
@@ -129,7 +129,7 @@ void Bacnet::CovReadStrategy::doAction(Bacnet::ExternalPropertyMapping *property
         externalHandler->readProperty(propertyMapping, false);
 }
 
-bool Bacnet::CovReadStrategy::isValueReady()
+bool CovReadStrategy::isValueReady()
 {
     if (isSubscriptionInitiated())
         return true;
@@ -137,17 +137,17 @@ bool Bacnet::CovReadStrategy::isValueReady()
         return false;
 }
 
-void Bacnet::CovReadStrategy::setInterval(int interval_ms)
+void CovReadStrategy::setInterval(int interval_ms)
 {
     _resubscriptionInterval_ms = interval_ms;
 }
 
-int Bacnet::CovReadStrategy::interval()
+int CovReadStrategy::interval()
 {
     return _resubscriptionInterval_ms;
 }
 
-void Bacnet::CovReadStrategy::setTimeDependantReadingWhenError(bool set)
+void CovReadStrategy::setTimeDependantReadingWhenError(bool set)
 {
     if (set)
         _settingsFlags = _settingsFlags | Flag_CovTimeReadEnable;
@@ -182,12 +182,20 @@ int CovReadStrategy::subscriptionProcId()
     return _subscriptionId;
 }
 
-void Bacnet::CovReadStrategy::setHasIncrement(bool hasIncrement, float incrValue)
+void CovReadStrategy::setHasIncrement(bool hasIncrement, float incrValue)
 {
     if (hasIncrement) {
         _increment = incrValue;
         _settingsFlags |= Flag_CovHasIncrement;
     } else
         _settingsFlags &= ~(Flag_CovHasIncrement);
+}
+
+void CovReadStrategy::notificationReceived(CovNotificationRequestData &data, bool confirmed)
+{
+    if (isConfirmed() != confirmed)
+        qDebug("%s : Should be confirmed (%s), and is (%s)", __PRETTY_FUNCTION__, isConfirmed() ? "true" : "false", confirmed ? "true" : "false");
+    if ( (SubscrInfiniteTime != data._timeLeft) && (_timeToAction_ms > 1000 * data._timeLeft) )//we thought we had more time -> make an update
+        _timeToAction_ms = 1000 * data._timeLeft;
 }
 

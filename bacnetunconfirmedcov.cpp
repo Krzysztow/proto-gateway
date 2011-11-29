@@ -30,7 +30,7 @@ qint16 BacnetUnconfirmedCov::parseFromRaw(quint8 *servicePtr, quint16 length)
 
     //get object identifier
     ret = bParser.parseNext();
-    _initiatingObjectId = bParser.toObjectId(&convOk);
+    _initiatingDevObjtId = bParser.toObjectId(&convOk);
     if (ret <= 0 || !bParser.isContextTag(1) || !convOk) //not enough data, not context tag or not this tag
         return -1;
     actualPtr += ret;

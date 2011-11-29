@@ -1369,3 +1369,5 @@ DataType::DataType BacnetArray::typeId()
 {
     return DataType::BACnetArray;
 }
+
+DEFINE_VISITABLE_FUNCTION(BacnetArray);

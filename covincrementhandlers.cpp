@@ -119,8 +119,15 @@ void CovIncrementHandler<Real, float>::visit(BacnetDataInterface &data)
     }
 }
 
+template <>
+void CovIncrementHandler<Real, float>::visit(BacnetArray &data)
+{
+    BacnetDataInterface *d = &data;
+    visit(*d);
+}
+
 template <class T, class V>
-const V &CovIncrementHandler<T, V>::incrementValue()
+V CovIncrementHandler<T, V>::incrementValue()
 {
     return _covIncrement.value();
 }

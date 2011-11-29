@@ -55,6 +55,7 @@ class Double;
 class UnsignedInteger;
 class SignedInteger;
 class BacnetDataInterface;
+class BacnetArray;
 
 class DataVisitor
 {
@@ -63,6 +64,7 @@ public://visitor interfaces
     DECLARE_VISITOR_CASE_FOR_VISITABLE(Double)
     DECLARE_VISITOR_CASE_FOR_VISITABLE(UnsignedInteger)
     DECLARE_VISITOR_CASE_FOR_VISITABLE(SignedInteger)
+    DECLARE_VISITOR_CASE_FOR_VISITABLE(BacnetArray)
 
     //general for unhandled cases
     DECLARE_VISITOR_CASE_FOR_VISITABLE(BacnetDataInterface)

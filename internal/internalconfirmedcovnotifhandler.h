@@ -21,7 +21,7 @@ public://methods overridden from InternalRequestHandler
     virtual bool isFinished();
     virtual void finalize(bool *deleteAfter);
     virtual bool execute();
-    virtual qint32 frormRaw(quint8 *servicePtr, quint16 length);
+    virtual qint32 fromRaw(quint8 *servicePtr, quint16 length);
 
 public:
     virtual bool hasError();
