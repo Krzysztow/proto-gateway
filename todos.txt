@@ -1,0 +1,4 @@
+InternalConfirmedRequestHandler should be fivided into (1) and AsynchSupporters.
+LOOK: InternalConfirmedCovNotificationHandler - there is no need to support all those InternalRequestHandler methods.
+
+InternalProperty value/type converter.

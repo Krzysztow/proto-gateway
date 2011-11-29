@@ -107,7 +107,8 @@ SOURCES += main.cpp \
     external/subscribecovservicehandler.cpp \
     tests/covanswerer.cpp \
     internal/internalconfirmedcovnotifhandler.cpp \
-    applayer/bacnetarrayvisitor.cpp
+    applayer/bacnetarrayvisitor.cpp \
+    internal/internaluncfrdmcovnotifhandler.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -210,9 +211,12 @@ HEADERS += bacnetvirtuallinklayer.h \
     external/subscribecovservicehandler.h \
     tests/covanswerer.h \
     internal/internalconfirmedcovnotifhandler.h \
-    applayer/bacnetarrayvisitor.h
+    applayer/bacnetarrayvisitor.h \
+    internal/internaluncfrdmcovnotifhandler.h
 
 OTHER_FILES +=
+
+
 
 
 

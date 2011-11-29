@@ -55,6 +55,7 @@ bool InternalConfirmedCovNotifHandler::execute()
         //don't set the response, it's simple ack
     }
 
+    finalizeInstant(_appLayer);
     return true;
 }
 

@@ -8,6 +8,8 @@
 #include "internalihaveservicehandler.h"
 #include "internaliamservicehandler.h"
 #include "internalconfirmedcovnotifhandler.h"
+#include "internaluncfrdmcovnotifhandler.h"
+
 #include "bacnetpci.h"
 
 ::InternalConfirmedRequestHandler *ServiceFactory::createConfirmedHandler(BacnetAddress &requester, BacnetAddress &destination,
@@ -61,6 +63,9 @@ Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHand
     }
     case (BacnetServicesNS::I_Am): {
         return new Bacnet::InternalIAmServiceHandler(appLayer, requester);
+    }
+    case (BacnetServicesNS::UnconfirmedCOVNotification) : {
+        return new Bacnet::InternalUncfrdmCovNotifHandler(appLayer);
     }
     default:
         Q_ASSERT(false);
