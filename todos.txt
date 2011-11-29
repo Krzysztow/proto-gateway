@@ -1,4 +1,10 @@
+IMPORTANT: External objects handler shouldn't be called on actions finish - they should be directly guided to strategy / handled in the handler.
+
 InternalConfirmedRequestHandler should be fivided into (1) and AsynchSupporters.
 LOOK: InternalConfirmedCovNotificationHandler - there is no need to support all those InternalRequestHandler methods.
 
 InternalProperty value/type converter.
+
+generateAsynchId() should be done via PropertySubject!
+
+

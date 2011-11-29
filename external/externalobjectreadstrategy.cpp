@@ -1,10 +1,17 @@
 #include "externalobjectreadstrategy.h"
 
+#include "externalpropertymapping.h"
+#include "property.h"
+
 using namespace Bacnet;
 
 ////////////////////////////////////////////////////
 ///////////ExternalObjectReadStrategy///////////////
 ////////////////////////////////////////////////////
+
+#include "bacnetreadpropertyservicehandler.h"
+#include "readpropertyservicedata.h"
+#include "externalobjectshandler.h"
 
 bool ExternalObjectReadStrategy::isPeriodic()
 {
@@ -25,10 +32,39 @@ bool ExternalObjectReadStrategy::timePassed(int timePassed_ms)
     return false;
 }
 
-bool ExternalObjectReadStrategy::isValueReady()
+//bool ExternalObjectReadStrategy::isValueReady()
+//{
+//    return false;
+//}
+
+int ExternalObjectReadStrategy::readProperty(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler, bool generateAsynchId)
 {
-    return false;
+    Q_CHECK_PTR(propertyMapping);
+    Q_CHECK_PTR(propertyMapping->mappedProperty);
+    Q_CHECK_PTR(externalHandler);
+
+    //get new asynchronous id from data model
+    int asynchId(::Property::ResultOk);
+    if (generateAsynchId)
+        asynchId = propertyMapping->mappedProperty->generateAsynchId();
+    Q_ASSERT(asynchId >= 0);
+    if (asynchId < 0) {
+        qWarning("Can't generate asynchronous id.");
+        return Property::UnknownError;
+    }
+
+    //! \todo Itroduce BacnetObjId class with conversion functions
+    ReadPropertyServiceData *service =
+            new ReadPropertyServiceData(numToObjId(propertyMapping->objectId),
+                                        propertyMapping->propertyId, propertyMapping->propertyArrayIdx);
+    Q_CHECK_PTR(service);
+    ExternalConfirmedServiceHandler *serviceHandler =
+            new ReadPropertyServiceHandler(service, asynchId, propertyMapping);
+    Q_CHECK_PTR(serviceHandler);
+    externalHandler->send(serviceHandler, propertyMapping->objectId);
+    return asynchId;
 }
+
 
 ////////////////////////////////////////////////////
 ///////////////SimpleReadStrategy///////////////////
@@ -52,7 +88,7 @@ SimpleWithTimeReadStrategy::SimpleWithTimeReadStrategy(int interval_ms):
 bool SimpleWithTimeReadStrategy::timePassed(int timePassed_ms)
 {
     _timeToAction_ms -= timePassed_ms;
-    return (_interval_ms < 0);
+    return (_timeToAction_ms < 0);
 }
 
 bool SimpleWithTimeReadStrategy::isPeriodic()
@@ -65,7 +101,7 @@ void SimpleWithTimeReadStrategy::doAction(ExternalPropertyMapping *propertyMappi
     Q_CHECK_PTR(propertyMapping);
     Q_CHECK_PTR(propertyMapping->mappedProperty);
 
-    externalHandler->readProperty(propertyMapping, false);
+    readProperty(propertyMapping, externalHandler, false);
     _timeToAction_ms = _interval_ms;
 }
 
@@ -126,16 +162,16 @@ void CovReadStrategy::doAction(ExternalPropertyMapping *propertyMapping, Externa
         qDebug("Subscribes cov with interval %d", _resubscriptionInterval_ms/1000);
         _timeToAction_ms = _resubscriptionInterval_ms;
     } else if (hasTimeDependantReadingWhenError())
-        externalHandler->readProperty(propertyMapping, false);
+        readProperty(propertyMapping, externalHandler, false);
 }
 
-bool CovReadStrategy::isValueReady()
-{
-    if (isSubscriptionInitiated())
-        return true;
-    else
-        return false;
-}
+//bool CovReadStrategy::isValueReady()
+//{
+//    if (isSubscriptionInitiated())
+//        return true;
+//    else
+//        return false;
+//}
 
 void CovReadStrategy::setInterval(int interval_ms)
 {
@@ -198,4 +234,13 @@ void CovReadStrategy::notificationReceived(CovNotificationRequestData &data, boo
     if ( (SubscrInfiniteTime != data._timeLeft) && (_timeToAction_ms > 1000 * data._timeLeft) )//we thought we had more time -> make an update
         _timeToAction_ms = 1000 * data._timeLeft;
 }
+
+int CovReadStrategy::readProperty(Bacnet::ExternalPropertyMapping *propertyMapping, Bacnet::ExternalObjectsHandler *externalHandler, bool generateAsynchId)
+{
+    if (isSubscriptionInitiated())
+        return Property::ResultOk;
+    else
+        return ExternalObjectReadStrategy::readProperty(propertyMapping, externalHandler, generateAsynchId);
+}
+
 

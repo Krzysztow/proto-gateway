@@ -7,7 +7,6 @@
 #include "bacnetreadpropertyack.h"
 #include "error.h"
 #include "writepropertyservicedata.h"
-#include "bacnetreadpropertyservicehandler.h"
 #include "bacnetwritepropertyservicehandler.h"
 #include "bacnetdefaultobject.h"
 #include "bacnetapplicationlayer.h"
@@ -15,6 +14,7 @@
 #include "subscribecovservicedata.h"
 #include "subscribecovservicehandler.h"
 #include "externalobjectreadstrategy.h"
+#include "externalobjectwritestrategy.h"
 
 using namespace Bacnet;
 
@@ -30,9 +30,8 @@ ExternalObjectsHandler::~ExternalObjectsHandler()
 
 }
 
-void ExternalObjectsHandler::addMappedProperty(PropertySubject *property, quint32 objectId,
-                                               BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
-                                               ExternalObjectReadStrategy *readStrategy)
+void ExternalObjectsHandler::addMappedProperty(PropertySubject *property, Bacnet::ObjIdNum objectId, BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,
+                                               ExternalObjectReadStrategy *readStrategy, ExternalObjectWriteStrategy *writeStrategy)
 {
     Q_CHECK_PTR(property);
     if (0 == property) {
@@ -47,11 +46,18 @@ void ExternalObjectsHandler::addMappedProperty(PropertySubject *property, quint3
     }
 
     property->setOwner(this);
-    ExternalPropertyMapping *propMapping = new ExternalPropertyMapping(property, readStrategy, propertyId, propertyArrayIdx, objectId);
+    ExternalPropertyMapping *propMapping = new ExternalPropertyMapping(property, readStrategy, writeStrategy, propertyId, propertyArrayIdx, objectId);
     _mappingTable.insert(property, propMapping);
-    if (0 != readStrategy && readStrategy->isPeriodic()) {
-        Q_ASSERT(!_timeDependantJobs.contains(qMakePair(readStrategy, propMapping)));
-        _timeDependantJobs.append(qMakePair(readStrategy, propMapping));
+
+    tryToAdd(readStrategy, propMapping);
+    tryToAdd(writeStrategy, propMapping);
+}
+
+void ExternalObjectsHandler::tryToAdd(ExternalTimeDepJob *job, ExternalPropertyMapping *correspondingMapping)
+{
+    if (0 != job && job->isPeriodic()) {
+        Q_ASSERT(!_timeDependantJobs.contains(qMakePair(job, correspondingMapping)));
+        _timeDependantJobs.append(qMakePair(job, correspondingMapping));
 
         if (!_timer.isActive() && !_timeDependantJobs.isEmpty())
             _timer.start(_interval_ms, this);
@@ -89,149 +95,55 @@ int ExternalObjectsHandler::getPropertyRequested(::PropertySubject *toBeGotten)
 
     ExternalPropertyMapping *rEntry = mappingEntry(toBeGotten);
 
-    if (0 == rEntry)
+    if ( (0 == rEntry) || (0 == rEntry->readAccessStrategy) ) {
+        qDebug("%s : error on getting read access strategy.", __PRETTY_FUNCTION__);
         return Property::UnknownProperty;
+    }
 
-    return readProperty(rEntry, toBeGotten);
+    Q_CHECK_PTR(rEntry->readAccessStrategy);
+    return rEntry->readAccessStrategy->readProperty(rEntry, this, true);
 }
 
-int ExternalObjectsHandler::readProperty(ExternalPropertyMapping *readElement, bool askStrategy)
+bool ExternalObjectsHandler::send(ExternalConfirmedServiceHandler *serviceHandler, ObjIdNum destinedObject)
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {
         qDebug("ExternalObjectsHandler::readProperty() : can't send request, since we have no address.");
-        return Property::UnknownError;
+        return false;
     }
 
-    Q_CHECK_PTR(readElement);
-    if (askStrategy) {
-        Q_CHECK_PTR(readElement->readAccessStrategy);
-        if (readElement->readAccessStrategy && readElement->readAccessStrategy->isValueReady())
-            return Property::ResultOk;
-    }
+//    Q_CHECK_PTR(readElement);
+//    if (askStrategy) {
+//        Q_CHECK_PTR(readElement->readAccessStrategy);
+//        if (readElement->readAccessStrategy && readElement->readAccessStrategy->isValueReady())
+//            return Property::ResultOk;
+//    }
 
-    //get new asynchronous id from data model
-    int asynchId = DataModel::instance()->generateAsynchId();
-    Q_ASSERT(asynchId >= 0);
-    if (asynchId < 0) {
-        qWarning("Can't generate asynchronous id.");
-        return Property::UnknownError;
-    }
+//    //get new asynchronous id from data model
+//    int asynchId(0);
+//    if (generateId)
+//        asynchId = DataModel::instance()->generateAsynchId();
+//    Q_ASSERT(asynchId >= 0);
+//    if (asynchId < 0) {
+//        qWarning("Can't generate asynchronous id.");
+//        return Property::UnknownError;
+//    }
 
-    //! \todo Itroduce BacnetObjId class with conversion functions
-    ReadPropertyServiceData *service =
-            new ReadPropertyServiceData(numToObjId(readElement->objectId),
-                                        readElement->propertyId, readElement->propertyArrayIdx);
-    Q_CHECK_PTR(service);
-    ExternalConfirmedServiceHandler *serviceHandler =
-            new ReadPropertyServiceHandler(service, this, asynchId, readElement->mappedProperty);
-    Q_CHECK_PTR(serviceHandler);
+//    //! \todo Itroduce BacnetObjId class with conversion functions
+//    ReadPropertyServiceData *service =
+//            new ReadPropertyServiceData(numToObjId(readElement->objectId),
+//                                        readElement->propertyId, readElement->propertyArrayIdx);
+//    Q_CHECK_PTR(service);
+//    ExternalConfirmedServiceHandler *serviceHandler =
+//            new ReadPropertyServiceHandler(service, asynchId, readElement);
+//    Q_CHECK_PTR(serviceHandler);
 
-    ObjectIdStruct objId = numToObjId(readElement->objectId);
-    BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
+//    ObjectIdStruct objId = numToObjId(readElement->objectId);
     //the ownership isgiven to TSM - we will never delete it. We just use pointers as Asynchronous tokens.
-    _appLayer->send(objId, fromAddr, BacnetServicesNS::ReadProperty, serviceHandler, 1000);
 
-    return asynchId;
-}
-
-void ExternalObjectsHandler::handleResponse(ExternalConfirmedServiceHandler *act, bool ok)
-{
-    //    RequestInfo ri = _bacnetPendingRequests.take(act);
-    //    Q_CHECK_PTR(ri.concernedProperty);
-    //    Q_ASSERT(ri.asynchId > 0);
-
-    //    bool found;
-    //    BacnetExternalObjects::ExternalRoutingElement rEntry = mappingEntry(ri.concernedProperty, &found);
-    //    Q_ASSERT(found);
-    //    if (!found) {
-    //        qWarning("ExternalObjectsHandler::handleResponse() property not found");
-    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-    //        return;
-    //    }
-
-    //    if (ri.reqType == RequestWrite) {
-    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
-    //    } else {
-    //        Q_ASSERT(false);
-    //    }
-}
-
-void ExternalObjectsHandler::handleResponse(ExternalConfirmedServiceHandler *act,
-                                            BacnetReadPropertyAck &rp)
-{
-    //    if (!_bacnetPendingRequests.contains(act))//this could happen, if the internal timeout has occured
-    //        return;
-
-    //    RequestInfo ri = _bacnetPendingRequests.take(act);
-    //    Q_CHECK_PTR(ri.concernedProperty);
-    //    Q_ASSERT(ri.asynchId > 0);
-
-    //    bool found;
-    //    BacnetExternalObjects::ExternalRoutingElement rEntry = mappingEntry(ri.concernedProperty, &found);
-    //    Q_ASSERT(found);
-    //    if (!found) {
-    //        qWarning("ExternalObjectsHandler::handleResponse() property not found");
-    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-    //        return;
-    //    }
-
-    //    BacnetDataInterfaceShared value = rp._data;
-    //    QVariant internalValue = value->toInternal();
-    //    ri.concernedProperty->setValueSilent(internalValue);
-    //    ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::ResultOk);
-}
-
-void ExternalObjectsHandler::handleError(ExternalConfirmedServiceHandler *act, Error &error)
-{
-    //    RequestInfo ri = _bacnetPendingRequests.take(act);
-    //    if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
-    //        ri.asynchId = 0;
-    //        ri.concernedProperty = 0;
-    //        ri.reqType = RequestRead;
-    //    } else {
-    //        RequestInfo ri = _bacnetPendingRequests.take(act);
-    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-    //    }
-
-    //    bool found;
-    //    BacnetExternalObjects::ExternalRoutingElement rElem = mappingEntry(ri.concernedProperty, &found);
-    //    Q_ASSERT(found);
-    //    if (!found)
-    //    {
-    //        qDebug("ExternalObjectsHandler::handleError() - routing entry not found!");
-    //        return;
-    //    }
-
-    //    qDebug("ExternalObjectsHandler::handleError() - Bacnet Error (class: %d, %d), while reading from object %d property %d",
-    //           error.errorClass, error.errorCode, rElem._deviceIdentifier, rElem._objectIdentifier);
-}
-
-void ExternalObjectsHandler::handleAbort(ExternalConfirmedServiceHandler *act,  quint8 abortReason)
-{
-    //    RequestInfo ri = _bacnetPendingRequests.take(act);
-    //    if (!_bacnetPendingRequests.contains(act)) {//this could happen, if the internal timeout has occured
-    //        ri.asynchId = 0;
-    //        ri.concernedProperty = 0;
-    //        ri.reqType = RequestRead;
-    //    } else {
-    //        RequestInfo ri = _bacnetPendingRequests.take(act);
-    //        ri.concernedProperty->asynchActionFinished(ri.asynchId, Property::UnknownError);
-    //    }
-
-    //    bool found;
-    //    BacnetExternalObjects::ExternalRoutingElement rElem = mappingEntry(ri.concernedProperty, &found);
-    //    Q_ASSERT(found);
-    //    if (!found)
-    //    {
-    //        qDebug("ExternalObjectsHandler::handleAbort() - routing entry not found!");
-    //        return;
-    //    }
-
-    //    qDebug("ExternalObjectsHandler::handleAbort() - Bacnet Abort (%d), while %s from object %d property %d",
-    //           abortReason,
-    //           (ri.reqType == RequestWrite) ? "write" : ((ri.reqType == RequestRead) ? "read" : "cov subscription"),
-    //           rElem._deviceIdentifier, rElem._objectIdentifier);
+    ObjectIdentifier objId(destinedObject);
+    BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
+    return _appLayer->send(objId.objIdStruct(), fromAddr, BacnetServicesNS::ReadProperty, serviceHandler);
 }
 
 bool ExternalObjectsHandler::isRegisteredAddress(InternalAddress &address)
@@ -264,46 +176,14 @@ int ExternalObjectsHandler::setPropertyRequested(::PropertySubject *toBeSet, QVa
 
     ExternalPropertyMapping *rEntry = _mappingTable.value(toBeSet);
 
-    if (0 == rEntry)
+    if ( (0 == rEntry) || (0 == rEntry->writeStrategy) ) {
+        qDebug("%s : error on getting write access strategy!", __PRETTY_FUNCTION__);
         return Property::UnknownProperty;
+    }
+
     Q_ASSERT(rEntry->isValid());
-
-    //rEntry->writeProperty(
-
-    int asynchId = DataModel::instance()->generateAsynchId();
-    Q_ASSERT(asynchId >= 0);
-    if (asynchId < 0) {
-        qWarning("Can't generate asynchronous id.");
-        return Property::UnknownError;
-    }
-
-    ObjectIdentifier objectId(rEntry->objectId);
-    BacnetDataInterface *writeData = BacnetDefaultObject::createDataForObjectProperty(objectId.type(), rEntry->propertyId, rEntry->propertyArrayIdx);
-    Q_CHECK_PTR(writeData);
-    if (0 == writeData) {
-        qWarning("Can't create appropriate value isntance for %d, %d", objectId.type(), rEntry->propertyId);
-        return Property::UnknownError;
-    }
-
-    if (!writeData->setInternal(value)) {
-        qDebug("ExternalObjectsHandler::setPropertyRequest() : Can't convert variant type %d, to bacnet type %d",
-               value.type(), writeData->typeId());
-        delete writeData;
-        return Property::UnknownError;
-    }
-
-    WritePropertyServiceData *serviceData =
-            new WritePropertyServiceData(objectId, rEntry->propertyId, writeData, rEntry->propertyArrayIdx);
-    Q_CHECK_PTR(serviceData);
-    BacnetWritePropertyServiceHandler *serviceHandler =
-            new BacnetWritePropertyServiceHandler(serviceData, this, toBeSet, asynchId);
-    Q_CHECK_PTR(serviceHandler);
-
-    BacnetAddress fromAddr = BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
-    //the ownership isgiven to AppLayer. We just use pointers as Asynchronous tokens.
-    _appLayer->send(objectId.objIdStruct(), fromAddr, BacnetServicesNS::WriteProperty, serviceHandler, 1000);
-
-    return asynchId;
+    Q_CHECK_PTR(rEntry->writeStrategy);
+    return rEntry->writeStrategy->writeProperty(rEntry, this, value, true);
 }
 
 //WritePropertyServiceData::WritePropertyServiceData(ObjectIdStruct&, BacnetPropertyNS::Identifier&, BacnetDataInterface*&, quint32&)’
@@ -332,7 +212,7 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
         return false;
     Q_ASSERT(propertyMapping->isValid());
 
-    quint8 generateProcId = insertToOrFindSubscribeCovs(isConfirmedCovSubscription, propertyMapping, covStreategy);
+    quint8 generateProcId = insertToOrFindSubscribeCovs(propertyMapping, covStreategy);
     if (isConfirmedCovSubscription && (0 == generateProcId)) {
         qDebug("%s : Couldn't generate Cov Process Id key.", __PRETTY_FUNCTION__);
         return false;
@@ -358,7 +238,7 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
     return true;
 }
 
-int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint)
+int ExternalObjectsHandler::insertToOrFindSubscribeCovs(ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint)
 {
     int returnProcId(-1);
     //    if (!confirmed) {
@@ -404,11 +284,12 @@ int ExternalObjectsHandler::insertToOrFindSubscribeCovs(bool confirmed, External
                 break;
             }
         }
-
-#warning "For testing purposes set 15 (like in examples). REMOVE later!"
-        Q_ASSERT(!_subscribedCovs.contains(15));
+//#define EXT_COV_TEST
+#ifdef EXT_COV_TEST
+#warning "For testing purposes set 18 (like in examples). REMOVE later!"
+        Q_ASSERT(!_subscribedCovs.contains(18));
         returnProcId = 18;
-
+#endif
         //the key was found, insert us
         Q_ASSERT(!_subscribedCovs.contains(returnProcId));
         _subscribedCovs.insert(returnProcId, qMakePair(propertyMapping, readStrategy));

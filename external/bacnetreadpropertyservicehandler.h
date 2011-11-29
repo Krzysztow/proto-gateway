@@ -8,14 +8,14 @@ class PropertySubject;
 
 namespace Bacnet {
 
-    class ExternalObjectsHandler;
+    class ExternalPropertyMapping;
     class ReadPropertyServiceData;
 
     class ReadPropertyServiceHandler:
             public ExternalConfirmedServiceHandler
     {
     public:
-        ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, ExternalObjectsHandler *respHandler, int asynchId, Property *property);
+        ReadPropertyServiceHandler(ReadPropertyServiceData *rpData, int asynchId, ExternalPropertyMapping *propertyMapping);
         virtual ~ReadPropertyServiceHandler();
 
     public://functions overridden from BacnetConfirmedServiceHandler
@@ -26,17 +26,12 @@ namespace Bacnet {
         virtual ActionToExecute handleAbort();
         virtual ActionToExecute handleTimeout();
 
-        virtual int asynchId();
-        virtual Property *property();
-
     private:
         //BACnet specific
         ReadPropertyServiceData *_rpData;
-        //CDM handling
-        ExternalObjectsHandler *_responseHandler;
 
         int _asynchId;
-        Property *_property;
+        ExternalPropertyMapping *_propertyMapping;
     };
 
 }

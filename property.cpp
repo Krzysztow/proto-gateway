@@ -13,6 +13,19 @@ Property::~Property()
 {
 }
 
+int Property::generateAsynchId()
+{
+    int id = DataModel::instance()->generateAsynchId();
+    Q_ASSERT(id >= 0);
+    return id;
+}
+
+void Property::releaseId(int asynchId)
+{
+    DataModel::instance()->releaseAsynchId(asynchId);
+}
+
+
 void Property::setOwner(PropertyOwner *owner)
 {
     Q_UNUSED(owner);
@@ -175,6 +188,8 @@ void PropertySubject::asynchActionFinished(int asynchId, Property::ActiontResult
         }
     } else
         qDebug("PropertySubject::asynchActionFinished() - result %d, don't tell others!", actionResult);
+
+    DataModel::instance()->releaseAsynchId(asynchId);
 }
 
 void PropertySubject::setValueInstantly(QVariant &inValue, PropertyObserver *observerToOmit)

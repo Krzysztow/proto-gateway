@@ -49,7 +49,6 @@ Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHand
     Q_CHECK_PTR(appLayer);
     Q_UNUSED(destination);
     Q_UNUSED(pciData);
-    qDebug("=== address lenght is %d", requester.macAddrLength());
     switch (pciData.service())
     {
     case (BacnetServicesNS::WhoIs): {
@@ -72,16 +71,3 @@ Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHand
         return 0;
     }
 }
-
-//BacnetService *ServiceFactory::createBroadcastService(quint8 *servicePtr, quint16 length,
-//                                                      quint8 serviceCode, qint32 *retCode)
-//{
-//    Q_CHECK_PTR(retCode);
-//    Q_CHECK_PTR(servicePtr);
-
-//    switch (serviceCode)
-//    {
-//    case (BacnetServices::I_Am):
-//        ;
-//    }
-//}

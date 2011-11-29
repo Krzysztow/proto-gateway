@@ -108,7 +108,10 @@ SOURCES += main.cpp \
     tests/covanswerer.cpp \
     internal/internalconfirmedcovnotifhandler.cpp \
     applayer/bacnetarrayvisitor.cpp \
-    internal/internaluncfrdmcovnotifhandler.cpp
+    internal/internaluncfrdmcovnotifhandler.cpp \
+    tests/rpanswerer.cpp \
+    external/externalobjectwritestrategy.cpp \
+    external/externaltimedepjob.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -212,9 +215,18 @@ HEADERS += bacnetvirtuallinklayer.h \
     tests/covanswerer.h \
     internal/internalconfirmedcovnotifhandler.h \
     applayer/bacnetarrayvisitor.h \
-    internal/internaluncfrdmcovnotifhandler.h
+    internal/internaluncfrdmcovnotifhandler.h \
+    tests/rpanswerer.h \
+    external/externalobjectwritestrategy.h \
+    external/externaltimedepjob.h
 
 OTHER_FILES +=
+
+
+
+
+
+
 
 
 

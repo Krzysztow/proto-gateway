@@ -7,14 +7,14 @@ class PropertySubject;
 
 namespace Bacnet {
 
-    class ExternalObjectsHandler;
+    class ExternalPropertyMapping;
     class WritePropertyServiceData;
 
     class BacnetWritePropertyServiceHandler:
             public ExternalConfirmedServiceHandler
     {
     public:
-        BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, ExternalObjectsHandler *respHandler, Property *property, int asynchId);
+        BacnetWritePropertyServiceHandler(WritePropertyServiceData *wData, int asynchId, ExternalPropertyMapping *propertyMapping);
         virtual ~BacnetWritePropertyServiceHandler();
 
     public://functions overridden from BacnetConfirmedServiceHandler
@@ -25,18 +25,12 @@ namespace Bacnet {
         virtual ActionToExecute handleAbort();
         virtual ActionToExecute handleTimeout();
 
-        virtual int asynchId();
-        virtual Property *property();
-
     private:
         //BACnet specific
         WritePropertyServiceData *_wData;
-        quint8 sendTryOuts;
-        //CDM handling
-        ExternalObjectsHandler *_responseHandler;
 
-        Property *_concernedProperty;
         int _asynchId;
+        ExternalPropertyMapping *_propertyMapping;
     };
 
 }

@@ -21,7 +21,8 @@ namespace Bacnet {
     class BacnetApplicationLayerHandler;
     class CovReadStrategy;
     class ExternalObjectReadStrategy;
-//    class CovNotificationRequestData;
+    class ExternalObjectWriteStrategy;
+    class ExternalTimeDepJob;
 
     class ExternalObjectsHandler:
             public QObject,
@@ -34,14 +35,9 @@ namespace Bacnet {
 
         void addMappedProperty(PropertySubject *property, Bacnet::ObjIdNum objectId,
                                BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx,                               
-                               ExternalObjectReadStrategy *readStrategy = 0);
+                               ExternalObjectReadStrategy *readStrategy = 0, ExternalObjectWriteStrategy *writeStrategy = 0);
 
         ExternalPropertyMapping *mappingEntry(::Property *property);
-
-        void handleResponse(ExternalConfirmedServiceHandler *act, BacnetReadPropertyAck &rp);
-        void handleResponse(ExternalConfirmedServiceHandler *act, bool ok);//all the simple acks come here.
-        void handleError(ExternalConfirmedServiceHandler *act, Error &error);
-        void handleAbort(ExternalConfirmedServiceHandler *act,  quint8 abortReason);
 
         bool isRegisteredAddress(InternalAddress &address);
         void addRegisteredAddress(InternalAddress &address);
@@ -51,6 +47,7 @@ namespace Bacnet {
     public://overridden from PropertyOwner
         int getPropertyRequested(PropertySubject *toBeGotten);
         virtual int setPropertyRequested(PropertySubject *toBeSet, QVariant &value);
+
 
         /** This function shouldn't be ever called. This owner should contain only external objects, which are
           handled by themselves.
@@ -63,14 +60,16 @@ namespace Bacnet {
         virtual void propertyValueChanged(Property *property);
 
     public:
-        int readProperty(ExternalPropertyMapping *readElement, bool askStrategy = true);
+        bool send(ExternalConfirmedServiceHandler *serviceHandler, ObjIdNum destinedObject);
+
     private:
         QHash<Property*, ExternalPropertyMapping*> _mappingTable;
 
     protected:
         void timerEvent(QTimerEvent *);
     private:
-        typedef QPair<ExternalObjectReadStrategy*,ExternalPropertyMapping*> TTimeDependantPair;
+        void tryToAdd(ExternalTimeDepJob *job, ExternalPropertyMapping* correspondingMapping);
+        typedef QPair<ExternalTimeDepJob*, ExternalPropertyMapping*> TTimeDependantPair;
         QList<TTimeDependantPair> _timeDependantJobs;
         QBasicTimer _timer;
         static const int DefaultInterval_ms = 500;
@@ -90,7 +89,7 @@ namespace Bacnet {
         static const int UnconfirmedProcIdValue = 0;
         static const quint32 MaximumConfirmedSubscriptions = 255;
         int _lastProcIdValueUsed;
-        int insertToOrFindSubscribeCovs(bool confirmed, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint = -1);
+        int insertToOrFindSubscribeCovs(ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint = -1);
 
     private:
         BacnetApplicationLayerHandler *_appLayer;

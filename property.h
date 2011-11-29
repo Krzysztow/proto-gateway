@@ -59,6 +59,10 @@ public:
 
     virtual void setOwner(PropertyOwner *owner);
     virtual PropertyOwner *owner();
+
+public:
+    int generateAsynchId();
+    void releaseId(int asynchId);
 };
 
 class PropertySubject:

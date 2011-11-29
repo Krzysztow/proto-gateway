@@ -2,24 +2,26 @@
 #define BACNET_EXTERNALOBJECTREADSTRATEGY_H
 
 #include <QtCore>
+#include "externaltimedepjob.h"
 
 namespace Bacnet {
 
 class ExternalObjectsHandler;
 class ExternalPropertyMapping;
 
-class ExternalObjectReadStrategy
+class ExternalObjectReadStrategy:
+        public ExternalTimeDepJob
 {
-public://time-dependant behaviour
+public://time-dependant behaviour / implemented ExternalTimeDepJob methods
     //! returns true, if the action is periodic
     virtual bool isPeriodic();
     //! returns true, if action is to be executed
     virtual bool timePassed(int timePassed_ms);
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
+
 public://methods considering property readyness to be read
-    //! should return true, if the caller (ExternalObjectsHandler) may read the value. Otherwise ExternalObjectsHandler will issue RP request.
-    virtual bool isValueReady();
+    virtual int readProperty(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler, bool generateAsynchId = false);
 };
 
 /**
@@ -44,6 +46,8 @@ public://time-dependant behaviour
     virtual bool timePassed(int timePassed_ms);
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
+
+    //readProperty() is taken from ExternalObjectReadStrategy
 
 public:
     void setInterval(int interval_ms);
@@ -97,7 +101,7 @@ public://time-dependant behaviour
     //! executes action
     virtual void doAction(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler);
 public:
-    virtual bool isValueReady();
+    virtual int readProperty(ExternalPropertyMapping *propertyMapping, ExternalObjectsHandler *externalHandler, bool generateAsynchId);
 
 public:
     void setInterval(int interval_ms);

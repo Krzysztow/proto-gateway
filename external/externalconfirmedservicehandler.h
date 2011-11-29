@@ -27,9 +27,6 @@ class Error;
         virtual ActionToExecute handleAbort() = 0;
         virtual ActionToExecute handleReject(BacnetRejectNS::RejectReason rejectReason) = 0;
         virtual ActionToExecute handleTimeout() = 0;
-
-        virtual int asynchId() = 0;
-        virtual Property *property() = 0;
     };
 
 }

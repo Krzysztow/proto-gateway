@@ -102,7 +102,6 @@ qint32 SequenceOf<T>::fromRawSpecific(BacnetTagParser &parser, quint8 tagNum, Ba
     while ((tagNum != ret) || (!okOrContext)) {
         seqElem = new T();
         _sequence.append(QSharedPointer<T>(seqElem));//append it first, so that in case of error we keep track of it and are able to delete later on.
-#warning "Take care of parameter objectType - is it really needed?"
         ret = seqElem->fromRawSpecific(parser, objectType);
         if (ret < 0)
             return ret;

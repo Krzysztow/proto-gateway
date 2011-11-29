@@ -486,6 +486,7 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "bacnetbipaddress.h"
 #include "externalobjectreadstrategy.h"
 #include "covanswerer.h"
+#include "rpanswerer.h"
 
 int main(int argc, char *argv[])
 {
@@ -672,9 +673,16 @@ int main(int argc, char *argv[])
 
 //    appHandler->indication(iAmData, iAmDataSize, srcAddr, broadAddr);
 
+///////////////////////////////////////////////////////////////////
+/////////////////ExternalObjectsHndlr tests////////////////////////
+///////////////////////////////////////////////////////////////////
+
     BacnetAddress covDeviceAddress(srcAddr);
     ObjectIdentifier covDeviceIdentifier(BacnetObjectTypeNS::Device, 2);
 
+//#define EXT_COV_TEST
+#ifdef EXT_COV_TEST
+    //To run COV test with externalObjHandler uncomment //#define EXT_COV_TEST in TSM and Externalobjects handler
     ObjectIdentifier covPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 10);
 
     PropertySubject *covPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
@@ -687,12 +695,37 @@ int main(int argc, char *argv[])
     extHandler->addMappedProperty(covPropSubject, covPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
                                   covStrategy);
 
-
     BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
     CovAnswerer *covAns = new CovAnswerer(15, covDeviceAddress, extHandlerAddress, appHandler);
     QTimer timer;
     QObject::connect(&timer, SIGNAL(timeout()), covAns, SLOT(answer()));
     timer.start(987);
+#endif
+#undef EXT_COV_TEST
+
+//#define EXT_RP_TEST
+#ifdef EXT_RP_TEST
+    //to make it work, define EXT_RP_TEST in BacnetTsm2.cpp
+    ObjectIdentifier rpPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 5);
+
+    PropertySubject *rpPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
+
+    appHandler->registerObject(covDeviceIdentifier, rpPropertyIdentifier);
+    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
+
+    SimpleWithTimeReadStrategy *creadStrategy = new SimpleWithTimeReadStrategy(60000);
+    extHandler->addMappedProperty(rpPropSubject, rpPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
+                                  creadStrategy);
+
+    BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
+    RpAnswerer *rpAns = new RpAnswerer(1, covDeviceAddress, extHandlerAddress, appHandler);
+    QTimer timer;
+    timer.setSingleShot(true);
+    QObject::connect(&timer, SIGNAL(timeout()), rpAns, SLOT(answer()));
+    timer.start(987);
+#endif
+#undef EXT_RP_TEST
+
 
     return a.exec();
 }

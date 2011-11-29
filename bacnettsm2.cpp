@@ -481,8 +481,22 @@ void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
 int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, const BacnetAddress &destination, const BacnetAddress &source, BacnetServicesNS::BacnetConfirmedServiceChoice service)
 {
     int invokeId = _generator.generateId();
+
+//#define EXT_COV_TEST
+#ifdef EXT_COV_TEST
 #warning "CHANGED TEMPORARILY"
     invokeId = 15;
+#endif
+#undef EXT_COV_TEST
+
+//#define EXT_RP_TEST
+#ifdef EXT_RP_TEST
+#warning "CHANGED TEMPORARILY"
+    invokeId = 1;
+#endif
+#undef EXT_RP_TEST
+
+
     if (invokeId < 0) {
         qDebug("%s : cannot generate id!", __PRETTY_FUNCTION__);
         return invokeId;
