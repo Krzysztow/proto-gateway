@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bacnetConfig>
+	<internalHandler dummy="first">
+		<devices>
+			<device name="BacnetTestDevice" int-address="1" dev-instance-number="1">
+				<properties>
+				<!--
+					<property prop-type="simple" id="85" bac-type="real" value="11.2" />
+					<property prop-type="array" id="76" >
+						<property prop-type="simple" bac-type="bacnetobjectidentifier" value="0x1234">
+					</property>
+					<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="5" int-var-type="float" />
+					-->
+					<property prop-type="internal" id="85" bac-type="real" int-id="1" int-type="observer" int-var-type="double" />		
+				</properties>
+				<childObjects>
+					<object name="OATemp" instance-number="5" obj-type="analog-input" >
+						<properties>
+							<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-var-type="double" int-id="3" />
+						</properties>
+					</object>	
+				</childObjects>
+			</device>
+			<device name="BestDeviceEver" int-address="3" dev-instance-number="8">
+			</device>
+			
+		</devices>
+	</internalHandler>
+</bacnetConfig>
+

@@ -27,7 +27,7 @@ DataModel *DataModel::instance()
     return _instance;
 }
 
-PropertySubject *DataModel::createProperty(quint32 propId, QVariant::Type propertyType)
+PropertySubject *DataModel::createPropertySubject(quint32 propId, QVariant::Type propertyType)
 {
     if (_properties.contains(propId)) {
         Q_ASSERT_X(false, "DataModel::createProperty()", "The property subject may be created only once!");
@@ -38,6 +38,55 @@ PropertySubject *DataModel::createProperty(quint32 propId, QVariant::Type proper
     _properties.insert(propId, propS);
 
     return propS;
+}
+
+static const char *InternalPropertyTypeAttribute    = "int-type";
+static const char *InternalPropertyId               = "int-id";
+static const char *ObserverAttributeValue           = "observer";
+static const char *SubjectAttributeValue            = "subject";
+static const char *InternalVariantType              = "int-var-type";
+
+PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement)
+{
+    bool ok;
+    quint32 internalId = observerElement.attribute(InternalPropertyId).toUInt(&ok);
+    if (!ok)
+        return 0;
+    return createPropertyObserver(internalId);
+}
+
+PropertySubject *DataModel::createPropertySubject(QDomElement &subjectElement)
+{
+    bool ok;
+    quint32 internalId = subjectElement.attribute(InternalPropertyId).toUInt(&ok);
+    if (!ok)
+        return 0;
+    QString variantType = subjectElement.attribute(InternalVariantType);
+    uint type = QMetaType::type(variantType.toLatin1());
+    if (QVariant::Invalid == type)
+        return 0;
+    return createPropertySubject(internalId, (QVariant::Type)type);
+}
+
+Property *DataModel::createProperty(QDomElement &propElement)
+{
+    if (!propElement.hasAttribute(InternalPropertyTypeAttribute) || !propElement.hasAttribute(InternalPropertyId)) {
+        qDebug("%s : Property has no required attributes! %s | %s", __PRETTY_FUNCTION__,
+               qPrintable(propElement.attribute(InternalPropertyTypeAttribute)),
+               qPrintable(propElement.attribute(InternalPropertyId)));
+        return 0;
+    }
+
+    QString str = propElement.attribute(InternalPropertyTypeAttribute);
+    bool ok;
+
+    if (ObserverAttributeValue == str) {
+        return createPropertyObserver(propElement);
+    } else if (SubjectAttributeValue == str) {
+        return createPropertySubject(propElement);
+    }
+
+    return 0;
 }
 
 PropertySubject *DataModel::getProperty(quint32 propId)

@@ -498,23 +498,64 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "wprequester.h"
 #include "wpacknowledger.h"
 
+#include "objectsstructurefactory.h"
+
+#include <QFile>
+#include <QDomDocument>
+
+static const char *InternalHandlerTagName = "internalHandler";
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    DataModel::instance();
-
     BacnetNetworkLayerHandler *netHandler = new BacnetNetworkLayerHandler();
     BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(netHandler);
-
     InternalObjectsHandler *intHandler = appHandler->internalHandler();
     ExternalObjectsHandler *extHandler = appHandler->externalHandler();
 
-    InternalAddress extObjHandlerAddress = 32;
-    extHandler->addRegisteredAddress(extObjHandlerAddress);
-
+    ///////Not bacnet thing
     QVariant test;
     test.setValue((double)72.3);
+    AsynchOwner *proto2 = new AsynchOwner();
+    PropertySubject *subject = DataModel::instance()->createPropertySubject(1, QVariant::Double);
+    subject->setValue(test);
+    proto2->addProperty(subject);
+
+    PropertySubject *subject2 = DataModel::instance()->createPropertySubject(2, QVariant::Double);
+    subject2->setValue(test);
+    proto2->addProperty(subject2);
+
+    PropertySubject *subject3 = DataModel::instance()->createPropertySubject(3, QVariant::Double);
+    subject3->setValue(test);
+
+    //////END of Not bacnet thing
+
+    QFile f("bacnet-test-config.xml");
+    if (!f.open(QIODevice::ReadOnly)) {
+        qDebug("Can't open test file!");
+        return 1;
+    }
+    QDomDocument doc;
+    bool parsed = doc.setContent(&f);
+
+    QDomElement docEl = doc.documentElement();
+    QDomNodeList list = docEl.elementsByTagName(InternalHandlerTagName);
+    if (list.count() > 1)
+        qDebug("%s : Config is malformed. Bad number of %s elements", __PRETTY_FUNCTION__, InternalHandlerTagName);
+
+    QDomElement el = list.at(0).toElement();
+
+    PropertySubject *subjectMain = DataModel::instance()->createPropertySubject(5, QVariant::Double);
+    QList<BacnetDeviceObject*> devices = ObjectsStructureFactory::instance()->createDevicesFromConfig(el, DataModel::instance());
+    ObjectsStructureFactory::releaseInstance();
+
+    foreach (BacnetDeviceObject *device, devices) {
+        intHandler->addDevice(device->address(), device);
+    }
+
+    InternalAddress extObjHandlerAddress = 32;
+    extHandler->addRegisteredAddress(extObjHandlerAddress);
 
     BacnetAddress srcAddr;
     QHostAddress sa("192.168.1.70");
@@ -526,36 +567,28 @@ int main(int argc, char *argv[])
     quint32 destAddrInt(0x00000001);
     BacnetAddress destAddr = BacnetInternalAddressHelper::toBacnetAddress(destAddrInt);
 
-    AsynchOwner *proto2 = new AsynchOwner();
-    PropertySubject *subject = DataModel::instance()->createProperty(1, QVariant::Double);
-    subject->setValue(test);
-    proto2->addProperty(subject);
+    //    BacnetDeviceObject *device = new BacnetDeviceObject(1, destAddr);
+    //    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Device 1 address");
+    //    device->setObjectName("BacnetTestDevice");
+    //    PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
+    //    ProxyInternalProperty propProxy(obs, AppTags::Real, QVariant::Double, device);
+    //    device->addProperty(BacnetPropertyNS::PresentValue, &propProxy);
+    //    intHandler->addDevice(device->address(), device);
 
-    BacnetDeviceObject *device = new BacnetDeviceObject(1, destAddr);
-    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Device 1 address");
-    device->setObjectName("BacnetTestDevice");
-    PropertyObserver *obs = DataModel::instance()->createPropertyObserver(1);
-    ProxyInternalProperty propProxy(obs, AppTags::Real, QVariant::Double, device);
-    device->addProperty(BacnetPropertyNS::PresentValue, &propProxy);
-    intHandler->addDevice(device->address(), device);
 
-    PropertySubject *subject2 = DataModel::instance()->createProperty(2, QVariant::Double);
-    subject2->setValue(test);
-    proto2->addProperty(subject2);
-
-    PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
-    BacnetObject *aio = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 5, device);
+    //    PropertyObserver *obs2 = DataModel::instance()->createPropertyObserver(2);
+    //    BacnetObject *aio = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 5, device);
     //    AnalogInputObject *aio = new AnalogInputObject(5, device);
-    aio->setObjectName("OATemp");
-    ProxyInternalProperty propProxy2(obs2, AppTags::Real, QVariant::Double, aio);
-    aio->addProperty(BacnetPropertyNS::PresentValue, &propProxy2);
+    //    aio->setObjectName("OATemp");
+    //    ProxyInternalProperty propProxy2(obs2, AppTags::Real, QVariant::Double, aio);
+    //    aio->addProperty(BacnetPropertyNS::PresentValue, &propProxy2);
 
     quint32 addr(0x00000003);
     BacnetAddress bAddr;
     BacnetInternalAddressHelper::macAddressFromRaw((quint8*)&addr, &bAddr);
-    BacnetDeviceObject *device1 = new BacnetDeviceObject(8, bAddr);
-    intHandler->addDevice(device1->address(), device1);
-    device1->setObjectName("BestDeviceEver");
+    //    BacnetDeviceObject *device1 = new BacnetDeviceObject(8, bAddr);
+    //    intHandler->addDevice(device1->address(), device1);
+    //    device1->setObjectName("BestDeviceEver");
 
     //    BacnetObject *aio1 = new BacnetObject(BacnetObjectTypeNS::AnalogInput, 3, device1);
     ////    AnalogInputObject *aio1 = new AnalogInputObject(3, device1);
@@ -570,47 +603,47 @@ int main(int argc, char *argv[])
     //    PropertyObserver *extObserver = DataModel::instance()->createPropertyObserver(3);
     //    proto2->addProperty(extObserver);
 
-    //READ PROPERTY ENCODED
-    //    quint8 readPropertyService[] = {
-    //        0x00,
-    //        0x00,
-    //        0x01,
-    //        0x0C,
-    //        0x0C,
-    //        0x00, 0x00, 0x00, 0x05,
-    //        0x19,
-    //        0x55
-    //    };
-
-    //    HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Addressed device:");
-    //    appHandler->indication(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
-
-    //        //WRITE PROEPRTY ENCODED
-    //        quint8 wpService[] = {
+    //    //READ PROPERTY ENCODED
+    //        quint8 readPropertyService[] = {
     //            0x00,
-    //            0x04,
-    //            0x59,
-    //            0x0F,
-
-    //            0x0c,
-    //            0x00, 0x00/*0x80*/, 0x00, /*0x01*/0x05, //analog input instance number 5
+    //            0x00,
+    //            0x01,
+    //            0x0C,
+    //            0x0C,
+    //            0x00, 0x00, 0x00, 0x05,
     //            0x19,
-    //            0x55,
-    //            0x3e,
-    //            0x44,
-    //            0x43, 0x34, 0x00, 0x00,
-    //            0x3f
+    //            0x55
     //        };
-    //        appHandler->indication(wpService, sizeof(wpService), srcAddr, destAddr);
 
-    //        //WHO IS//device instance 03
-    //        quint8 wiService[] = {
-    //            0x10,
-    //            0x08,
-    //            0x09, 0x03,//find device
-    //            0x19, 0x03
-    //        };
-    //        appHandler->indication(wiService, sizeof(wiService), srcAddr, destAddr);
+    //        HelperCoder::printArray(destAddr.macPtr(), destAddr.macAddrLength(), "Addressed device:");
+    //        appHandler->indication(readPropertyService, sizeof(readPropertyService), srcAddr, destAddr);
+
+//    //WRITE PROEPRTY ENCODED
+//    quint8 wpService[] = {
+//        0x00,
+//        0x04,
+//        0x59,
+//        0x0F,
+
+//        0x0c,
+//        0x00, 0x00/*0x80*/, 0x00, /*0x01*/0x05, //analog input instance number 5
+//        0x19,
+//        0x55,
+//        0x3e,
+//        0x44,
+//        0x43, 0x34, 0x00, 0x00,
+//        0x3f
+//    };
+//    appHandler->indication(wpService, sizeof(wpService), srcAddr, destAddr);
+
+//            //WHO IS//device instance 03
+//            quint8 wiService[] = {
+//                0x10,
+//                0x08,
+//                0x09, 0x01,//find device
+//                0x19, 0x0a
+//            };
+//            appHandler->indication(wiService, sizeof(wiService), srcAddr, destAddr);
 
     //    //WHO IS//device instance 03
     //    quint8 wiService[] = {
@@ -621,76 +654,76 @@ int main(int argc, char *argv[])
     //    };
     //    appHandler->indication(wiService, sizeof(wiService), srcAddr, destAddr);
 
-    //    //WHO HAS - object name is known
-    //    quint8 whoHasService[] = {
-    //        0x10,
-    //        0x07,
-    //        0x3d,
-    //        0x07,
-    //        0x00,
-    //        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
-    //    };
-    //    appHandler->indication(whoHasService, sizeof(whoHasService), srcAddr, destAddr);
-
-//            BacnetAddress broadAddr;
-//            broadAddr.setGlobalBroadcast();
-    ////        bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
-
-    //        //WHO HAS - object id is known
-    //        quint8 whoHasService2[] = {
-    //            0x10,
-    //            0x07,
-    //            0x2c,
-    //            0x00, 0x00, 0x00, 0x05
-    //        };
-    //        appHandler->indication(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
-
-//    //I-HAVE
-//    quint8 iHaveData[] = {
+//    //WHO HAS - object name is known
+//    quint8 whoHasService[] = {
 //        0x10,
-//        0x01,
-//        0xc4,
-//        0x02, 0x00, 0x00, 0x08,
-//        0xc4,
-//        0x00, 0x00, 0x00, 0x03,
-//        0x75,
+//        0x07,
+//        0x3d,
 //        0x07,
 //        0x00,
-//        0x4f, 0x41, 0x54, 0x65, 0x6d, 0x70
+//        0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70
 //    };
-//    const quint16 iHaveDataSize = sizeof(iHaveData);
-//    BacnetAddress broadAddr;
-//    broadAddr.setGlobalBroadcast();
+//    appHandler->indication(whoHasService, sizeof(whoHasService), srcAddr, destAddr);
 
-//    appHandler->indication(iHaveData, iHaveDataSize, srcAddr, broadAddr);
+                BacnetAddress broadAddr;
+                broadAddr.setGlobalBroadcast();
+    ////        bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
 
-//    //I-AM
-//    quint8 iAmData[] = {
-//        0x10,
-//        0x00,
-//        0xc4,
-//        0x02, 0x00, 0x00, 0x01,
-//        0x22,
-//        0x01, 0xe0,
-//        0x91,
-//        0x01,
-//        0x21,
-//        0x63
-//    };
-//    const quint16 iAmDataSize = sizeof(iAmData);
-//    BacnetAddress broadAddr;
-//    broadAddr.setGlobalBroadcast();
+//            //WHO HAS - object id is known
+//            quint8 whoHasService2[] = {
+//                0x10,
+//                0x07,
+//                0x2c,
+//                0x00, 0x00, 0x00, 0x05
+//            };
+//            appHandler->indication(whoHasService2, sizeof(whoHasService2), srcAddr, broadAddr);
 
-//    appHandler->indication(iAmData, iAmDataSize, srcAddr, broadAddr);
+    //    //I-HAVE
+    //    quint8 iHaveData[] = {
+    //        0x10,
+    //        0x01,
+    //        0xc4,
+    //        0x02, 0x00, 0x00, 0x08,
+    //        0xc4,
+    //        0x00, 0x00, 0x00, 0x03,
+    //        0x75,
+    //        0x07,
+    //        0x00,
+    //        0x4f, 0x41, 0x54, 0x65, 0x6d, 0x70
+    //    };
+    //    const quint16 iHaveDataSize = sizeof(iHaveData);
+    //    BacnetAddress broadAddr;
+    //    broadAddr.setGlobalBroadcast();
 
-///////////////////////////////////////////////////////////////////
-/////////////////ExternalObjectsHndlr tests////////////////////////
-///////////////////////////////////////////////////////////////////
+    //    appHandler->indication(iHaveData, iHaveDataSize, srcAddr, broadAddr);
+
+    //    //I-AM
+    //    quint8 iAmData[] = {
+    //        0x10,
+    //        0x00,
+    //        0xc4,
+    //        0x02, 0x00, 0x00, 0x01,
+    //        0x22,
+    //        0x01, 0xe0,
+    //        0x91,
+    //        0x01,
+    //        0x21,
+    //        0x63
+    //    };
+    //    const quint16 iAmDataSize = sizeof(iAmData);
+    //    BacnetAddress broadAddr;
+    //    broadAddr.setGlobalBroadcast();
+
+    //    appHandler->indication(iAmData, iAmDataSize, srcAddr, broadAddr);
+
+    ///////////////////////////////////////////////////////////////////
+    /////////////////ExternalObjectsHndlr tests////////////////////////
+    ///////////////////////////////////////////////////////////////////
 
     BacnetAddress covDeviceAddress(srcAddr);
     ObjectIdentifier covDeviceIdentifier(BacnetObjectTypeNS::Device, 2);
 
-//#define EXT_COV_TEST
+    //#define EXT_COV_TEST
 #ifdef EXT_COV_TEST
     //To run COV test with externalObjHandler uncomment //#define EXT_COV_TEST in TSM and Externalobjects handler
     ObjectIdentifier covPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 10);
@@ -713,7 +746,7 @@ int main(int argc, char *argv[])
 #endif
 #undef EXT_COV_TEST
 
-//#define EXT_RP_TEST
+    //#define EXT_RP_TEST
 #ifdef EXT_RP_TEST
     //to make it work, define EXT_RP_TEST in BacnetTsm2.cpp
     ObjectIdentifier rpPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 5);
@@ -736,7 +769,7 @@ int main(int argc, char *argv[])
 #endif
 #undef EXT_RP_TEST
 
-//#define EXT_WP_TEST
+    //#define EXT_WP_TEST
 #ifdef EXT_WP_TEST
     //to make it work, define EXT_RP_TEST in BacnetTsm2.cpp
     ObjectIdentifier wpPropertyIdentifier(BacnetObjectTypeNS::AnalogValue, 1);
@@ -747,7 +780,7 @@ int main(int argc, char *argv[])
     appHandler->registerObject(covDeviceIdentifier, wpPropertyIdentifier);
     appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
 
-//    SimpleWithTimeReadStrategy *creadStrategy = new SimpleWithTimeReadStrategy(60000);
+    //    SimpleWithTimeReadStrategy *creadStrategy = new SimpleWithTimeReadStrategy(60000);
     SimpleReadStrategy *creadStrategy = new SimpleReadStrategy();
     ExternalObjectWriteStrategy *writeStrategy = new ExternalObjectWriteStrategy();
     extHandler->addMappedProperty(wpPropSubject, wpPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,

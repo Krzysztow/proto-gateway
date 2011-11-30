@@ -40,8 +40,10 @@ BacnetDeviceObject::BacnetDeviceObject(quint32 instanceNumber, BacnetAddress &ad
 
 BacnetDeviceObject::~BacnetDeviceObject()
 {
-    qDeleteAll(_specializedProperties);
-    qDeleteAll(_childObjects);
+    foreach (BacnetObject *child, _childObjects) {
+        if (child != this)
+            delete child;
+    }
 }
 
 bool BacnetDeviceObject::readClassDataHelper(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, Bacnet::BacnetDataInterfaceShared &data, Bacnet::Error *error)
@@ -263,7 +265,6 @@ bool BacnetDeviceObject::addBacnetObject(BacnetObject *object)
     if (object == this)
         return true;//will be added later, in initialization.
 #endif
-
     Q_ASSERT(!_childObjects.contains(object->objectIdNum()));
     if (!_childObjects.contains(object->objectIdNum())) {
         _childObjects.insert(object->objectIdNum(), object);

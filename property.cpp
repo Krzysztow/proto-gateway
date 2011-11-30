@@ -194,7 +194,6 @@ void PropertySubject::asynchActionFinished(int asynchId, Property::ActiontResult
 
 void PropertySubject::setValueInstantly(QVariant &inValue, PropertyObserver *observerToOmit)
 {
-    Q_ASSERT(_value.type() == inValue.type());
     _value = inValue;
     foreach (PropertyObserver *observer, _observers) {
         if (observer != observerToOmit)

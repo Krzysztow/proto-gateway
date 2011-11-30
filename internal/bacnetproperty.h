@@ -118,9 +118,8 @@ public://overriden from Bacnet::Property
     virtual int setValue(BacnetDataInterfaceShared &data, quint32 BacnetPropertyArrayIdx = ArrayIndexNotPresent, Error *error = 0);
 
 public://overriden from InternalPropertyContainerSupport
-    virtual void propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result,
-                                              BacnetProperty *subProperty = 0, BacnetProperty *mainProperty = 0,
-                                              BacnetObject *parentObject = 0, BacnetDeviceObject *deviceObject = 0);
+    virtual void propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result, BacnetProperty *property,
+                                              ArrayProperty *arrayProperty, BacnetObject *parentObject, BacnetDeviceObject *deviceObject);
 
     virtual void propertyValueChanged(BacnetProperty *property = 0, ArrayProperty *arrayProperty = 0,
                                       BacnetObject *parentObject = 0, BacnetDeviceObject *deviceObject = 0);

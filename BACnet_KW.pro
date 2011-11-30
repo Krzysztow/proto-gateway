@@ -2,7 +2,8 @@
 # Project created by QtCreator 2011-07-19T19:54:05
 # -------------------------------------------------
 QT += core \
-    network
+    network \
+    xml
 QT -= gui
 TARGET = BACnet_KW
 CONFIG += console
@@ -12,6 +13,7 @@ TEMPLATE = app
 INCLUDEPATH += internal \
     external \
     applayer \
+    factories \
     tests
 
 SOURCES += main.cpp \
@@ -113,7 +115,8 @@ SOURCES += main.cpp \
     external/externalobjectwritestrategy.cpp \
     external/externaltimedepjob.cpp \
     tests/wprequester.cpp \
-    tests/wpacknowledger.cpp
+    tests/wpacknowledger.cpp \
+    factories/objectsstructurefactory.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -222,9 +225,12 @@ HEADERS += bacnetvirtuallinklayer.h \
     external/externalobjectwritestrategy.h \
     external/externaltimedepjob.h \
     tests/wprequester.h \
-    tests/wpacknowledger.h
+    tests/wpacknowledger.h \
+    factories/objectsstructurefactory.h
 
 OTHER_FILES +=
+
+
 
 
 

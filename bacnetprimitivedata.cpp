@@ -1159,8 +1159,11 @@ bool ObjectIdentifier::setInternal(QVariant &value)
 {
     //this should be never used with QVariant type - would be insane!
     Q_UNUSED(value);
-    Q_ASSERT_X(false, "bacnetprimitivedata.cpp", "You don't want to store BacnetId ");
-    return false;
+    bool ok;
+    ObjIdNum numId = value.toUInt(&ok);
+    if (ok)
+        setObjectIdNum(numId);
+    return ok;
 }
 
 QVariant ObjectIdentifier::toInternal()

@@ -52,7 +52,7 @@ public:
     QString objectName() const;
 
     /** Adds property to the property list. If property is already used, nothing happens, but returns false.
-        To replace property call \sa removeProperty/\sa takeProperty and then addProperty.
+        To replace property call \sa removeProperty or \sa takeProperty and then addProperty.
         \note Note that array properties are supposed to be entered and taken as a whole.
       */
     bool addProperty(BacnetPropertyNS::Identifier identifier, BacnetProperty *property);

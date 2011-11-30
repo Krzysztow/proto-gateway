@@ -57,9 +57,6 @@ private:
 private:*/
 public:
     Bacnet::ObjectIdStruct _id;
-    typedef QMap<BacnetPropertyNS::Identifier, Bacnet::BacnetDataInterface*> TPropertiesMap;
-    TPropertiesMap _specializedProperties;
-
     QMap<quint32, BacnetObject*> _childObjects;
     BacnetAddress _address;
     InternalObjectsHandler *_handler;

@@ -26,6 +26,7 @@ BacnetObject::BacnetObject(BacnetObjectTypeNS::ObjectType objectType, quint32 in
 
 BacnetObject::~BacnetObject()
 {
+    qDeleteAll(_properties);
 }
 
 const ObjectIdentifier &BacnetObject::objectId() const
@@ -88,9 +89,9 @@ int BacnetObject::propertyReadTry(BacnetPropertyNS::Identifier propertyId, quint
         return Property::ResultOk;
 
     BacnetProperty *prop(0);
-    prop = _properties[propertyId];
+    prop = _properties.value(propertyId);
     if (0 == prop)
-        prop = BacnetDefaultObject::instance()->defaultProperties(_id.type())[propertyId];
+        prop = BacnetDefaultObject::instance()->defaultProperties(_id.type()).value(propertyId);
 
     if (0 != prop)
         return prop->getValue(data, propertyArrayIdx, error, false);
@@ -108,9 +109,9 @@ BacnetDataInterfaceShared BacnetObject::propertyReadInstantly(BacnetPropertyNS::
         return data;
 
     BacnetProperty *prop(0);
-    prop = _properties[propertyId];
+    prop = _properties.value(propertyId);
     if (0 == prop)
-        prop = BacnetDefaultObject::instance()->defaultProperties(_id.type())[propertyId];
+        prop = BacnetDefaultObject::instance()->defaultProperties(_id.type()).value(propertyId);
 
     if (0 != prop) {
         int ret = prop->getValue(data, propertyArrayIdx, error, true);
@@ -132,7 +133,7 @@ BacnetDataInterfaceShared BacnetObject::propertyReadInstantly(BacnetPropertyNS::
 int BacnetObject::propertySet(BacnetPropertyNS::Identifier propertyId, quint32 propertyArrayIdx, BacnetDataInterfaceShared &data, Error *error)
 {
     BacnetProperty *prop(0);
-    prop = _properties[propertyId];
+    prop = _properties.value(propertyId);
 
     //don't look over default properties - those are not supposed to be changed!
     if (0 != prop)
@@ -162,7 +163,7 @@ const QMap<BacnetPropertyNS::Identifier, BacnetProperty *> & BacnetObject::objPr
 
 BacnetProperty * BacnetObject::takeProperty(BacnetPropertyNS::Identifier identifier)
 {
-    return _properties[identifier];
+    return _properties.value(identifier);
 }
 
 void Bacnet::BacnetObject::propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result,

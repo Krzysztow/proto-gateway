@@ -313,18 +313,17 @@ int ArrayProperty::setValue(BacnetDataInterfaceShared &data, quint32 propertyArr
     return ::Property::ResultOk;
 }
 
-void ArrayProperty::propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result,
-                                                 BacnetProperty *subProperty, BacnetProperty *mainProperty,
-                                                 BacnetObject *parentObject, BacnetDeviceObject *deviceObject)
+void ArrayProperty::propertyAsynchActionFinished(int asynchId, ::Property::ActiontResult result, BacnetProperty *property,
+                                                 ArrayProperty *arrayProperty, BacnetObject *parentObject, BacnetDeviceObject *deviceObject)
 {
-    Q_CHECK_PTR(subProperty);
-    Q_ASSERT(0 == mainProperty);
-    Q_UNUSED(mainProperty);
+    Q_CHECK_PTR(property);
+    Q_ASSERT(0 == arrayProperty);
+    Q_UNUSED(arrayProperty);
     Q_ASSERT(0 == parentObject);
     Q_UNUSED(parentObject);
     Q_ASSERT(0 == deviceObject);
     Q_UNUSED(deviceObject);
-    Q_ASSERT(_data.contains(subProperty));
+    Q_ASSERT(_data.contains(property));
 
     if (0 != _asynchHelper) {
         ::MultipleAsynchHelper::DoneState multiState;
@@ -340,7 +339,7 @@ void ArrayProperty::propertyAsynchActionFinished(int asynchId, ::Property::Actio
     }
 
     if (0 != _parentSupporter) {
-        _parentSupporter->propertyAsynchActionFinished(asynchId, result, subProperty, this);
+        _parentSupporter->propertyAsynchActionFinished(asynchId, result, property, this);
     }
 }
 

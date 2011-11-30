@@ -1,12 +1,14 @@
 #ifndef CDM_H
 #define CDM_H
 
+#include <QDomElement>
 #include <QMap>
 #include <QVector>
 #include <QVariant>
 #include <QObject>
 #include <limits>
 
+class Property;
 class PropertyOwner;
 class PropertySubject;
 class PropertyObserver;
@@ -20,7 +22,11 @@ public:
     /**Creates PropertySubject of propertyType and registers it at propId id. If the id is already reserverd
       returns 0 pointer.
       */
-    PropertySubject *createProperty(quint32 propId, QVariant::Type propertyType);
+    PropertySubject *createPropertySubject(quint32 propId, QVariant::Type propertyType);
+
+    Property *createProperty(QDomElement &propElement);
+    PropertySubject *createPropertySubject(QDomElement &subjectElement);
+    PropertyObserver *createPropertyObserver(QDomElement &observerElement);
 
     PropertySubject *getProperty(quint32 propId);
 
