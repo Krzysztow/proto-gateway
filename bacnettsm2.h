@@ -38,7 +38,7 @@ public:
 public://functions connected with parsing
     void receive(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *data, quint16 dataLength);
 private:
-    ExternalConfirmedServiceHandler *takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId);
+    ExternalConfirmedServiceHandler *dequeueConfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId);
     BacnetApplicationLayerHandler *_appLayer;
 
 public:

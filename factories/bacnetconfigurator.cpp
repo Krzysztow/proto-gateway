@@ -10,6 +10,7 @@
 #include "externalobjectreadstrategy.h"
 #include "externalobjectwritestrategy.h"
 #include "cdm.h"
+#include "configuratorhelper.h"
 
 using namespace Bacnet;
 
@@ -40,25 +41,6 @@ static const char *BacnetDeviceAddressAttribute     = "bac-address";
 static const char *BacnetDeviceNetworkAttribute     = "bac-network";
 static const char *BacnetDeviceSegmentationAttribute= "bac-segmentation";
 static const char *BacnetDeviceMaxApduAttribute     = "bac-max-apdu";
-
-QString elementString(QDomElement &el) {
-    QString str;
-    str += "<"%el.tagName()%" ";
-
-    QDomNamedNodeMap attrs = el.attributes();
-    int count = attrs.count();
-    for (int i = 0; i < count; ++i) {
-        str += attrs.item(i).toAttr().name()%"="%attrs.item(i).toAttr().value()%" ";
-    }
-    str += "/>";
-
-    return str;
-}
-
-void elementError(QDomElement &el, const char* attrWithError, const char *addInfo = "") {
-    QString errorElement = elementString(el);
-    qDebug("Error occured while parsing attribute %s of element \n\t%s.\n%s\n\n", attrWithError, qPrintable(errorElement), addInfo);
-}
 
 void BacnetConfigurator::configureInternalHandler(QDomElement &devicesConfig, DataModel *dataModel, InternalObjectsHandler *intHandler)
 {
@@ -640,6 +622,48 @@ QMap<QString, Bacnet::BacnetSegmentation> BacnetConfigurator::segmentDict()
     mSegsDictionary.insert("segmented-rx",      Bacnet::SegmentedReceive);
 
     return mSegsDictionary;
+}
+
+static const char *InternalHandlerTagName   = "internalHandler";
+static const char *ExternalHandlerTagName   = "externalHandler";
+static const char *DeviceMappingsTagName    = "deviceMappings";
+
+static const char *AppLayerNetNumber        = "net-num";
+
+#include "bacnetnetworklayer.h"
+
+BacnetApplicationLayerHandler *BacnetConfigurator::createApplicationLayer(BacnetNetworkLayerHandler *netHandler, QDomElement &appCfg)
+{
+    Q_CHECK_PTR(netHandler);
+
+    bool ok;
+    quint32 netNumber = appCfg.attribute(AppLayerNetNumber).toUInt(&ok);
+    if (!ok) {
+        elementError(appCfg, AppLayerNetNumber, "No network number set, exit.");
+        return 0;
+    }
+
+
+    BacnetApplicationLayerHandler *appHandler = new BacnetApplicationLayerHandler(netHandler);
+    netHandler->setVirtualApplicationLayer(netNumber, appHandler);
+
+    InternalObjectsHandler *intHandler = appHandler->internalHandler();
+    Q_CHECK_PTR(intHandler);
+
+    QDomElement el = appCfg.firstChildElement(InternalHandlerTagName);
+    BacnetConfigurator::instance()->configureInternalHandler(el, DataModel::instance(), intHandler);
+
+    el = appCfg.firstChildElement(ExternalHandlerTagName);
+    BacnetConfigurator::instance()->configureExternalHandler(el, DataModel::instance(), appHandler);
+
+    el = appCfg.firstChildElement(DeviceMappingsTagName);
+    BacnetConfigurator::instance()->configureDeviceMappings(el, appHandler);
+
+    BacnetConfigurator::releaseInstance();
+
+
+
+    return appHandler;
 }
 
 

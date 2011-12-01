@@ -103,22 +103,6 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
     _netHandler->sendApdu(&buffer, false, &destination, &source);
 }
 
-ExternalConfirmedServiceHandler *BacnetTSM2::takeRespondedService(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId)
-{
-    ExternalConfirmedServiceHandler *handler(0);
-    QHash<int, ConfirmedRequestEntry>::Iterator it = _confiremedEntriesList.find(invokeId);
-    if (it == _confiremedEntriesList.end()) {
-        qDebug("%s : Response for 0x%x requested, and TSM has none.", __PRETTY_FUNCTION__, invokeId);
-    } else {
-        ConfirmedRequestEntry &entry = it.value();
-        if ( (remoteSource == entry.dst) && (localDestination == entry.src) ) {//this is response to our request, indeed.
-            handler = entry.handler;
-            _confiremedEntriesList.erase(it);
-        }
-    }
-
-    return handler;
-}
 
 void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *data, quint16 dataLength)
 {
@@ -184,7 +168,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, saData.invokeId());
+        ExternalConfirmedServiceHandler *service = dequeueConfirmedRequest(remoteSource, localDestination, saData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -212,7 +196,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
 #endif
         }
 
-        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, cplxData.invokeId());
+        ExternalConfirmedServiceHandler *service = dequeueConfirmedRequest(remoteSource, localDestination, cplxData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processAck(remoteSource, localDestination, data + ret, dataLength - ret, service);
@@ -263,7 +247,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             error.setError(BacnetErrorNS::ClassDevice, BacnetErrorNS::CodeOther);
         }
 
-        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, errData.invokeId());
+        ExternalConfirmedServiceHandler *service = dequeueConfirmedRequest(remoteSource, localDestination, errData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processError(remoteSource, localDestination, error, service);
@@ -281,7 +265,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, rjctData.invokeId());
+        ExternalConfirmedServiceHandler *service = dequeueConfirmedRequest(remoteSource, localDestination, rjctData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processReject(remoteSource, localDestination, (BacnetRejectNS::RejectReason) rjctData.rejectReason(), service);
@@ -297,7 +281,7 @@ void BacnetTSM2::receive(BacnetAddress &remoteSource, BacnetAddress &localDestin
             return;
         }
 
-        ExternalConfirmedServiceHandler *service = takeRespondedService(remoteSource, localDestination, abrtData.invokeId());
+        ExternalConfirmedServiceHandler *service = dequeueConfirmedRequest(remoteSource, localDestination, abrtData.invokeId());
         Q_CHECK_PTR(service);//this could fail, if there was a timeout for this service. Not an error, just here for the time being.
         if (0 != service)
             _appLayer->processAbort(remoteSource, localDestination, service);
@@ -468,7 +452,9 @@ void Bacnet::BacnetTSM2::timerEvent(QTimerEvent *)
                 it->timeLeft_ms = _requestTimeout_ms;
                 send_hlpr(it->dst, it->src, it->handler, it.key());
             } else {
+                qDebug("%s : Processing service timeout for InvokeId: %d", __PRETTY_FUNCTION__, it.key());
                 _appLayer->processTimeout(it->dst, it->src, it->handler);
+                _generator.returnId(it.key());
                 it = _confiremedEntriesList.erase(it);
                 continue;//called to avoid ++it
             }
@@ -506,3 +492,20 @@ int BacnetTSM2::queueConfirmedRequest(ExternalConfirmedServiceHandler *handler, 
     return invokeId;
 }
 
+ExternalConfirmedServiceHandler *BacnetTSM2::dequeueConfirmedRequest(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 invokeId)
+{
+    ExternalConfirmedServiceHandler *handler(0);
+    QHash<int, ConfirmedRequestEntry>::Iterator it = _confiremedEntriesList.find(invokeId);
+    if (it == _confiremedEntriesList.end()) {
+        qDebug("%s : Response for 0x%x requested, and TSM has none.", __PRETTY_FUNCTION__, invokeId);
+    } else {
+        ConfirmedRequestEntry &entry = it.value();
+        if ( (remoteSource == entry.dst) && (localDestination == entry.src) ) {//this is response to our request, indeed.
+            handler = entry.handler;
+            _confiremedEntriesList.erase(it);
+        }
+        _generator.returnId(invokeId);
+    }
+
+    return handler;
+}

@@ -9,6 +9,8 @@
 
 class DataModel;
 
+class BacnetNetworkLayerHandler;
+
 namespace Bacnet {
 
 class BacnetDeviceObject;
@@ -25,6 +27,9 @@ class BacnetApplicationLayerHandler;
 class BacnetConfigurator
 {
 public:
+    static BacnetApplicationLayerHandler *createApplicationLayer(BacnetNetworkLayerHandler *netHandler, QDomElement &appCfg);
+
+private:
     void configureInternalHandler(QDomElement &devicesConfig, DataModel *dataModel, InternalObjectsHandler *intHandler);
     void configureExternalHandler(QDomElement extPropsConfig, DataModel *dataModel, BacnetApplicationLayerHandler *appLayer);
     void configureDeviceMappings(QDomElement &mappings, BacnetApplicationLayerHandler *appLayer);
