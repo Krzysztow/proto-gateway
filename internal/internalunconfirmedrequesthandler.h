@@ -7,12 +7,12 @@
 /** We stick to this upper class
   */
 
-class InternalObjectsHandler;
 class BacnetUnconfirmedRequestData;
 
 namespace Bacnet {
 class BacnetTSM2;
 class ExternalObjectsHandler;
+class InternalObjectsHandler;
 
 class InternalUnconfirmedRequestHandler:
         public InternalRequestHandler

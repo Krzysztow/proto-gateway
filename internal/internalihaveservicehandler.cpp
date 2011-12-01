@@ -33,7 +33,7 @@ bool InternalIHaveServiceHandler::execute()
 {
     Q_ASSERT(_requester.isAddrInitialized());
     Q_CHECK_PTR(_appLayer);
-    _appLayer->registerObject(_requester, _data._devId, _data._objId, _data._objName);
+    _appLayer->registerObjectFromDiscovery(_requester, _data._devId, _data._objId, _data._objName);
     return true;
 }
 

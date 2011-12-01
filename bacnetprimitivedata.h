@@ -309,7 +309,8 @@ namespace Bacnet
 
         void setObjectIdNum(quint32 objIdNum);
         void setObjectId(ObjectIdStruct &value);
-        quint32 objectIdNum() const;
+        void setObjectId(BacnetObjectTypeNS::ObjectType type, quint32 instanceNumber);
+        ObjIdNum objectIdNum() const;
         Bacnet::ObjectIdStruct &objIdStruct() {return _value;}
 
         BacnetObjectTypeNS::ObjectType type() const {return _value.objectType;}

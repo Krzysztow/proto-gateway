@@ -1100,7 +1100,7 @@ ObjectIdentifier::ObjectIdentifier(quint32 objectIdNum):
 {
 }
 
-quint32 ObjectIdentifier::objectIdNum() const
+ObjIdNum ObjectIdentifier::objectIdNum() const
 {
     return objIdToNum(_value);
 }
@@ -1113,6 +1113,12 @@ void ObjectIdentifier::setObjectIdNum(quint32 objIdNum)
 void ObjectIdentifier::setObjectId(ObjectIdStruct &value)
 {
     _value = value;
+}
+
+void ObjectIdentifier::setObjectId(BacnetObjectTypeNS::ObjectType type, quint32 instanceNumber)
+{
+    _value.objectType = type;
+    _value.instanceNum = instanceNumber;
 }
 
 qint32 ObjectIdentifier::toRaw(quint8 *ptrStart, quint16 buffLength)

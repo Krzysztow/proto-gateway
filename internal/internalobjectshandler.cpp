@@ -23,8 +23,10 @@
 #include "internalrequesthandler.h"
 #include "bacnetapplicationlayer.h"
 
+using namespace Bacnet;
+
 //void AsynchSetter::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
-void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device)
+void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
 {
     Q_ASSERT(_asynchRequests.contains(asynchId));
 
@@ -43,14 +45,14 @@ void InternalObjectsHandler::propertyIoFinished(int asynchId, int result, Bacnet
     }
 }
 
-void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues)
+void InternalObjectsHandler::propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, CovSubscription &subscription, QList<PropertyValueShared> &propertiesValues)
 {
     Q_CHECK_PTR(device);
     Q_CHECK_PTR(object);
 
     Q_ASSERT(object->objectIdNum() == subscription._monitoredPropertyRef.objId().objectIdNum());
 
-    Bacnet::CovNotificationRequestData *covData = new Bacnet::CovNotificationRequestData(subscription._recipientProcess.processId(), device->objectId(), object->objectId(),
+    CovNotificationRequestData *covData = new CovNotificationRequestData(subscription._recipientProcess.processId(), device->objectId(), object->objectId(),
                                                                                          subscription._timeLeft);
 
     //add properties list
@@ -63,7 +65,7 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
     //! \todo Unify send interface!
     //send it
     if (subscription.isIssueConfirmedNotifications()) {
-        Bacnet::CovConfNotificationServiceHandler *hndlr = new Bacnet::CovConfNotificationServiceHandler(covData);//takes ownership
+        CovConfNotificationServiceHandler *hndlr = new CovConfNotificationServiceHandler(covData);//takes ownership
         _appLayer->send(subscription.recipientAddress()->address(), devAddress, hndlr);
 //        if (subscription.recipientHasAddress()) {
 //            _appLayer->send(subscription.recipientAddress()->address(), devAddress, BacnetServicesNS::ConfirmedCOVNotification, hndlr);
@@ -84,7 +86,7 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
         delete covData;
     }
 
-////    typedef QList<Bacnet::SubscribeCOVServiceData> TCovObjectSubscriptionList;
+////    typedef QList<SubscribeCOVServiceData> TCovObjectSubscriptionList;
 ////    typedef QHash<BacnetObject*, TCovObjectSubscriptionList> TCovSubscriptionsHash;
 ////    typedef QHash<BacnetDeviceObject*, TCovSubscriptionsHash> TCovDevicesSubscriptions;
 
@@ -101,7 +103,7 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
 //    //inform each subscriber that value have changed!
 //    for (; subscriptionsIt != (*subObjIt).end(); ++subscriptionsIt) {
 //        //! \todo We could have optimization here - get the value only once, instead of for each subscribed device. Then SharedData should be used as well.
-//        QList<Bacnet::PropertyValue*> dataList = object->readCovValuesList();
+//        QList<PropertyValue*> dataList = object->readCovValuesList();
 //        if (dataList.isEmpty()) {
 //            qDebug("InternalObjectsHandler::propertyValueChanged() : data changed but we got zero pointer dev (0x%x), obj (0x%x), propId (0x%x)",
 //                   device->objectIdNum(), object->objectIdNum(), propId);
@@ -113,7 +115,7 @@ void InternalObjectsHandler::propertyValueChanged(Bacnet::BacnetObject *object, 
 //            covData = new CovNotificationRequestData((*subscriptionsIt)._subscriberProcId, device->objectId(),
 //                                                     (*subscriptionsIt)._monitoredObjectId, (*subscriptionsIt)._timeLeft);
 
-//        foreach (Bacnet::PropertyValue *data, dataList) {
+//        foreach (PropertyValue *data, dataList) {
 //            covData->_listOfValues.append(data);
 //        }
 
@@ -136,7 +138,7 @@ void InternalObjectsHandler::addAsynchronousHandler(QList<int> asynchIds, Intern
     }
 }
 
-bool InternalObjectsHandler::addDevice(BacnetAddress &address, Bacnet::BacnetDeviceObject *device)
+bool InternalObjectsHandler::addDevice(BacnetAddress &address, BacnetDeviceObject *device)
 {
     InternalAddress intAddress = BacnetInternalAddressHelper::internalAddress(address);
     Q_ASSERT(!_devices.contains(intAddress));
@@ -159,13 +161,13 @@ QList<Bacnet::BacnetDeviceObject*> InternalObjectsHandler::devices()
     return _devices.values();
 }
 
-InternalObjectsHandler::InternalObjectsHandler(Bacnet::BacnetApplicationLayerHandler *appLayer):
+InternalObjectsHandler::InternalObjectsHandler(BacnetApplicationLayerHandler *appLayer):
     _appLayer(appLayer)
 {
     Q_CHECK_PTR(_appLayer);
 }
 
-//void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error)
+//void InternalObjectsHandler::subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, SubscribeCOVServiceData &covData, Error *error)
 //{
 //    Q_CHECK_PTR(error);
 //    Q_CHECK_PTR(device);

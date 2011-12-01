@@ -9,9 +9,9 @@
 #include "bacnetobjectinternalsupport.h"
 #include "propertyvalue.h"
 
-class InternalObjectsHandler;
 
 namespace Bacnet {
+class InternalObjectsHandler;
 
 class BacnetDeviceObject:
         public BacnetObject

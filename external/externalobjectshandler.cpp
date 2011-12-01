@@ -166,7 +166,7 @@ BacnetAddress ExternalObjectsHandler::oneOfAddresses()
         return BacnetInternalAddressHelper::toBacnetAddress(_registeredAddresses.first());
 }
 
-bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription, quint32 lifetime_s, CovReadStrategy *covStreategy)
+bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription, quint32 lifetime_s, CovReadStrategy *covStreategy, int resubId)
 {
     Q_ASSERT(!_registeredAddresses.isEmpty());
     if (_registeredAddresses.isEmpty()) {
@@ -179,7 +179,7 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
         return false;
     Q_ASSERT(propertyMapping->isValid());
 
-    quint8 generateProcId = insertToOrFindSubscribeCovs(propertyMapping, covStreategy);
+    quint8 generateProcId = insertToOrFindSubscribeCovs(propertyMapping, covStreategy, resubId);
     if (isConfirmedCovSubscription && (0 == generateProcId)) {
         qDebug("%s : Couldn't generate Cov Process Id key.", __PRETTY_FUNCTION__);
         return false;
@@ -205,9 +205,9 @@ bool ExternalObjectsHandler::startCovSubscriptionProcess(ExternalPropertyMapping
     return true;
 }
 
-int ExternalObjectsHandler::insertToOrFindSubscribeCovs(ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint)
+int ExternalObjectsHandler::insertToOrFindSubscribeCovs(ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int resubId)
 {
-    int returnProcId(-1);
+    int returnProcId(NotAResubscription);
     //    if (!confirmed) {
     //        {
     //            //check if we are there already. QHash::find(key) returns iterator to the most recent element inserted. If there are others, their are accessible by incremenation.
@@ -232,10 +232,10 @@ int ExternalObjectsHandler::insertToOrFindSubscribeCovs(ExternalPropertyMapping 
     //            returnProcId = UnconfirmedProcIdValue;
     //        }
     //    } else {
-    if (valueHint >= 0) {
-        QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(valueHint);
+    if (resubId >= 0) {
+        QHash<int, TCovMappinPair>::Iterator it = _subscribedCovs.find(resubId);
         if ( (it->first == propertyMapping) && (it->second == readStrategy) )
-            returnProcId = valueHint;
+            returnProcId = resubId;
     }
 
     //we still have to look for the unique number
@@ -261,11 +261,11 @@ int ExternalObjectsHandler::insertToOrFindSubscribeCovs(ExternalPropertyMapping 
         Q_ASSERT(!_subscribedCovs.contains(returnProcId));
         _subscribedCovs.insert(returnProcId, qMakePair(propertyMapping, readStrategy));
 
-        if ( (valueHint >= 0) && (returnProcId != valueHint) ) {//we have to take care, that we remove the valueHint if it represents CovReadStrategy
-            QHash<int, TCovMappinPair>::Iterator checkIt = _subscribedCovs.find(valueHint);
+        if ( (resubId >= 0) && (returnProcId != resubId) ) {//we have to take care, that we remove the valueHint if it represents CovReadStrategy
+            QHash<int, TCovMappinPair>::Iterator checkIt = _subscribedCovs.find(resubId);
             QHash<int, TCovMappinPair>::Iterator checkItEnd = _subscribedCovs.end();
             for (; checkIt != checkItEnd; ++checkIt) {
-                if (checkIt.key() != valueHint)
+                if (checkIt.key() != resubId)
                     break;
                 if ( (checkIt->first == propertyMapping) && (checkIt->second == readStrategy) ) {
                     _subscribedCovs.erase(checkIt);

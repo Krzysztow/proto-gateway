@@ -116,7 +116,7 @@ SOURCES += main.cpp \
     external/externaltimedepjob.cpp \
     tests/wprequester.cpp \
     tests/wpacknowledger.cpp \
-    factories/objectsstructurefactory.cpp
+    factories/bacnetconfigurator.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -226,7 +226,7 @@ HEADERS += bacnetvirtuallinklayer.h \
     external/externaltimedepjob.h \
     tests/wprequester.h \
     tests/wpacknowledger.h \
-    factories/objectsstructurefactory.h
+    factories/bacnetconfigurator.h
 
 OTHER_FILES +=
 

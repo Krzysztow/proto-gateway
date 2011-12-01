@@ -169,7 +169,7 @@ void CovReadStrategy::doAction(ExternalPropertyMapping *propertyMapping, Externa
     Q_ASSERT(propertyMapping);
     Q_ASSERT(externalHandler);
     if (!hasError()) {
-        externalHandler->startCovSubscriptionProcess(propertyMapping, isConfirmed(), _resubscriptionInterval_ms/1000, this);
+        externalHandler->startCovSubscriptionProcess(propertyMapping, isConfirmed(), _resubscriptionInterval_ms/1000, this, _subscriptionId);
         qDebug("Subscribes cov with interval %d", _resubscriptionInterval_ms/1000);
     } else if (hasTimeDependantReadingWhenError())
         readProperty(propertyMapping, externalHandler, false);

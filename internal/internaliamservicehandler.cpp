@@ -34,7 +34,7 @@ bool InternalIAmServiceHandler::execute()
 {
     Q_ASSERT(_requester.isAddrInitialized());
     Q_CHECK_PTR(_appLayer);
-    _appLayer->registerDevice(_requester, _data._devObjId, _data._maxApduLength, _data._segmentationSupported, _data._vendorId);
+    _appLayer->registerDeviceFromDiscovery(_requester, _data._devObjId, _data._maxApduLength, _data._segmentationSupported, _data._vendorId);
     return true;
 }
 

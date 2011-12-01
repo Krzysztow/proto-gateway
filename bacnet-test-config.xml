@@ -1,30 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bacnetConfig>
-	<internalHandler dummy="first">
-		<devices>
-			<device name="BacnetTestDevice" int-address="1" dev-instance-number="1">
-				<properties>
-				<!--
-					<property prop-type="simple" id="85" bac-type="real" value="11.2" />
-					<property prop-type="array" id="76" >
-						<property prop-type="simple" bac-type="bacnetobjectidentifier" value="0x1234">
-					</property>
-					<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="5" int-var-type="float" />
-					-->
-					<property prop-type="internal" id="85" bac-type="real" int-id="1" int-type="observer" int-var-type="double" />		
-				</properties>
-				<childObjects>
-					<object name="OATemp" instance-number="5" obj-type="analog-input" >
-						<properties>
-							<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-var-type="double" int-id="3" />
-						</properties>
-					</object>	
-				</childObjects>
-			</device>
-			<device name="BestDeviceEver" int-address="3" dev-instance-number="8">
-			</device>
-			
-		</devices>
-	</internalHandler>
+	<appLayer>
+		<internalHandler dummy="first">
+					<!--
+			<devices>
+				<device name="BacnetTestDevice" int-address="1" dev-instance-number="1">
+					<properties>
+						<property prop-type="simple" id="85" bac-type="real" value="11.2" />
+						<property prop-type="array" id="76" >
+							<property prop-type="simple" bac-type="bacnetobjectidentifier" value="0x1234">
+						</property>
+						<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="5" int-var-type="float" />
+						<property prop-type="internal" id="85" bac-type="real" int-id="1" int-type="observer" int-var-type="double" />		
+					</properties>
+					<childObjects>
+						<object name="OATemp" instance-number="5" obj-type="analog-input" >
+							<properties>
+								<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-var-type="double" int-id="3" />
+							</properties>
+						</object>	
+					</childObjects>
+				</device>
+				<device name="BestDeviceEver" int-address="3" dev-instance-number="8">
+				</device>
+			</devices>
+						-->
+		</internalHandler>
+		<externalHandler int-address="14" >
+			<devices>
+				<device dev-instance-number="64" >
+					<childObjects>
+						<object instance-number="1" obj-type="aanalog-input">
+							<properties>	
+									<property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
+									<!--
+									<property id="85" array-idx="2" prop-type="internal" read-strategy="simple" read-interval="1000" write-strategy="simple-time" int-var-type="float" int-id="7"/>
+									-->
+							</properties>
+						</object>
+					</childObjects>
+				</device>
+			</devices>
+		</externalHandler>
+		<deviceMappings>
+			<device dev-instance-number="64" bac-address="c0:a8:2:6d:ba:c0" bac-network="2" bac-max-apdu="128" bac-segmentation="segmented-not" bac-vendor-id="99" />
+			<device dev-instance-number="65" bac-address="c0:a8:2:6e:ba:c0" bac-network="2" bac-max-apdu="128" bac-segmentation="segmented-not" bac-vendor-id="99" />
+			<device dev-instance-number="66" bac-address="c0:a8:2:6f:ba:c0" bac-network="2" bac-max-apdu="128" bac-segmentation="segmented-not" bac-vendor-id="99" />
+		</deviceMappings>
+	</appLayer>
 </bacnetConfig>
 

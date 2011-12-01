@@ -76,7 +76,9 @@ namespace Bacnet {
         int _interval_ms;
 
     public:
-        bool startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0);
+        //! Method to call subscription/resubscription requests. In the latter case, resubId should be the same, as earlier subscription processId.
+        static const int NotAResubscription = -1;
+        bool startCovSubscriptionProcess(ExternalPropertyMapping *propertyMapping, bool isConfirmedCovSubscription = false, quint32 lifetime_s = 60000, CovReadStrategy *covStreategy = 0, int resubId = NotAResubscription);
         void covSubscriptionProcessFinished(int subscribeProcId, ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, bool ok, bool isCritical = false);
         void covValueChangeNotification(Bacnet::CovNotificationRequestData &data, bool isConfirmed, Error *error = 0);
 
@@ -89,7 +91,7 @@ namespace Bacnet {
         static const int UnconfirmedProcIdValue = 0;
         static const quint32 MaximumConfirmedSubscriptions = 255;
         int _lastProcIdValueUsed;
-        int insertToOrFindSubscribeCovs(ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int valueHint = -1);
+        int insertToOrFindSubscribeCovs(ExternalPropertyMapping *propertyMapping, CovReadStrategy *readStrategy, int resubId = NotAResubscription);
 
     private:
         BacnetApplicationLayerHandler *_appLayer;

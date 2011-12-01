@@ -13,10 +13,10 @@
 
 class BacnetAddress;
 class BacnetNetworkLayerHandler;
-class InternalObjectsHandler;
 
 namespace Bacnet {
 class ExternalObjectsHandler;
+class InternalObjectsHandler;
 class ExternalConfirmedServiceHandler;
 class BacnetServiceData;
 class BacnetDeviceObject;
@@ -81,9 +81,13 @@ private:
     void discover(quint32 objectId, bool forceToHave = false);
     QHash<ObjIdNum, DiscoveryWrapper*> _awaitingDiscoveries;
 public:
+    //! These two registration functions are used to write configuration data about external devices (address, their object ids), which have  the highest priority when searched.
     void registerObject(ObjectIdentifier &devId, ObjectIdentifier &objId);
-    void registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName);
-    void registerDevice(BacnetAddress &devAddress, ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId);
+    void registerDevice(BacnetAddress &devAddress, Bacnet::ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType);
+
+    //! These two functions are meant to be used with Discovery (I-Am and Who-Has) requests.
+    void registerObjectFromDiscovery(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName);
+    void registerDeviceFromDiscovery(BacnetAddress &devAddress, ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId);
 
 private:
     QList<ExternalConfirmedServiceHandler*> _awaitingConfirmedServices;

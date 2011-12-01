@@ -116,6 +116,18 @@ public:
       */
     const quint8 *macPtr() const;
 
+public:
+    /**
+      Decodes mac address from string written in a following way xx:xx:..:xx, where xx is one byte
+      encoded in hexadecimal.
+      */
+    bool macAddressFromString(QString &addressStr);
+
+    bool networkNumFromString(QString &netStr);
+
+    QString macAddressToString();
+    QString netToString();
+
 private:
     enum {
         GlobalBroadcastNet = 0xffff,

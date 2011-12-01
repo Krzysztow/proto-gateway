@@ -9,8 +9,8 @@
 namespace Bacnet {
     class BacnetApplicationLayerHandler;
     class ExternalObjectsHandler;
+    class InternalObjectsHandler;
 }
-class InternalObjectsHandler;
 class BacnetConfirmedRequestData;
 
 class InternalConfirmedRequestHandler:

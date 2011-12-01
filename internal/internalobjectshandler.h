@@ -21,37 +21,36 @@ namespace Bacnet {
     class PropertyValue;
     class BacnetApplicationLayerHandler;
     typedef QSharedPointer<PropertyValue> PropertyValueShared;
-}
 
 class InternalObjectsHandler
 {
 public:
-    InternalObjectsHandler(Bacnet::BacnetApplicationLayerHandler *appLayer);
+    InternalObjectsHandler(BacnetApplicationLayerHandler *appLayer);
 
 public://interface for BacnetObject-Internal interaction
-    void propertyIoFinished(int asynchId, int result, Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device);
+    void propertyIoFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device);
     void addAsynchronousHandler(QList<int> asynchIds, InternalRequestHandler *handler);
 
-    void propertyValueChanged(Bacnet::BacnetObject *object, Bacnet::BacnetDeviceObject *device, Bacnet::CovSubscription &subscription, QList<Bacnet::PropertyValueShared> &propertiesValues);
+    void propertyValueChanged(BacnetObject *object, BacnetDeviceObject *device, CovSubscription &subscription, QList<PropertyValueShared> &propertiesValues);
 
 public:
-    bool addDevice(BacnetAddress &address, Bacnet::BacnetDeviceObject *device);
-    QMap<quint32, Bacnet::BacnetDeviceObject*> &virtualDevices();
+    bool addDevice(BacnetAddress &address, BacnetDeviceObject *device);
+    QMap<quint32, BacnetDeviceObject*> &virtualDevices();
 
     //! \todo If performance here is bad, just return reference to QMap, as is stored.
-    QList<Bacnet::BacnetDeviceObject*> devices();
+    QList<BacnetDeviceObject*> devices();
 
 public:
-    QMap<InternalAddress, Bacnet::BacnetDeviceObject*> _devices;
+    QMap<InternalAddress, BacnetDeviceObject*> _devices;
     QHash<int, InternalRequestHandler*> _asynchRequests;
-    Bacnet::BacnetApplicationLayerHandler *_appLayer;
+    BacnetApplicationLayerHandler *_appLayer;
 
 //    /****************************
 //          COV handling part
 //    ****************************/
 //public:
 ////    static const int MAX_TOTAL_COV_SUBSCRIPTIONS = 64;
-////    void subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, Bacnet::SubscribeCOVServiceData &covData, Bacnet::Error *error);
+////    void subscribeCOV(BacnetDeviceObject *device, BacnetAddress &requester, SubscribeCOVServiceData &covData, Error *error);
 
 //private:
 
@@ -62,5 +61,6 @@ public:
 //    int _totalCOVsubscriptionsNum;
 };
 
+}
 
 #endif // ASYNCHSETTER_H

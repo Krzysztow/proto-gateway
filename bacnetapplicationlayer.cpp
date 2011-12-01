@@ -361,7 +361,7 @@ void BacnetApplicationLayerHandler::registerObject(ObjectIdentifier &devId, Obje
     _objectDeviceMapper.addOrUpdatemappingEntry(objId.objectIdNum(), devId.objectIdNum(), true);
 }
 
-void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName)
+void BacnetApplicationLayerHandler::registerObjectFromDiscovery(BacnetAddress &devAddress, ObjectIdentifier &devId, ObjectIdentifier &objId, QString &objName)
 {
     ObjIdNum devNum = devId.objectIdNum();
     ObjIdNum objNum = objId.objectIdNum();
@@ -398,7 +398,7 @@ void BacnetApplicationLayerHandler::registerObject(BacnetAddress &devAddress, Ob
     }
 }
 
-void BacnetApplicationLayerHandler::registerDevice(BacnetAddress &devAddress, Bacnet::ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId)
+void BacnetApplicationLayerHandler::registerDeviceFromDiscovery(BacnetAddress &devAddress, Bacnet::ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType, quint32 vendorId)
 {
     ObjIdNum devNum = devId.objectIdNum();
     qDebug("%s : Gotten response from device 0x%x, and vendor id 0x%x", __PRETTY_FUNCTION__, devNum, vendorId);
@@ -421,6 +421,12 @@ void BacnetApplicationLayerHandler::registerDevice(BacnetAddress &devAddress, Ba
     }
 
     _devicesRoutingTable.addOrUpdatemappingEntry(devAddress, devNum, maxApduSize, segmentationType, true, isResponseForUs);//force update, since this is for sure fine quality information!
+}
+
+void BacnetApplicationLayerHandler::registerDevice(BacnetAddress &devAddress, Bacnet::ObjectIdentifier &devId, quint32 maxApduSize, BacnetSegmentation segmentationType)
+{
+    ObjIdNum devNum = devId.objectIdNum();
+    _devicesRoutingTable.addOrUpdatemappingEntry(devAddress, devNum, maxApduSize, segmentationType, false, true);//force update, since this is for sure fine quality information!
 }
 
 
@@ -458,7 +464,7 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
     }
 }
 
-#define BAC_APP_TEST
+//#define BAC_APP_TEST
 #ifndef BAC_APP_TEST
 //int main()
 //{
@@ -498,12 +504,15 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
 #include "wprequester.h"
 #include "wpacknowledger.h"
 
-#include "objectsstructurefactory.h"
+#include "bacnetconfigurator.h"
 
 #include <QFile>
 #include <QDomDocument>
 
-static const char *InternalHandlerTagName = "internalHandler";
+static const char *InternalHandlerTagName   = "internalHandler";
+static const char *ExternalHandlerTagName   = "externalHandler";
+static const char *DeviceMappingsTagName    = "deviceMappings";
+static const char *BacnetApplicationLayerTag = "appLayer";
 
 int main(int argc, char *argv[])
 {
@@ -537,22 +546,21 @@ int main(int argc, char *argv[])
         return 1;
     }
     QDomDocument doc;
-    bool parsed = doc.setContent(&f);
+    doc.setContent(&f);
 
     QDomElement docEl = doc.documentElement();
-    QDomNodeList list = docEl.elementsByTagName(InternalHandlerTagName);
-    if (list.count() > 1)
-        qDebug("%s : Config is malformed. Bad number of %s elements", __PRETTY_FUNCTION__, InternalHandlerTagName);
+    QDomElement appLayerEl = docEl.firstChildElement(BacnetApplicationLayerTag);
 
-    QDomElement el = list.at(0).toElement();
+    QDomElement el = docEl.firstChildElement(InternalHandlerTagName);
+    BacnetConfigurator::instance()->configureInternalHandler(el, DataModel::instance(), intHandler);
 
-    PropertySubject *subjectMain = DataModel::instance()->createPropertySubject(5, QVariant::Double);
-    QList<BacnetDeviceObject*> devices = ObjectsStructureFactory::instance()->createDevicesFromConfig(el, DataModel::instance());
-    ObjectsStructureFactory::releaseInstance();
+    el = appLayerEl.firstChildElement(ExternalHandlerTagName);
+    BacnetConfigurator::instance()->configureExternalHandler(el, DataModel::instance(), appHandler);
 
-    foreach (BacnetDeviceObject *device, devices) {
-        intHandler->addDevice(device->address(), device);
-    }
+    el = appLayerEl.firstChildElement(DeviceMappingsTagName);
+    BacnetConfigurator::instance()->configureDeviceMappings(el, appHandler);
+
+    BacnetConfigurator::releaseInstance();
 
     InternalAddress extObjHandlerAddress = 32;
     extHandler->addRegisteredAddress(extObjHandlerAddress);
@@ -665,8 +673,8 @@ int main(int argc, char *argv[])
 //    };
 //    appHandler->indication(whoHasService, sizeof(whoHasService), srcAddr, destAddr);
 
-                BacnetAddress broadAddr;
-                broadAddr.setGlobalBroadcast();
+    BacnetAddress broadAddr;
+    broadAddr.setGlobalBroadcast();
     ////        bHndlr->getBytes(whoHasService, sizeof(whoHasService), srcAddr, broadAddr);
 
 //            //WHO HAS - object id is known
@@ -720,75 +728,105 @@ int main(int argc, char *argv[])
     /////////////////ExternalObjectsHndlr tests////////////////////////
     ///////////////////////////////////////////////////////////////////
 
-    BacnetAddress covDeviceAddress(srcAddr);
-    ObjectIdentifier covDeviceIdentifier(BacnetObjectTypeNS::Device, 2);
+//    ObjectIdentifier covDeviceIdentifier(BacnetObjectTypeNS::Device, 2);
 
-    //#define EXT_COV_TEST
+//#define EXT_COV_TEST
 #ifdef EXT_COV_TEST
-    //To run COV test with externalObjHandler uncomment //#define EXT_COV_TEST in TSM and Externalobjects handler
-    ObjectIdentifier covPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 10);
+    //To run COV test with externalObjHandler uncomment //#define EXT_COV_TEST in TSM and Externalobjects handler, and set config below
 
-    PropertySubject *covPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
+//    QHostAddress cobAddr("192.168.2.109");
+//    quint16 port(0xbac0);
+//    BacnetAddress covDeviceAddress;
+//    BacnetBipAddressHelper::setMacAddress(cobAddr, port, &covDeviceAddress);
+//
+//    BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
+//    CovAnswerer *covAns = new CovAnswerer(15, covDeviceAddress, extHandlerAddress, appHandler);
+//    QTimer timer;
+//    QObject::connect(&timer, SIGNAL(timeout()), covAns, SLOT(answer()));
+//    timer.start(987);
+//
+//    <appLayer>
+//            <internalHandler dummy="first">
+//            </internalHandler>
+//            <externalHandler int-address="14" >
+//                    <devices>
+//                            <device dev-instance-number="64" >
+//                                    <childObjects>
+//                                            <object instance-number="10" obj-type="analog-input">
+//                                                    <properties>
+//                                                                    <property id="85" prop-type="internal" read-strategy="cov-poll" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
+//                                                    </properties>
+//                                            </object>
+//                                    </childObjects>
+//                            </device>
+//                    </devices>
+//            </externalHandler>
+//            <deviceMappings>
+//                    <device dev-instance-number="64" bac-address="c0:a8:2:6d:ba:c0" bac-network="2" bac-max-apdu="128" bac-segmentation="segmented-not" bac-vendor-id="99" />
+//            </deviceMappings>
+//    </appLayer>
 
-    appHandler->registerObject(covDeviceIdentifier, covPropertyIdentifier);
-    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
 
-    CovReadStrategy *covStrategy = new CovReadStrategy(60000, true);
-    covStrategy->setHasIncrement(true, 1.0);
-    extHandler->addMappedProperty(covPropSubject, covPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
-                                  covStrategy);
-
-    BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
-    CovAnswerer *covAns = new CovAnswerer(15, covDeviceAddress, extHandlerAddress, appHandler);
-    QTimer timer;
-    QObject::connect(&timer, SIGNAL(timeout()), covAns, SLOT(answer()));
-    timer.start(987);
 #endif
 #undef EXT_COV_TEST
 
-    //#define EXT_RP_TEST
+//#define EXT_RP_TEST
 #ifdef EXT_RP_TEST
     //to make it work, define EXT_RP_TEST in BacnetTsm2.cpp
-    ObjectIdentifier rpPropertyIdentifier(BacnetObjectTypeNS::AnalogInput, 5);
 
-    PropertySubject *rpPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
-
-    appHandler->registerObject(covDeviceIdentifier, rpPropertyIdentifier);
-    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
-
-    SimpleWithTimeReadStrategy *creadStrategy = new SimpleWithTimeReadStrategy(60000);
-    extHandler->addMappedProperty(rpPropSubject, rpPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
-                                  creadStrategy);
+    QHostAddress cobAddr("192.168.2.109");
+    quint16 port(0xbac0);
+    BacnetAddress rpDeviceAddress;
+    BacnetBipAddressHelper::setMacAddress(cobAddr, port, &rpDeviceAddress);
 
     BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
-    RpAnswerer *rpAns = new RpAnswerer(1, covDeviceAddress, extHandlerAddress, appHandler);
+    RpAnswerer *rpAns = new RpAnswerer(1, rpDeviceAddress, extHandlerAddress, appHandler);
     QTimer timer;
     timer.setSingleShot(true);
     QObject::connect(&timer, SIGNAL(timeout()), rpAns, SLOT(answer()));
     timer.start(987);
+
+//    <appLayer>
+//            <internalHandler dummy="first">
+//            </internalHandler>
+//            <externalHandler int-address="14" >
+//                    <devices>
+//                            <device dev-instance-number="64" >
+//                                    <childObjects>
+//                                            <object instance-number="5" obj-type="analog-input">
+//                                                    <properties>
+//                                                                    <property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
+//                                                    </properties>
+//                                            </object>
+//                                    </childObjects>
+//                            </device>
+//                    </devices>
+//            </externalHandler>
+//            <deviceMappings>
+//                    <device dev-instance-number="64" bac-address="c0:a8:2:6d:ba:c0" bac-network="2" bac-max-apdu="128" bac-segmentation="segmented-not" bac-vendor-id="99" />
+//            </deviceMappings>
+//    </appLayer>
+
 #endif
 #undef EXT_RP_TEST
 
-    //#define EXT_WP_TEST
+//#define EXT_WP_TEST
 #ifdef EXT_WP_TEST
     //to make it work, define EXT_RP_TEST in BacnetTsm2.cpp
-    ObjectIdentifier wpPropertyIdentifier(BacnetObjectTypeNS::AnalogValue, 1);
-
-    PropertySubject *wpPropSubject = DataModel::instance()->createProperty(5, (QVariant::Type)QMetaType::Float);
     Property *wpObserver = DataModel::instance()->createPropertyObserver(5);
-
-    appHandler->registerObject(covDeviceIdentifier, wpPropertyIdentifier);
-    appHandler->registerDevice(covDeviceAddress, covDeviceIdentifier, ApduMaxSize, SegmentedNOT, 99);
+    Q_CHECK_PTR(wpObserver);
 
     //    SimpleWithTimeReadStrategy *creadStrategy = new SimpleWithTimeReadStrategy(60000);
-    SimpleReadStrategy *creadStrategy = new SimpleReadStrategy();
-    ExternalObjectWriteStrategy *writeStrategy = new ExternalObjectWriteStrategy();
-    extHandler->addMappedProperty(wpPropSubject, wpPropertyIdentifier.objectIdNum(), BacnetPropertyNS::PresentValue, ArrayIndexNotPresent,
-                                  creadStrategy, writeStrategy);
 
     BacnetAddress extHandlerAddress = extHandler->oneOfAddresses();
     QVariant value = (float)180.0;
     WpRequester *wpReq = new WpRequester(wpObserver, value);
+
+    QHostAddress cobAddr("192.168.2.109");
+    quint16 port(0xbac0);
+    BacnetAddress wpDeviceAddress;
+    BacnetBipAddressHelper::setMacAddress(cobAddr, port, &wpDeviceAddress);
+
 
     QTimer timer;
     timer.setSingleShot(true);
@@ -797,11 +835,31 @@ int main(int argc, char *argv[])
 
     QTimer timer2;
     timer2.setSingleShot(true);
-    WpAcknowledger *wpAcknowledger = new WpAcknowledger(0x00, covDeviceAddress, extHandlerAddress, appHandler);
+    WpAcknowledger *wpAcknowledger = new WpAcknowledger(0x01, wpDeviceAddress, extHandlerAddress, appHandler);
     QObject::connect(&timer2, SIGNAL(timeout()), wpAcknowledger, SLOT(answer()));
     timer2.start(1500);
-#endif
 
+//    <appLayer>
+//            <internalHandler dummy="first">
+//            </internalHandler>
+//            <externalHandler int-address="14" >
+//                    <devices>
+//                            <device dev-instance-number="64" >
+//                                    <childObjects>
+//                                            <object instance-number="1" obj-type="analog-input">
+//                                                    <properties>
+//                                                                    <property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
+//                                                    </properties>
+//                                            </object>
+//                                    </childObjects>
+//                            </device>
+//                    </devices>
+//            </externalHandler>
+//            <deviceMappings>
+//                    <device dev-instance-number="64" bac-address="c0:a8:2:6d:ba:c0" bac-network="2" bac-max-apdu="128" bac-segmentation="segmented-not" bac-vendor-id="99" />
+//            </deviceMappings>
+//    </appLayer>
+#endif
 
     return a.exec();
 }

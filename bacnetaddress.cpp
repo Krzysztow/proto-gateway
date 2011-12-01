@@ -120,3 +120,61 @@ bool BacnetAddress::operator ==(const BacnetAddress &other) const
     else
         return false;
 }
+
+#include <QStringList>
+
+static const char *MacSeparator = ":";
+
+bool BacnetAddress::macAddressFromString(QString &addressStr)
+{
+    QStringList macParts = addressStr.split(MacSeparator);
+    quint8 macSize = macParts.count();
+    if ( (macSize > MaxMacLength) ||
+         (macSize <= 0) )
+        return false;
+    bool ok;
+    memset(_macAddress, 0, MaxMacLength);
+    for (int i = 0; i < macSize; ++i) {
+        _macAddress[i] = macParts.at(i).toUInt(&ok, 16);
+        if (!ok)
+            break;
+    }
+
+    if (!ok) {
+        memset(_macAddress, 0, MaxMacLength);
+        _macAddrLength = -1;
+    } else {
+        _macAddrLength = macSize;
+    }
+
+    return ok;
+}
+
+bool BacnetAddress::networkNumFromString(QString &netStr)
+{
+    bool ok;
+    _networkNumber = netStr.toUInt(&ok, 0);
+    if (!ok)
+        _networkNumber = UninitizlizedNet;
+
+    return ok;
+}
+
+QString BacnetAddress::macAddressToString()
+{
+    QString macStr;
+    for (int i = 0; i < _macAddrLength; ++i) {
+        macStr += QString::number(_macAddress[i], 16);
+        if (_macAddrLength - 1 != i)
+            macStr += ":";
+    }
+
+    return macStr;
+}
+
+QString BacnetAddress::netToString()
+{
+    if (UninitizlizedNet == _networkNumber)
+        return QString();
+    return QString::number(_networkNumber);
+}
