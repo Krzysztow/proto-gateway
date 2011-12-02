@@ -2,13 +2,30 @@
 
 #include <cstring>
 #include <QtEndian>
-
+#include <QString>
 #include "helpercoder.h"
 
 #if (BIP_IP_LENGTH != 4)
 #error "IPv6 not handled!"
 #endif
+static const char *BacnetBipAddressSeparator = ":";
 
+bool BacnetBipAddressHelper::macAddressFromString(QString &addrStr, QHostAddress *host, quint64 *port)
+{
+    //expected format is xxx.xxx.xxx.xxx:<port-num>, all numbers in decimal
+    QStringList addrList = addrStr.split(BacnetBipAddressSeparator);
+    if (addrList.count() == 0)
+        return false;
+
+    host->setAddress(addrList.first());
+    bool ok(false);
+    if (addrList.count() == 2) {
+        *port = addrList.at(1).toUInt(&ok);
+    }
+    if (!ok)
+        *port = 0xBAC0;//assume default port
+    return true;
+}
 
 quint8 BacnetBipAddressHelper::macAddressFromRaw(quint8 *addrRawPtr, BacnetAddress *outAddress)
 {
@@ -39,11 +56,15 @@ QHostAddress BacnetBipAddressHelper::ipAddress(const BacnetAddress &inAddress)
     else return QHostAddress();
 }
 
-quint16 BacnetBipAddressHelper::ipPort(BacnetAddress &inAddress)
+quint16 BacnetBipAddressHelper::ipPort(const BacnetAddress &inAddress)
 {
     Q_ASSERT(inAddress.macAddrLength() == (BipAddrLength));
+
+    const quint8 *ptr = &(inAddress.macPtr()[BipIpLength]);
+    qDebug("Values 0x%x, 0x%x", *ptr, *(ptr+1));
+
     if (inAddress.macAddrLength() == BipAddrLength) {
-        return qFromBigEndian(*(quint16*)(inAddress.macPtr()[BipIpLength]));
+        return qFromBigEndian(*(quint16*)(&inAddress.macPtr()[BipIpLength]));
     }
     else return 0;
 

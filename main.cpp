@@ -40,22 +40,22 @@ int main(int argc, char *argv[])
     QDomElement mainElement = doc.documentElement();
     QDomElement element;
 
+    element = mainElement.firstChildElement(TransportLayerTag);
+    QHash<quint8, BacnetTransportLayerHandler*> createdPorts = Bacnet::TransportLayerConfigurator::createTransportLayer(element);
+    if (createdPorts.count() == 0) {
+        qDebug("Transport layer was not created, terminate!");
+        return 3;
+    }
+
+
     //configure network layer
     element = mainElement.firstChildElement(NetworkLayerTag);
-    BacnetNetworkLayerHandler *networkLayer = Bacnet::NetworkLayerConfigurator::createNetworkLayer(element);
+    BacnetNetworkLayerHandler *networkLayer = Bacnet::NetworkLayerConfigurator::createNetworkLayer(createdPorts, element);
     Q_CHECK_PTR(networkLayer);
     if (0 == networkLayer) {
         qDebug("Network layer was not created, terminate!");
         return 3;
     }
-
-    element = mainElement.firstChildElement(TransportLayerTag);
-    BacnetTransportLayerHandler *transportBipLayer = Bacnet::TransportLayerConfigurator::createTransportLayer(networkLayer, element);
-    if (0 == transportBipLayer) {
-        qDebug("Transport layer was not created, terminate!");
-        return 3;
-    }
-    Q_CHECK_PTR(transportBipLayer);
 
     element = mainElement.firstChildElement(AppLayerTag);
     Bacnet::BacnetApplicationLayerHandler *appLayer = Bacnet::BacnetConfigurator::createApplicationLayer(networkLayer, element);

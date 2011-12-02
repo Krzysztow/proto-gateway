@@ -16,6 +16,8 @@ class Buffer;
 class BacnetTransportLayerHandler
 {
 public:
+    virtual void setNetworkLayer(BacnetNetworkLayerHandler *networkHndlr) = 0;
+
     /**
       This function gives \sa BacnetNetworkLayer ability to send data to the BACnet network.
       When no destAddress is specified-

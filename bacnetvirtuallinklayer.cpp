@@ -11,13 +11,17 @@
 #include "bacnetbuffermanager.h"
 #include "helpercoder.h"
 
-BacnetBvllHandler::BacnetBvllHandler(BacnetNetworkLayerHandler *networkLayerHndlr,
-                                     BacnetUdpTransportLayerHandler *transportLayerHndlr):
-        _networkHndlr(networkLayerHndlr),
+BacnetBvllHandler::BacnetBvllHandler(BacnetUdpTransportLayerHandler *transportLayerHndlr):
+        _networkHndlr(0),
         _transportHndlr(transportLayerHndlr),
         _bbmdHndlr(0)
 {
-    Q_ASSERT(_networkHndlr != 0);
+    _globBcastAddr.setGlobalBroadcast();
+}
+
+void BacnetBvllHandler::setNetworkLayer(BacnetNetworkLayerHandler *networkHndlr)
+{
+    _networkHndlr = networkHndlr;
 }
 
 void BacnetBvllHandler::setBbmdHndlr(BacnetBbmdHandler *bbmdHandler)
@@ -132,16 +136,19 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             break;
         }
     case (Read_Foreign_Device_Table_Ack): {
-            //! \todo pass it to BVLL state machine, when we support FDT
-            qDebug("BacnetBvllHandler: received Read_Foreign_Device_Table_Ack. NOT HANDLED!");
+            qDebug("BacnetBvllHandler: received Read_Foreign_Device_Table_Ack. Not interested!");
             break;
         }
     case (Delete_Foreign_Device_Table_Entry): {
-            //! \todo pass it to BVLL state machine, when we support FDT
+        //! \todo pass it to BVLL state machine, when we support FDT
+        if (0 != _bbmdHndlr) {
+            qDebug("%s : Not handled, do it if FD is to be implemented.", __PRETTY_FUNCTION__);
             sendShortResult(Delete_Foreign_Device_Table_Entry_NAK, srcAddr, srcPort);
             break;
         }
+    }
     case (Distribute_Broadcast_To_Network): {
+        if (0 != _bbmdHndlr) {
             BacnetAddress srcBipAddr;
             BacnetBipAddressHelper::setMacAddress(srcAddr, srcPort, &srcBipAddr);
             //get npdu data information (pointer to start & size)
@@ -149,15 +156,13 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             quint16 npduLength = dataLength;
 
             //if we are BBMD, forward it to other BBMDS
-            if (0 != _bbmdHndlr) {
-                //first create Forwarded-NPDU message
-                QByteArray forwardedMsg;
-                quint16 forwardedLength = createForwardedMsg(npdu, npduLength, forwardedMsg, srcAddr, srcPort);
-                quint8 *forwardedPtr = (quint8 *)forwardedMsg.data();
+            //first create Forwarded-NPDU message
+            QByteArray forwardedMsg;
+            quint16 forwardedLength = createForwardedMsg(npdu, npduLength, forwardedMsg, srcAddr, srcPort);
+            quint8 *forwardedPtr = (quint8 *)forwardedMsg.data();
 
-                //this will send to all BBMDs except itself
-                _bbmdHndlr->processBroadcastToNetwork(forwardedPtr, forwardedLength, srcBipAddr);
-            }
+            //this will send to all BBMDs except itself
+            _bbmdHndlr->processBroadcastToNetwork(forwardedPtr, forwardedLength, srcBipAddr);
             /**
              \note this is important to pass message to the upper layer. This message was sent locally, but we will not
              receive it anymore, since our transport layer discards all the messages sent by oursleves.
@@ -165,10 +170,11 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
             //pass it to the netorowk layer, since we won't get the forwarded message (our transport layer blocks messages sent by ourself)
             _networkHndlr->readNpdu(npdu, npduLength, srcBipAddr, _transportProxyPtr);
 
-            break;
         }
+        break;
+    }
     case (Original_Unicast_NPDU): {
-            //some device sent us a directed message, forward it to the upper layer
+            //some device sent us a directed message (it could be for us, or for some routed network - forward it upper)
             BacnetAddress srcBipAddr;
             BacnetBipAddressHelper::setMacAddress(srcAddr, srcPort, &srcBipAddr);
             //prepare npdu infor
@@ -281,15 +287,56 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
     quint8 *startByte = buffToSend->bufferStart() + BacnetBufferManager::instance()->offsetForLayer(BacnetBufferManager::TransportLayer);
     quint8 *dataPtr = startByte;
 
-#warning "Sending not implemented"
+
+    /** From network layer invoked send NPDU
+        --------If is a broadcast:
+        --------- send Original_Broadcast_NPDU with Subnet Broadcast address (to send to devices on my subnet)
+        --------- to all entries in BDT (except myself) send Forwarded_NPDU - keep in mind hwo to create destination address for each subnet
+        --------- to all entries in FDT send Forwarded_NPDU
+        --------If is a localbroadcast || address DOES NOT have a network number:
+        --------- send only to me and my FDs
+        --------If is a remote broadcast || address HAS a network number:
+        --------- send to all BBMDs
+
+
+        NOT TRUE, because we cannot determine where (FDT or other BMBD) basing on network. Thus, when broadcast - send to Forwarded_NPDU to all entries in BDT (exccept mine) and all entries of FDT.
+        Also send Original_Broadcast_NPDU to my subnet.
+
+        When non-broadcast thing is sent from network, we just create  Unicast message and send to the source. (this will be a case of remote broadcast, the address will be unicast of the router).
+      */
+
+    /** If we receive message from our layer:
+      - Write-Broadcast-Distribution-Table: Purpose
+      - Read-Broadcast-Distribution-Table:
+      - Read-Broadcast-Distribution-Table-Ack
+      - Forwarded-NPDU: (BBMD sends it when got original-broadcast or distribute-broadcast)
+        - forawrd on subnet (if BBMD and if not directed broadcast)
+        - forward to every FD (if FD-BBMD except incoming)
+        - forward to all FDTs (except incoming)
+      - Register_Foreign_Device
+      - Read_Foreign_Device_Table
+      - Delete_Foreign_Device_Table_Entry
+      - Distribute_Broadcast_To_Network (from FD):
+        - Forwarded_NPDU to local subnet (if BBMD)                                                                            - local device gets Forwarded_NPDU as result of Bcast
+        - Forwarded_NPDU to each BDT except myself (if BBMD)
+        - Forwarded_NPDU to all FDTs (if FD-BBMD)
+        - pass to network
+      - Original-Unicast-NPDU ****************
+      - Original-Broadcast-NPDU:
+        - send Forwarded_NPDU to all devices in BDT except mine (if FD-BBMD)                                                     - bbmd local device gets Original_Broadcast_NPDU anyway, as a result of broadcast
+        - send Forwarded_NPDU to all devices in FdTableEntry (if FD-BBMD)
+        - pass to networ layer
+      */
 
     /*althought BacnetAddress contains information about network - we don't use it here - this layer knows nothing about
       networking. It just makes check if the address is localBroadcast and if so send to QHostAddress::Broadcast address,
       unicast otherwise.
      */
-    if (destAddress->isLocalBraodacst()) {
+    if (0 == destAddress)
+        destAddress = &_globBcastAddr;
+    if (destAddress->isLocalBraodacst() || destAddress->isGlobalBroadcast() || destAddress->isRemoteBroadcast()) {
         quint8 appendedSize(0);
-        if (0 != _bbmdHndlr) {
+        if (0 != _bbmdHndlr ) {
             //send as forwarded-NPDU to all FDs and BBMDs. I create new Buffer instance, so that can freely append
             //Forwarded-NPDU header without loosing information about NPDU position and size.
             Buffer buffToForward = *buffToSend;
@@ -336,5 +383,10 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
 
         buffToSend->setBodyPtr(finalBodyPtr);
         buffToSend->setBodyLength(buffToSend->bodyLength() + appendedSize);
+
+        QHostAddress destHost = BacnetBipAddressHelper::ipAddress(*destAddress);
+        quint64 destPort = BacnetBipAddressHelper::ipPort(*destAddress);
+
+        _transportHndlr->sendBuffer(buffToSend, destHost, destPort);
     }
 }

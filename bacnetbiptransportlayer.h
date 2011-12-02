@@ -11,8 +11,9 @@ class BacnetBipTransportLayer :
         public BacnetTransportLayerHandler
 {
 public:
-    BacnetBipTransportLayer(BacnetNetworkLayerHandler *networkHndlr);
+    BacnetBipTransportLayer();
 
+    virtual void setNetworkLayer(BacnetNetworkLayerHandler *networkHndlr);
     /**
       Implementation of BacnetTransportLayerHandler interface function.
       This function is used to send
@@ -23,8 +24,8 @@ public:
     BacnetUdpTransportLayerHandler *transportLayer();
 
 private:
-    BacnetBvllHandler *_bvllHndlr;
     BacnetUdpTransportLayerHandler *_transportHndlr;
+    BacnetBvllHandler *_bvllHndlr;
 };
 
 #endif // BACNETBIPTRANSPORTLAYER_H

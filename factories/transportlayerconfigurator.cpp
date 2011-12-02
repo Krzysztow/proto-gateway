@@ -15,29 +15,52 @@ static const char *BacnetRawAddressValue    = "raw";
 static const char *BacnetIpAddressValue     = "bip";
 static const char *TransportLayerTypeAttr   = "type";
 static const char *BacnetAddressAttribute   = "address";
+static const char *PortTagName              = "port";
+static const char *PortIdAttribute          = "port-id";
 
-static const char *BacnetBipAddressSeparator = ":";
-
-BacnetTransportLayerHandler *TransportLayerConfigurator::createTransportLayer(BacnetNetworkLayerHandler *netLayer, QDomElement &transportLayCfg)
+QHash<quint8, BacnetTransportLayerHandler*> TransportLayerConfigurator::createTransportLayer(QDomElement &transportLayCfg)
 {
-    Q_CHECK_PTR(netLayer);
     Q_ASSERT(!transportLayCfg.isNull());
 
-    QString str = transportLayCfg.attribute(TransportLayerTypeAttr);
-    if (str.isEmpty())
-        str = BacnetIpAddressValue;//assume default value
+    QHash<quint8, BacnetTransportLayerHandler*> createdPorts;
+    bool ok;
+    quint8 portId;
+    for (QDomElement portElement = transportLayCfg.firstChildElement(PortTagName); !portElement.isNull(); portElement = portElement.nextSiblingElement(PortTagName)) {
+        //get port id
+        portId = portElement.attribute(PortIdAttribute).toUInt(&ok);
+        if (!ok) {
+            elementError(portElement, PortIdAttribute);
+            //skip
+            continue;
+        }
 
-    BacnetTransportLayerHandler *tLayer(0);
-    if (BacnetIpAddressValue == str) {
-        tLayer = createBipTransportLayer(netLayer, transportLayCfg);
-    } else {
-        elementError(transportLayCfg, TransportLayerTypeAttr);
+        if (createdPorts.contains(portId)) {//we cannot allow for duplications
+            qDebug("%s : PortId (%d) is already used.", __PRETTY_FUNCTION__, portId);
+            continue;
+        }
+
+        QString str = portElement.attribute(TransportLayerTypeAttr);
+        if (str.isEmpty())
+            str = BacnetIpAddressValue;//assume default value
+
+        BacnetTransportLayerHandler *tLayer(0);
+        if (BacnetIpAddressValue == str) {
+            tLayer = createBipTransportLayer(portElement);
+        } else {
+            //there weas an error/. Don;t have to continue or break, since 0 != tLayer takes care of that.
+            elementError(portElement, TransportLayerTypeAttr);
+        }
+
+        if (0 != tLayer) {
+#warning "netLayer->addTransportLayer(network, portId, tLayer); in network layer creation!"
+            createdPorts.insert(portId, tLayer);
+        }
     }
 
-    return tLayer;
+    return createdPorts;
 }
 
-BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(BacnetNetworkLayerHandler *netLayer, QDomElement &bipLayCfg)
+BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(QDomElement &bipLayCfg)
 {
     QString addrStr = bipLayCfg.attribute(BacnetAddressAttribute);
     if (addrStr.isEmpty()) {
@@ -48,7 +71,7 @@ BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(Bac
     QString addressType = bipLayCfg.attribute(BacnetAddressTypeAttr);
 
     QHostAddress ipAddress;
-    quint16 port(0);
+    quint64 port(0);
     if (BacnetRawAddressValue == addressType) {
         //expected format is xx:xx:xx:xx:pp:pp, all numbers in hexadecimal
         BacnetAddress address;
@@ -57,29 +80,23 @@ BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(Bac
             return 0;
         }
         ipAddress = BacnetBipAddressHelper::ipAddress(address);
+        port = BacnetBipAddressHelper::ipPort(address);
     } else { //assume default is ip-like address
         //expected format is xxx.xxx.xxx.xxx:<port-num>, all numbers in decimal
-        QStringList addrList = addrStr.split(BacnetBipAddressSeparator);
-        if (addrList.count() == 0) {
+
+        if (!BacnetBipAddressHelper::macAddressFromString(addrStr, &ipAddress, &port)) {
             elementError(bipLayCfg, BacnetAddressTypeAttr);
             return 0;
         }
-        ipAddress.setAddress(addrList.first());
-        bool ok(false);
-        if (addrList.count() == 2) {
-            port = addrList.at(1).toUInt(&ok);
-        }
-        if (!ok)
-            port = 0xBAC0;//assume default port
     }
 
-    if (ipAddress.isNull()) {
+    if ( ipAddress.isNull() || (0 == port) ) {
         qDebug("%s : Can't parse address.", __PRETTY_FUNCTION__);
         return 0;
     }
 
-    BacnetBipTransportLayer *bip = new BacnetBipTransportLayer(netLayer);
-    bip->transportLayer()->setAddress(ipAddress, port);
+    BacnetBipTransportLayer *bip = new BacnetBipTransportLayer();
+    bip->transportLayer()->setAddress(ipAddress, port);    
 
     return bip;
 }

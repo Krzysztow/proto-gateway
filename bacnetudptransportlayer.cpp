@@ -19,6 +19,7 @@ bool BacnetUdpTransportLayerHandler::setAddress(QHostAddress ip, quint16 port)
     _myAddress = ip;
     _myPort = port;
     //will listen to the packets directed to the device/broadcasted with port port
+    qDebug("%s : address set to %s:%d", __PRETTY_FUNCTION__, qPrintable(ip.toString()), port);
     return _socket->bind(port, QUdpSocket::ShareAddress);
 }
 

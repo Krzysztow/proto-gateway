@@ -29,6 +29,9 @@ public:
         TooLongMessage = 4
     };
 
+    typedef quint16 TNetworkNum;
+    typedef quint8 TPortId;
+
     /**
       Function should be invoked by lowe layer (transport layer) in order to parse the NPDU buffer.
       \param npdu - pointer to the start of the buffer containing NPDU data;
@@ -45,12 +48,21 @@ public:
       Sets transport layer (or its proxy) that it communicates with, when wants to send data.
       The transport layer handler calls \sa readNpud method when it receives data which is meant
       to be passed to Application or Network layers.
-      \todo if we want to provide real routing - there should be few DLs possible to assign.
+      \param portId         - port Id, which is associatied with given transport handler
+      \param transportHndlr - transport handler.
       */
-    void setTransportLayer(BacnetTransportLayerHandler *transportHndlr);
+    void addPorts(QHash<TPortId, BacnetTransportLayerHandler*> &transportHndlrs);
 
     void setApplicationLayer(Bacnet::BacnetApplicationLayerHandler *appHndlr);
-    void setVirtualApplicationLayer(quint16 virtualNetworkNum, Bacnet::BacnetApplicationLayerHandler *appHndlr);
+    void setVirtualApplicationLayer(TNetworkNum virtualNetworkNum, Bacnet::BacnetApplicationLayerHandler *appHndlr);
+
+    //! Adds the path to the network via specifier port. If the network was earlier reachable through other route, that route will be removed and only new remembered.
+    void updateRoutingTableIndirectAccess(BacnetTransportLayerHandler *port, QVector<TNetworkNum> &indirectRouterNets, BacnetAddress &routerAddress);
+    void updateRoutingTableIndirectAccess(TPortId portId, QVector<TNetworkNum> &indirectRouterNets, BacnetAddress &routerAddress);
+    void rmNetworkIndirectAccess(BacnetTransportLayerHandler *port, quint16 net);
+
+    //! Associates direct network num with portId. If there was such association, gets  deleted.
+    void setPortDirectNetwork(TPortId portId, TNetworkNum networkNum);
 
 private:
     /**
@@ -60,44 +72,57 @@ private:
       \param port - pointer to the port transport layer - this would be very useful, if we were really a router, with different
       physical (or BVLL logical) ports.
       */
-    qint32 processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port);
+    qint32 processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetNpci &rcvdNpci, BacnetTransportLayerHandler *port);
     qint32 processRejectMessageToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port);
     qint32 processInitializeRoutingTable(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetTransportLayerHandler *port);
     qint32 processIAmRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddress, BacnetTransportLayerHandler *port);
 
-    void sendRejectMessageToNetwork(RejectMessageToRouterReason rejReason, quint16 dnet, BacnetAddress &destAddr, BacnetTransportLayerHandler *port);
+    void sendRejectMessageToNetwork(RejectMessageToRouterReason rejReason, quint16 dnet, BacnetAddress &dlSenderAddress, BacnetTransportLayerHandler *port);
 
-    void sendBuffer(Buffer *bufferToSend, Bacnet::NetworkPriority priority = Bacnet::PriorityNormal,
-                    const BacnetAddress *destination = 0, const BacnetAddress *source = 0);
+    //! Creates and sends networks vector to the port.
+    void sendIAmRouterToNetwork_helper(QVector<quint16> &networks, BacnetTransportLayerHandler *port);
 
-    void addRouterToNetwork(QVector<quint16> &nets, BacnetAddress &routerAddress);
-    void rmRouterToNetwork(quint16 net);
+    //! Used to send network messages, where dlDestination is already known (or 0, meainging b'cast) and port to which we want to send is known as well.
+    void sendBuffer(Buffer *bufferToSend, Bacnet::NetworkPriority priority, BacnetTransportLayerHandler *port, const BacnetAddress *dlDestinationAddress = 0);
+
     /**
       This function returns the data link address that the message should be directed to in order to get to device with destAddr.
       Basically, if it's a remote message, it returns address of the router to dest network. Otherwise returns this address.
       */
-    const BacnetAddress *dlAddressForDest(const BacnetAddress *destAddr);
+//    const BacnetAddress *findAddrPortDestination(const BacnetAddress *destAddr);
 
 private:
-    BacnetTransportLayerHandler *_transportHndlr;
+    //! Returns port Id. If not found, returns InvalidPortId.
+    qint16 porrId(BacnetTransportLayerHandler *port);
+    /** Each routing entry should consist of direct network number, port number and a list of pair (networks accessible through this port, router address).
+        \note we don't store direct network number in the entry RoutingEntry. It's already given as a hash key.
+       */
+    struct RoutingEntry {
+        TPortId portId;
+        BacnetTransportLayerHandler* port;
+        QHash<TNetworkNum, BacnetAddress> indirectNetworkAccess;
+    };
+    static const quint8 AppLayerPortId = 0xff;
+    static const quint8 InvalidPortId = -1;
+    //! This is a Bacnet routing table. If the value of network is negative, it means
+    QHash<TNetworkNum, RoutingEntry> _routingTable;
+    QHash<TPortId, BacnetTransportLayerHandler*> _allPorts;
     /**
-      This one keeps track of the application layer and virtual networks supported by the device.
-      Assumes, that the real application layer has -1 key, whereas virtual ones are positive and the
-      key is same as it's network number.
+        Network number of the application application layer.
       */
-    QHash<qint32, Bacnet::BacnetApplicationLayerHandler*> _networks;
-    /**
-      This hash stores information about routers that are connected to local network and are on the path to
-      the concrete network. The information is colleted wiht BacnetNpci::IAmRouterToNetwork network message.
-      Update mechanism is as follows. Either IAmRouterToNetwork comes from some reason - maybe some other device
-      requested.  But it can happen, that we have no such information and application entity wants to connect
-      to some network. We send app entity remote request with local broadcast (one of the local routers will grab it)
-      and just after that, we send WhoIsRouterToNetwork - then we will get desired information.
-      If the information gets stale - we will receive RejectMessageToNetwork with NotDirectlyConnected.
-      \todo \note \warning What if the router that is already set, changes its address? We would still have an old one, which doesn't
-      respond.
-      */
-    QHash<quint16 , BacnetAddress> _routers;
+    quint16 _virtualNetNum;
+    Bacnet::BacnetApplicationLayerHandler *_virtualAppLayer;
+//    /**
+//      This hash stores information about routers that are connected to local network and are on the path to
+//      the concrete network. The information is colleted wiht BacnetNpci::IAmRouterToNetwork network message.
+//      Update mechanism is as follows. Either IAmRouterToNetwork comes from some reason - maybe some other device
+//      requested.  But it can happen, that we have no such information and application entity wants to connect
+//      to some network. We send app entity remote request with local broadcast (one of the local routers will grab it)
+//      and just after that, we send WhoIsRouterToNetwork - then we will get desired information.
+//      If the information gets stale - we will receive RejectMessageToNetwork with NotDirectlyConnected.
+//      \todo \note \warning What if the router that is already set, changes its address? We would still have an old one, which doesn't
+//      respond.
+//      */
 
 };
 

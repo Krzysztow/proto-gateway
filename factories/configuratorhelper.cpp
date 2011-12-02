@@ -21,3 +21,5 @@ void elementError(QDomElement &el, const char* attrWithError, const char *addInf
     QString errorElement = elementString(el);
     qDebug("Error occured while parsing attribute *%s* of element \n\t%s.\n%s\n", attrWithError, qPrintable(errorElement), addInfo);
 }
+
+

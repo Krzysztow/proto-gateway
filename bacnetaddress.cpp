@@ -107,7 +107,7 @@ void BacnetAddress::resetMacAddress()
 
 bool BacnetAddress::isAddrInitialized() const
 {
-    return (_macAddrLength > 0);
+    return ( (_macAddrLength > 0) || isGlobalBroadcast() );
 }
 
 bool BacnetAddress::operator ==(const BacnetAddress &other) const

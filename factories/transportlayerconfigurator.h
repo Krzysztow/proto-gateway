@@ -2,6 +2,7 @@
 #define BACNET_TRANSPORTLAYERCONFIGURATOR_H
 
 #include <QDomDocument>
+#include <QHash>
 
 class BacnetTransportLayerHandler;
 class BacnetNetworkLayerHandler;
@@ -12,10 +13,10 @@ namespace Bacnet {
 class TransportLayerConfigurator
 {
 public:
-    static ::BacnetTransportLayerHandler *createTransportLayer(BacnetNetworkLayerHandler *netLayer, QDomElement &transportLayCfg);
+    static QHash<quint8, BacnetTransportLayerHandler*> createTransportLayer(QDomElement &transportLayCfg);
 
 private:
-    static BacnetBipTransportLayer *createBipTransportLayer(BacnetNetworkLayerHandler *netLayer, QDomElement &bipLayCfg);
+    static BacnetBipTransportLayer *createBipTransportLayer(QDomElement &bipLayCfg);
 };
 
 } // namespace Bacnet

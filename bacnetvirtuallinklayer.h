@@ -21,8 +21,7 @@ class Buffer;
 class BacnetBvllHandler
 {
 public:
-    BacnetBvllHandler(BacnetNetworkLayerHandler *networkLayerHndlr,
-                      BacnetUdpTransportLayerHandler *transportLayerHndlr);
+    BacnetBvllHandler(BacnetUdpTransportLayerHandler *transportLayerHndlr);
 
     //! BACnet BVLC result codes
     enum BvlcResultCode{
@@ -82,6 +81,8 @@ public:
     void setBbmdHndlr(BacnetBbmdHandler *bbmdHandler);
     void setTransportProxy(BacnetTransportLayerHandler *transportProxy);
 
+    void setNetworkLayer(BacnetNetworkLayerHandler *networkHndlr);
+
 private:
     //! Helper function to send data to underlying transport layer.
     void send(quint8 *data, quint16 length, QHostAddress destAddr, quint16 destPort);
@@ -125,6 +126,7 @@ private:
     //!just to pass to the network layer information about the TransportLayer we are in.
     BacnetTransportLayerHandler *_transportProxyPtr;
 
+    BacnetAddress _globBcastAddr;
     friend class BacnetBbmdHandler;//encapsulation is broken! \todo think of it
 };
 

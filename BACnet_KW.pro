@@ -116,7 +116,10 @@ SOURCES += main.cpp \
     external/externaltimedepjob.cpp \
     tests/wprequester.cpp \
     tests/wpacknowledger.cpp \
-    factories/bacnetconfigurator.cpp
+    factories/bacnetconfigurator.cpp \
+    factories/networklayerconfigurator.cpp \
+    factories/transportlayerconfigurator.cpp \
+    factories/configuratorhelper.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -226,9 +229,18 @@ HEADERS += bacnetvirtuallinklayer.h \
     external/externaltimedepjob.h \
     tests/wprequester.h \
     tests/wpacknowledger.h \
-    factories/bacnetconfigurator.h
+    factories/bacnetconfigurator.h \
+    factories/networklayerconfigurator.h \
+    factories/transportlayerconfigurator.h \
+    factories/configuratorhelper.h
 
 OTHER_FILES +=
+
+
+
+
+
+
 
 
 

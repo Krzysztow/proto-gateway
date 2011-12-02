@@ -28,6 +28,7 @@ public:
         \returns number of bytes that were used for the address
     */
     static quint8 macAddressFromRaw(quint8 *addrRawPtr, BacnetAddress *outAddress);
+    static bool macAddressFromString(QString &addrStr, QHostAddress *host, quint64 *port);
 
     /**
       Returns the ip address representing part of the B/IPs address from inAddress.
@@ -38,7 +39,7 @@ public:
     /**
       Returns ip port, being second part of the B/IP address.
       */
-    static quint16 ipPort(BacnetAddress &inAddress);
+    static quint16 ipPort(const BacnetAddress &inAddress);
 
     /**
       Converst QHostAddress (IPv4) and port into outAddress.

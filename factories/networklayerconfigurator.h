@@ -2,15 +2,17 @@
 #define NETWORKLAYERCONFIGURATOR_H
 
 #include <QDomElement>
+#include <QHash>
 
 class BacnetNetworkLayerHandler;
+class BacnetTransportLayerHandler;
 
 namespace Bacnet {
 
 class NetworkLayerConfigurator
 {
 public:
-    static ::BacnetNetworkLayerHandler *createNetworkLayer(QDomElement &netCfgElement);
+    static BacnetNetworkLayerHandler *createNetworkLayer(QHash<quint8, BacnetTransportLayerHandler*> &ports, QDomElement &netCfgElement);
 };
 
 }
