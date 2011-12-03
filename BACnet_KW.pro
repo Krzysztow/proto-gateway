@@ -236,84 +236,9 @@ HEADERS += bacnetvirtuallinklayer.h \
 
 OTHER_FILES +=
 
+INCLUDEPATH += ./sng
 
+HEADERS += sng/snghandler.cpp
+SOURCES += sng/snghandler.h
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+LIBS += -lSNGConnectionManager
