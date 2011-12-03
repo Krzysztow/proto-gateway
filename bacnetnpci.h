@@ -58,9 +58,9 @@ public:
     qint8 setToRaw(quint8 *outDataPtr);
 
     BacnetAddress &destAddress();
-    void setDestAddress(BacnetAddress &addr);
+    void setDestAddress(const BacnetAddress &addr);
     BacnetAddress &srcAddress();
-    void setSrcAddress(BacnetAddress &addr);
+    void setSrcAddress(const BacnetAddress &addr);
 
     inline bool isSane() {return ((BitFields::Bit6 & _controlOctet) | (BitFields::Bit4 & _controlOctet)) == 0;}
 
@@ -74,9 +74,10 @@ public:
         return (Bacnet::NetworkPriority)((_controlOctet)&(BitFields::Bit0 | BitFields::Bit1));}
     inline void setNetworkPriority(Bacnet::NetworkPriority netPriority) {_controlOctet |= ( (quint8)netPriority & (BitFields::Bit0 | BitFields::Bit1) );}
 
-private:
     inline bool isDestinationSpecified() {return (BitFields::Bit5 & _controlOctet);}
     inline bool isSourceSpecified() {return (BitFields::Bit3 & _controlOctet);}
+private:
+
     inline bool isConfirmed() {return (BitFields::Bit2 & _controlOctet);}
     inline bool isExpectingReply() {return (_controlOctet & BitFields::Bit2);}
     /**

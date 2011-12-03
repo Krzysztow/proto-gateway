@@ -52,7 +52,6 @@ QHash<quint8, BacnetTransportLayerHandler*> TransportLayerConfigurator::createTr
         }
 
         if (0 != tLayer) {
-#warning "netLayer->addTransportLayer(network, portId, tLayer); in network layer creation!"
             createdPorts.insert(portId, tLayer);
         }
     }

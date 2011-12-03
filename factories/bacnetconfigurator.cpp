@@ -248,10 +248,9 @@ BacnetDeviceObject *BacnetConfigurator::createDevice(QDomElement &deviceElement)
     //get address
     BacnetAddress address = BacnetInternalAddressHelper::toBacnetAddress(deviceElement.attribute(DeviceInternalAddressAttribute).toUInt(&ok));
     if (!ok || !address.isAddrInitialized() ) {
-        qDebug("%s : Address can't be created (%s) or already exists", __PRETTY_FUNCTION__, qPrintable(deviceElement.attribute(DeviceInternalAddressAttribute)));
+        elementError(deviceElement, DeviceInternalAddressAttribute, "Address can't be parsed.");
         return 0;
     }
-    
     //get device instance number
     quint32 instanceNum = deviceElement.attribute(DeviceInstanceNumberAttribute).toUInt(&ok);
     if (!ok) {

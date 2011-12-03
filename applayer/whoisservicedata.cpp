@@ -65,26 +65,32 @@ qint32 WhoIsServiceData::fromRaw(quint8 *serviceData, quint16 buffLength)
     qint16 consumedBytes(0);
     bool convOkOrCtxt;
 
-    //parse object identifier
-    ret = bParser.nextTagNumber(&convOkOrCtxt);
-    if (ret == 0 && convOkOrCtxt) {//we have a first device range - there is a need to have the other tag in this case
-        ret = bParser.parseNext();
-        _rangeLowLimit = bParser.toUInt(&convOkOrCtxt);
-        if (!convOkOrCtxt)
-            return -BacnetRejectNS::ReasonInvalidParameterDataType;
-        consumedBytes += ret;
-        buffLength -= ret;
-        ret = bParser.parseNext();
-        if (ret < 0)
-            return -BacnetRejectNS::ReasonMissingRequiredParameter;
-        _rangeHighLimit = bParser.toUInt(&convOkOrCtxt);
-        if (!convOkOrCtxt)
-            return -BacnetRejectNS::ReasonInvalidParameterDataType;
-        consumedBytes += ret;
-    }
+    //entire range is specified
+    if (0 == buffLength) {
+        _rangeLowLimit = 0;
+        _rangeHighLimit = MaximumInstanceNumber;
+    } else {
+        //parse object identifier
+        ret = bParser.nextTagNumber(&convOkOrCtxt);
+        if (ret == 0 && convOkOrCtxt) {//we have a first device range - there is a need to have the other tag in this case
+            ret = bParser.parseNext();
+            _rangeLowLimit = bParser.toUInt(&convOkOrCtxt);
+            if (!convOkOrCtxt)
+                return -BacnetRejectNS::ReasonInvalidParameterDataType;
+            consumedBytes += ret;
+            buffLength -= ret;
+            ret = bParser.parseNext();
+            if (ret < 0)
+                return -BacnetRejectNS::ReasonMissingRequiredParameter;
+            _rangeHighLimit = bParser.toUInt(&convOkOrCtxt);
+            if (!convOkOrCtxt)
+                return -BacnetRejectNS::ReasonInvalidParameterDataType;
+            consumedBytes += ret;
+        }
 
-    if (bParser.hasNext())
-        return -BacnetRejectNS::ReasonTooManyArguments;
+        if (bParser.hasNext())
+            return -BacnetRejectNS::ReasonTooManyArguments;
+    }
 
     return consumedBytes;
 }

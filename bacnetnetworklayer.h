@@ -72,15 +72,18 @@ private:
       \param port - pointer to the port transport layer - this would be very useful, if we were really a router, with different
       physical (or BVLL logical) ports.
       */
-    qint32 processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetNpci &rcvdNpci, BacnetTransportLayerHandler *port);
+    qint32 processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &originAddress, BacnetNpci &npci, BacnetTransportLayerHandler *port);
     qint32 processRejectMessageToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port);
     qint32 processInitializeRoutingTable(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetTransportLayerHandler *port);
     qint32 processIAmRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddress, BacnetTransportLayerHandler *port);
 
     void sendRejectMessageToNetwork(RejectMessageToRouterReason rejReason, quint16 dnet, BacnetAddress &dlSenderAddress, BacnetTransportLayerHandler *port);
 
-    //! Creates and sends networks vector to the port.
-    void sendIAmRouterToNetwork_helper(QVector<quint16> &networks, BacnetTransportLayerHandler *port);
+    void sendWhoIsRouterToNetwork(qint32 network, BacnetTransportLayerHandler *port);
+    void prepareBufferWhoIsRouterToNetwork_hlpr(Buffer *buffer, qint32 network, BacnetNpci *npci, BacnetAddress *originAddr = 0);
+
+    //! Creates and sends networks vector to the port. If originAddr is specified, this address will be inserted into NPCI SRC fields.
+    void sendIAmRouterToNetwork_helper(QList<TNetworkNum> &networks, BacnetTransportLayerHandler *port);
 
     //! Used to send network messages, where dlDestination is already known (or 0, meainging b'cast) and port to which we want to send is known as well.
     void sendBuffer(Buffer *bufferToSend, Bacnet::NetworkPriority priority, BacnetTransportLayerHandler *port, const BacnetAddress *dlDestinationAddress = 0);
@@ -94,6 +97,18 @@ private:
 private:
     //! Returns port Id. If not found, returns InvalidPortId.
     qint16 porrId(BacnetTransportLayerHandler *port);
+
+    //! Returns network number directly connected to port.
+    qint32 portDirectNetNum(BacnetTransportLayerHandler *port);
+
+
+    /** Returns the port, that should be able to reach the given address (based on network parameters). If netwrork in address is provided, but the route is not found,
+        returns NULL port and issues who-is-router-to-network request to all ports available.
+        If the port is found and the network is not directly accessible (there is some intermediate router), it will also return pointer to the address of the next
+        router on path. Otherwise it's NULL as well.
+      */
+    BacnetTransportLayerHandler *findDestinationForAddress(const BacnetAddress *destAddr, BacnetAddress *&dlAddress);
+
     /** Each routing entry should consist of direct network number, port number and a list of pair (networks accessible through this port, router address).
         \note we don't store direct network number in the entry RoutingEntry. It's already given as a hash key.
        */

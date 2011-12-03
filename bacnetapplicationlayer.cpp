@@ -21,10 +21,11 @@ BacnetApplicationLayerHandler::BacnetApplicationLayerHandler(BacnetNetworkLayerH
     _networkHndlr(networkHndlr),
     _internalHandler(new InternalObjectsHandler(this)),
     _externalHandler(new ExternalObjectsHandler(this)),
-    _tsm(new Bacnet::BacnetTSM2(this)),
+    _tsm(new Bacnet::BacnetTSM2(this, networkHndlr)),
     _devicesRoutingTable(DefaultDynamicElementsSize),
     _objectDeviceMapper(DefaultMapperElementsSize)
 {
+    Q_CHECK_PTR(networkHndlr);
     _timer.start(TimerInterval_ms, this);
 }
 
@@ -81,7 +82,7 @@ void BacnetApplicationLayerHandler::processUnconfirmedRequest(BacnetAddress &rem
     BacnetDeviceObject *device = _internalHandler->virtualDevices().value(destination);
 
     //create appropriate handler. \note It takes ownership over ucrData!
-    qDebug("--- Address length is %d", remoteSource.macAddrLength());
+
     InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(remoteSource, localDestination, ucrData, device, this);
     Q_CHECK_PTR(handler);
     if (0 == handler) {

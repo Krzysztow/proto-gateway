@@ -12,15 +12,16 @@
 
 using namespace Bacnet;
 
-BacnetTSM2::BacnetTSM2(BacnetApplicationLayerHandler *appLayer, QObject *parent):
+BacnetTSM2::BacnetTSM2(BacnetApplicationLayerHandler *appLayer, BacnetNetworkLayerHandler *netLayer, QObject *parent):
     QObject(parent),
     _appLayer(appLayer),
     _requestTimeout_ms(DefaultTimeout_ms),
     _requestRetriesCount(DefaultRetryCount),
-    _timerInterval_ms(DefaultTimerInterval_ms)
+    _timerInterval_ms(DefaultTimerInterval_ms),
+    _netHandler(netLayer)
 {
     Q_CHECK_PTR(_appLayer);
-
+    Q_CHECK_PTR(_netHandler);
     _timer.start(_timerInterval_ms, this);
 }
 
@@ -426,8 +427,8 @@ void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress
     actualPtr += ret;
     buffer.setBodyLength(actualPtr - buffer.bodyPtr());
 
-    _netHandler->sendApdu(&buffer, false, &destination, &source);
     HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "sendUnconfirmed: ");
+    _netHandler->sendApdu(&buffer, false, &destination, &source);
 }
 
 Bacnet::BacnetTSM2::ConfirmedRequestEntry::ConfirmedRequestEntry(ExternalConfirmedServiceHandler *handler, int timeout_ms, int retriesNum, const BacnetAddress &destination, const BacnetAddress &source):

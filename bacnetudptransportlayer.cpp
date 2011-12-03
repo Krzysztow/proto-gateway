@@ -56,7 +56,6 @@ bool BacnetUdpTransportLayerHandler::send(quint8 *data, qint64 length, QHostAddr
 void BacnetUdpTransportLayerHandler::sendBuffer(Buffer *buffer, QHostAddress &destAddr, qint16 destPort)
 {
     Buffer::printArray(buffer->bodyPtr(), buffer->bodyLength(), "Sending data:");
-    qDebug("Is sent to %s 0x%40x", qPrintable(destAddr.toString()), destPort);
 
     if (buffer->bodyLength() != _socket->writeDatagram((char*)buffer->bodyPtr(), buffer->bodyLength(), destAddr, destPort)) {
         qDebug("I didn't manage to send the data! Need to implement resending!");

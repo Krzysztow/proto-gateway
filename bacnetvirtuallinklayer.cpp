@@ -284,7 +284,10 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
        We are sure that while creating correct header and inserting it's bytes we will not run onto bytes of NPDU
        which currently are at buffToSend->bodyStart().
      */
-    quint8 *startByte = buffToSend->bufferStart() + BacnetBufferManager::instance()->offsetForLayer(BacnetBufferManager::TransportLayer);
+    quint8 *originalBufferStartPtr = buffToSend->bodyPtr();
+    quint16 originalBodyLength = buffToSend->bodyLength();
+
+    quint8 *startByte = buffToSend->bufferStart() + BacnetBufferManager::offsetForLayer(BacnetBufferManager::TransportLayer);
     quint8 *dataPtr = startByte;
 
 
@@ -337,9 +340,8 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
     if (destAddress->isLocalBraodacst() || destAddress->isGlobalBroadcast() || destAddress->isRemoteBroadcast()) {
         quint8 appendedSize(0);
         if (0 != _bbmdHndlr ) {
-            //send as forwarded-NPDU to all FDs and BBMDs. I create new Buffer instance, so that can freely append
+            //send as forwarded-NPDU to all FDs and BBMDs. Remember buffer information, so that at the end of this case, we restore them.
             //Forwarded-NPDU header without loosing information about NPDU position and size.
-            Buffer buffToForward = *buffToSend;
             //create original broadcast and send it
             dataPtr += setHeadersFields(dataPtr, Forwarded_NPDU,
                                         buffToSend->bodyLength() + BacnetBipAddressHelper::BipAddrLength);
@@ -347,20 +349,24 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
             BacnetBipAddressHelper::ipAddrToRaw(address(), port(), dataPtr);
 
             appendedSize = dataPtr - startByte;
-            //we have to stitch the data together - there is probably a gap between npdu and this bvll header
-            Q_ASSERT(buffToForward.bodyPtr() - dataPtr >= 0);//otherwise we overlap - this shouldn't happen
-            quint8 *finalBodyPtr = startByte + (buffToForward.bodyPtr() - dataPtr);//shift from startByte about gap width
+            //we have to stitch the data together - there is probably a gap between npdu and this bvll header            
+            Q_ASSERT(originalBufferStartPtr - dataPtr >= 0);//otherwise we overlap - this shouldn't happen
+            quint8 *finalBodyPtr = startByte + (originalBufferStartPtr - dataPtr);//shift from startByte about gap width
             memmove(startByte, finalBodyPtr, appendedSize);//close the gap
-            buffToForward.setBodyPtr(finalBodyPtr);
-            buffToForward.setBodyLength(buffToSend->bodyLength() + appendedSize);
 
             BacnetAddress tmpAddr;
-            _bbmdHndlr->processOriginalBroadcast(buffToForward.bodyPtr(), buffToForward.bodyLength(), tmpAddr);
+            _bbmdHndlr->processOriginalBroadcast(finalBodyPtr, buffToSend->bodyLength() + appendedSize, tmpAddr);
+
+            //restore buffer body (of APDU data) information
+            buffToSend->setBodyPtr(originalBufferStartPtr);
+            buffToSend->setBodyLength(originalBodyLength);
         }
+
 
         //create original-broadcast and send it with local braodcast address
         //this time I can use original buffer.
         dataPtr = startByte;
+        qDebug("Network ptr 0x%x and apdu ptr 0x%x (No bbmd)", dataPtr, buffToSend->bodyPtr());
         dataPtr += setHeadersFields(dataPtr, Original_Broadcast_NPDU, buffToSend->bodyLength());
         appendedSize = dataPtr - startByte;
         Q_ASSERT(buffToSend->bodyPtr() - dataPtr >= 0);//otherwise we overlap - this shouldn't happen
@@ -378,15 +384,26 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
         quint8 appendedSize = dataPtr - startByte;
         //we have to stitch the data together - there is probably a gap between npdu and this bvll header
         Q_ASSERT(buffToSend->bodyPtr() - dataPtr >= 0);//otherwise we overlap - this shouldn't happen
+
+        printf("Encoded size is %d (0x%x)\n", buffToSend->bodyLength(), buffToSend->bodyLength());
+        HelperCoder::printArray(startByte, appendedSize, "BVLL stitch:");
+
         quint8 *finalBodyPtr = startByte + (buffToSend->bodyPtr() - dataPtr);//shift from startByte about gap width
-        memmove(startByte, finalBodyPtr, appendedSize);//close the gap
+        memmove(finalBodyPtr, startByte, appendedSize);//close the gap
+
 
         buffToSend->setBodyPtr(finalBodyPtr);
         buffToSend->setBodyLength(buffToSend->bodyLength() + appendedSize);
+
+        Buffer::printArray(buffToSend->bodyPtr(), buffToSend->bodyLength(), "Bvll sends:");
 
         QHostAddress destHost = BacnetBipAddressHelper::ipAddress(*destAddress);
         quint64 destPort = BacnetBipAddressHelper::ipPort(*destAddress);
 
         _transportHndlr->sendBuffer(buffToSend, destHost, destPort);
     }
+
+    //restore buffer data
+    buffToSend->setBodyPtr(originalBufferStartPtr);
+    buffToSend->setBodyLength(originalBodyLength);
 }

@@ -33,7 +33,7 @@ class BacnetTSM2:
 {
     Q_OBJECT
 public:
-    explicit BacnetTSM2(BacnetApplicationLayerHandler *appLayer, QObject *parent = 0);
+    explicit BacnetTSM2(BacnetApplicationLayerHandler *appLayer, BacnetNetworkLayerHandler *netLayer, QObject *parent = 0);
 
 public://functions connected with parsing
     void receive(BacnetAddress &remoteSource, BacnetAddress &localDestination, quint8 *data, quint16 dataLength);

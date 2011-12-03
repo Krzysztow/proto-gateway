@@ -88,6 +88,18 @@ qint16 BacnetNetworkLayerHandler::porrId(BacnetTransportLayerHandler *port)
     return InvalidPortId;
 }
 
+qint32 BacnetNetworkLayerHandler::portDirectNetNum(BacnetTransportLayerHandler *port)
+{
+    QHash<TNetworkNum, RoutingEntry>::Iterator it = _routingTable.begin();
+    for (; it != _routingTable.end(); ++it) {
+        if (it->port == port)
+            return it.key();
+    }
+
+    Q_ASSERT(false);//this shouldn't ever ahappen!
+    return -1;
+}
+
 void BacnetNetworkLayerHandler::updateRoutingTableIndirectAccess(TPortId portId, QVector<TNetworkNum> &indirectRouterNets, BacnetAddress &routerAddress)
 {
     if (_allPorts.contains(portId))
@@ -191,12 +203,6 @@ qint32 BacnetNetworkLayerHandler::processInitializeRoutingTable(quint8 *actualBy
     field, it shall return an Initialize-Routing-Table-Ack message to the source containing a complete copy of its routing table as
     described in 6.6.3.9.
     */
-
-    qDebug("Something 0");
-    int c = _allPorts.count();
-    qDebug("Something");
-    int count = _routingTable.count();
-    qDebug("Something 2 %d", count);
 
     Q_ASSERT(length >= 1);
     if (length < 1)
@@ -325,13 +331,13 @@ qint32 BacnetNetworkLayerHandler::processRejectMessageToNetwork(quint8 *actualBy
     return (dataPtr - actualBytePtr);
 }
 
-qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetNpci &rcvdNpci, BacnetTransportLayerHandler *port)
+qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &dlSrcAddress, BacnetNpci &npci, BacnetTransportLayerHandler *port)
 {
     /**
       If network router (even intermediate) cannot be found, return Reject 1.
       If the message is broadcast with the specific network number, one I-Am-Router-To-Network should be returned at most - from the router on
       a local network, that is on the path to the specified destination.
-      If the network number is omitted - each router shall repolu with I-Am-Router-To-Network message, with all networks reachable through it.
+      If the network number is omitted - each router shall reply with I-Am-Router-To-Network message, with all networks reachable through it.
 
        If found (not searching the table part with port which we got request from), send a I-Am-Router-To-Network with broadcast address to let others know.
 
@@ -346,31 +352,34 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
 
 
     quint8 *dataPtr = actualBytePtr;
-    QVector<quint16> networksToReturn;
+    QList<TNetworkNum> networksToReturn;
     if (length > 0) { // so the requester asks only for one, specific network
         Q_ASSERT(2 == length);
-        quint16 reqDnet;
+        TNetworkNum reqDnet;
         dataPtr += HelperCoder::uint16FromRaw(dataPtr, &reqDnet);
         if (reqDnet == _virtualNetNum) { //is this our application layer?
             networksToReturn.append(reqDnet);
         } else { //so we are looking for some other layer
-            QHash<quint16, RoutingEntry>::Iterator reIt = _routingTable.begin();
-            QHash<quint16, RoutingEntry>::Iterator endIt = _routingTable.end();
+            QHash<TNetworkNum, RoutingEntry>::Iterator reIt = _routingTable.begin();
+            QHash<TNetworkNum, RoutingEntry>::Iterator endIt = _routingTable.end();
             for (; reIt != endIt; ++reIt) {
                 if ( (port != reIt->port) && //we don't want to investigate information from the same port
                      reIt->indirectNetworkAccess.contains(reqDnet) ) {
-                        networksToReturn.append(reqDnet);
-                        break;
+                    networksToReturn.append(reqDnet);
+                    break;
                 }
             }
 
             if (networksToReturn.isEmpty()) {
-                //being here, means we have no access to the network - send  who-is-router-request on all ports.
-                reIt = _routingTable.begin();
-                for (; reIt != endIt; ++reIt) {
-                    if (port != reIt->port) {
-#warning "sendWhoIsRouterToNetworkRequest(network, sourceAddress ? npci.srcAddr())"
-                    }
+                //being here, means we have no access to the network - send  who-is-router-request on all ports other than the one message came from
+                Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::NetworkLayer);
+                prepareBufferWhoIsRouterToNetwork_hlpr(&buffer, reqDnet, &npci, &dlSrcAddress);
+
+                QHash<TPortId, BacnetTransportLayerHandler*>::Iterator portIt = _allPorts.begin();
+                QHash<TPortId, BacnetTransportLayerHandler*>::Iterator portEndIt = _allPorts.end();
+                for (; portIt != portEndIt; ++portIt) {
+                    if (port != portIt.value())
+                        sendBuffer(&buffer, Bacnet::PriorityNormal, portIt.value());
                 }
             }
         }
@@ -380,9 +389,17 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
          that question could come only come from the only one port - thus we don't care, pass all the virtual
          networks.
          */
-        //first, we know we didn't
-        //this is a virtual network, not an applicaton layer
+        //firts, show access to our virtual network...
         networksToReturn.append(_virtualNetNum);
+        //...and for all the others
+        QHash<TNetworkNum, RoutingEntry>::Iterator reIt = _routingTable.begin();
+        QHash<TNetworkNum, RoutingEntry>::Iterator endIt = _routingTable.end();
+        for (; reIt != endIt; ++reIt) {
+            if (reIt->port != port) {//add routing information, exclude that connected to port where the message came from
+                networksToReturn.append(reIt.key());
+                networksToReturn.append(reIt->indirectNetworkAccess.keys());
+            }
+        }
     }
 
     if (!networksToReturn.isEmpty())
@@ -391,7 +408,38 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
     return (dataPtr - actualBytePtr);
 }
 
-void BacnetNetworkLayerHandler::sendIAmRouterToNetwork_helper(QVector<quint16> &networks, BacnetTransportLayerHandler *port)
+void BacnetNetworkLayerHandler::prepareBufferWhoIsRouterToNetwork_hlpr(Buffer *buffer, qint32 network, BacnetNpci *npci, BacnetAddress *originAddr)
+{
+    BacnetNpci npciData;
+    if (0 == npci) {
+    npciData.setNetworkMessage(BacnetNpci::WhoIsRouterToNetwork);
+    npciData.setExpectingReply(true);
+    npciData.setNetworkPriority(Bacnet::PriorityNormal);
+    } else
+        npciData = *npci;
+
+    quint8 *startByte = buffer->bufferStart() + BacnetBufferManager::offsetForLayer(BacnetBufferManager::NetworkLayer);
+    quint8 *dataPtr = startByte;
+    dataPtr += npciData.setToRaw(dataPtr);
+
+    if (0 != originAddr && !npciData.srcAddress().isAddrInitialized())
+        npciData.setSrcAddress(*originAddr);
+
+    if (network >= 0)
+        dataPtr += HelperCoder::uin16ToRaw((quint16)network, dataPtr);
+
+    buffer->setBodyLength(dataPtr - startByte);
+}
+
+void BacnetNetworkLayerHandler::sendWhoIsRouterToNetwork(qint32 network, BacnetTransportLayerHandler *port)
+{
+    Q_CHECK_PTR(port);
+    Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::NetworkLayer);
+    prepareBufferWhoIsRouterToNetwork_hlpr(&buffer, network, 0, 0);
+    sendBuffer(&buffer, Bacnet::PriorityNormal, port);
+}
+
+void BacnetNetworkLayerHandler::sendIAmRouterToNetwork_helper(QList<TNetworkNum> &networks, BacnetTransportLayerHandler *port)
 {
     //we have some networks to send
     //get the buffer to stuff
@@ -410,14 +458,13 @@ void BacnetNetworkLayerHandler::sendIAmRouterToNetwork_helper(QVector<quint16> &
     npci.setNetworkMessage(BacnetNpci::IAmRouterToNetwork);
     npci.setExpectingReply(false);//this is a response
     npci.setNetworkPriority(Bacnet::PriorityNormal);
-    //don't set npci addresses, since all is resent locally
 
     //fill buffer with NPCI
     buffPtr += npci.setToRaw(buffPtr);
 
     //after npci is set, fill the buffer with the list of available networks
     Q_ASSERT( (buffLength - (buffPtr - buffer.bodyPtr())) >= (sizeof(quint16)*networks.count()));//assert we have enough place in the buffer
-    QVector<quint16>::iterator netIt = networks.begin();
+    QList<TNetworkNum>::iterator netIt = networks.begin();
     for (; netIt != networks.end(); ++netIt) {
         buffPtr += HelperCoder::uin16ToRaw(*netIt, buffPtr);
     }
@@ -431,20 +478,116 @@ void BacnetNetworkLayerHandler::sendIAmRouterToNetwork_helper(QVector<quint16> &
     sendBuffer(&buffer, Bacnet::PriorityNormal, port);
 }
 
+BacnetTransportLayerHandler *BacnetNetworkLayerHandler::findDestinationForAddress(const BacnetAddress *destAddr, BacnetAddress *&dlAddress)
+{
+    //first try to find direct network
+    Q_ASSERT(destAddr->hasNetworkNumber());
+    QHash<TNetworkNum, RoutingEntry>::Iterator rIt = _routingTable.find(destAddr->networkNumber());
+    QHash<TNetworkNum, RoutingEntry>::Iterator rItEnd = _routingTable.end();
+
+    if (rIt != rItEnd) {//got found
+        dlAddress = 0;
+        return rIt->port;
+    } else {//not found, try indirect network addresses
+        QHash<TNetworkNum, BacnetAddress>::Iterator indirectIt;
+        TNetworkNum dNet = destAddr->networkNumber();
+        for (rIt = _routingTable.begin(); rIt != rItEnd; ++rIt) {
+            indirectIt = rIt->indirectNetworkAccess.find(dNet);
+            if (indirectIt != rIt->indirectNetworkAccess.end()) {
+                dlAddress = &(indirectIt.value());//it's safe to return pointer - we don't add elements within some time locality - reference will not get changed.
+                return rIt->port;
+            }
+        }
+    }
+
+    //we couldn't find neither port nor address. We should issue who is router to network to every port and wait
+    Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::NetworkLayer);
+    prepareBufferWhoIsRouterToNetwork_hlpr(&buffer, destAddr->networkNumber(), 0, 0);
+
+    QHash<TPortId, BacnetTransportLayerHandler*>::Iterator reIt = _allPorts.begin();
+    QHash<TPortId, BacnetTransportLayerHandler*>::Iterator endIt = _allPorts.end();
+    for (; reIt != endIt; ++reIt) {
+            sendBuffer(&buffer, Bacnet::PriorityNormal, reIt.value());
+    }
+
+    return 0;
+}
+
+
 void BacnetNetworkLayerHandler::sendApdu(Buffer *apduBuffer, bool dataExpectingReply, const BacnetAddress *destAddr,
                                          const BacnetAddress *srcAddr, Bacnet::NetworkPriority prio)
 {
-    Q_UNUSED(prio);
-    Q_UNUSED(dataExpectingReply);
+    Q_CHECK_PTR(srcAddr);
 
+    BacnetAddress *dlAddress(0);
+    BacnetTransportLayerHandler *portToBeSentTo(0);
 
-#warning "Communication with Application layer not implemented, yet!"
+    if ((0 == destAddr) || destAddr->isGlobalBroadcast()) {
+        //send to all ports
+    } else {
+        Q_ASSERT(!destAddr->isLocalBraodacst());//the applayer should never invoke local broadcasts - would be insane
+        Q_ASSERT(destAddr->hasNetworkNumber());
+        portToBeSentTo = findDestinationForAddress(destAddr, dlAddress);
+        if (0 == portToBeSentTo) {
+            qDebug("%s : can't find port for network number %d. Discards message, who-is-router-to-network issued!", __PRETTY_FUNCTION__, destAddr->networkNumber());
+            return;
+        }
+    }
+
+    /*Being here we have either port == NULL, meaning message has to be distributed to all endpoints (except application, of course), or port != NULL
+      and we send there just one message.
+      */
+    quint8 *startByte = apduBuffer->bufferStart() + BacnetBufferManager::offsetForLayer(BacnetBufferManager::NetworkLayer);
+    quint8 *dataPtr = startByte;
+
+    BacnetNpci npci;
+    npci.setApduMessage();
+    npci.setExpectingReply(dataExpectingReply);
+    npci.setNetworkPriority(prio);
+
+    //sending from this application layer means we always change network -> alway need to set source address in NPDU header, and set it's network
+    npci.setSrcAddress(*srcAddr);
+    npci.srcAddress().setNetworkNum(_virtualNetNum);
+
+    //if the destination nework is not directly connected, we will send to dlAddress, and encode real destination in NPDU header
+    if (0 != dlAddress)
+        npci.setDestAddress(*destAddr);
+
+    qint8 total = npci.setToRaw(dataPtr);
+    if (total < 0) {
+        qDebug("%s : Problem on encoding APDU (%d)", __PRETTY_FUNCTION__, total);
+        return;
+    }
+    dataPtr += total;
+
+    //shift npdu header so that it gets stitched
+    quint16 shiftSpread = apduBuffer->bodyPtr() - dataPtr;
+    quint8 *dest = startByte + shiftSpread;
+
+    HelperCoder::printArray(startByte, dataPtr - startByte, "Network stitch:");
+
     //remember to include the network address of the source
+    memmove(dest, startByte, total);
+    apduBuffer->setBodyPtr(dest);
+    apduBuffer->setBodyLength(total + apduBuffer->bodyLength());
+
+    if (0 != portToBeSentTo) //we have port specified
+        sendBuffer(apduBuffer, prio, portToBeSentTo, 0 != dlAddress ? dlAddress : destAddr);
+    else {
+        total = apduBuffer->bodyLength();
+        dest = apduBuffer->bodyPtr();
+        foreach (BacnetTransportLayerHandler *port, _allPorts) {
+            sendBuffer(apduBuffer, prio, port, 0 != dlAddress ? dlAddress : destAddr);
+            //function sendBuffer may change body pointer and body lenght values.
+            apduBuffer->setBodyPtr(dest);
+            apduBuffer->setBodyLength(total);
+        }
+    }
 }
 
 void BacnetNetworkLayerHandler::sendBuffer(Buffer *bufferToSend, Bacnet::NetworkPriority priority, BacnetTransportLayerHandler *port, const BacnetAddress *dlDestinationAddress)
 {
-    Buffer::printArray(bufferToSend->bodyPtr(), bufferToSend->bodyLength(), "Response from (network):");
+    Buffer::printArray(bufferToSend->bodyPtr(), bufferToSend->bodyLength(), "Network sends:");
     Q_CHECK_PTR(port);
     port->sendNpdu(bufferToSend, priority, dlDestinationAddress);
 }
@@ -479,7 +622,8 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
         switch (npci.networkMessageType())
         {
         case (BacnetNpci::WhoIsRouterToNetwork):
-            ret = processWhoIsRouterToNetwork(actualBytePtr, leftLength, npci, port);
+            dlSrcAddress.setNetworkNum(portDirectNetNum(port));
+            ret = processWhoIsRouterToNetwork(actualBytePtr, leftLength, dlSrcAddress, npci, port);
             break;
         case (BacnetNpci::IAmRouterToNetwork):
             ret = processIAmRouterToNetwork(actualBytePtr, leftLength, dlSrcAddress, port);
@@ -527,7 +671,8 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
         }
         Q_ASSERT(ret >= 0);
     } else {
-        /** This is either for application layer of:
+        /** This is an application layer message.
+
             - the router device, when the message is locally sent (no DNET specified)
             - application layer of some of our virtual networks - if the DNET is specified and equal to one of registered networks in _networks.
             - for all application layers if this is a global broadcast
@@ -551,7 +696,7 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
                 appHndlr = _virtualAppLayer;
         } else {
             //was local message - pass it to the application layer
-//            appHndlr = _virtualNetNum.value(REAL_APP_LAYER_NUM);
+            //            appHndlr = _virtualNetNum.value(REAL_APP_LAYER_NUM);
             //handle local message!
         }
 

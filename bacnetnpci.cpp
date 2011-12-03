@@ -33,7 +33,10 @@ void BacnetNpci::encodeAddressHlpr(BacnetAddress &bacAddress, quint8 **netFieldP
     //network number is always available, then
     //! \todo This will not work if we were to rout between two irtual networks - no consultation with our routing table
     ptr += bacAddress.networkNumToRaw(ptr);
-    ptr += HelperCoder::uin16ToRaw(bacAddress.macAddrLength(), ptr);
+    //encode mac addresss length
+    *ptr = (quint8)bacAddress.macAddrLength();
+    ++ptr;
+    //ptr += HelperCoder::uin16ToRaw(bacAddress.macAddrLength(), ptr);
     /*
     if it's not a remote and local broadcast (and it's not a local message (we are sure of that
     since network number is present)) we have to encode address as well - this is taken care of
@@ -180,8 +183,9 @@ BacnetAddress &BacnetNpci::destAddress()
     return _destAddr;
 }
 
-void BacnetNpci::setDestAddress(BacnetAddress &addr)
+void BacnetNpci::setDestAddress(const BacnetAddress &addr)
 {
+    _controlOctet |= BitFields::Bit5;
     _destAddr = addr;
 }
 
@@ -191,7 +195,8 @@ BacnetAddress &BacnetNpci::srcAddress()
     return _srcAddr;
 }
 
-void BacnetNpci::setSrcAddress(BacnetAddress &addr)
+void BacnetNpci::setSrcAddress(const BacnetAddress &addr)
 {
+    _controlOctet |= BitFields::Bit3;
     _srcAddr = addr;
 }

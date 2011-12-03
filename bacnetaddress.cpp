@@ -69,7 +69,7 @@ quint8 BacnetAddress::macAddressToRaw(quint8 *data)
 
 quint8 BacnetAddress::macAddrLength() const
 {
-    return _macAddrLength;
+    return (_macAddrLength >= 0) ? _macAddrLength : 0;
 }
 
 const quint8 *BacnetAddress::macPtr() const
