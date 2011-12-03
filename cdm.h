@@ -19,18 +19,25 @@ class DataModel:
 public:
     static DataModel *instance();
 
+    void startFactory();
+    void stopFactory();
     /**Creates PropertySubject of propertyType and registers it at propId id. If the id is already reserverd
       returns 0 pointer.
       */
+    PropertySubject *getProperty(quint32 propId);
     PropertySubject *createPropertySubject(quint32 propId, QVariant::Type propertyType);
+    /** Creates PropertyObserver for a given id. If the property subject was not created yet, to things may happen:
+      - if earlier, startFactory() was called (and stopFactory() not), the subject will be created and inserted into temportal list.
+        Then, observer returned.
+      - in other case NULL pointer is returned.
+      \note When startFactory() was called, don't forget to call stop factory. This cleans resources.
+      */
+    PropertyObserver *createPropertyObserver(quint32 propId);
 
     Property *createProperty(QDomElement &propElement);
     PropertySubject *createPropertySubject(QDomElement &subjectElement);
     PropertyObserver *createPropertyObserver(QDomElement &observerElement);
 
-    PropertySubject *getProperty(quint32 propId);
-
-    PropertyObserver *createPropertyObserver(quint32 propId);
 
     //! \todo inside the code, there is a shift between asynchId and index (returned 0 is ResultOK code) - fix it
     /** This function should be used to get an unique id for the asynchronous operation within DataModel.
@@ -66,7 +73,10 @@ private:
     static const int DEFAULT_TIMEOUT = 2000;
     int _internalTimeout_ms;
 
+    //! list containing PropertySubjects that have been created and taken.
     QMap<quint32, PropertySubject*> _properties;
+    //! list of PropertySubjects that observers were created, but Subjects not yet. This is cleaned up on \sa stopFactory() method call;
+    QMap<quint32, PropertySubject*> *_untakenProperties;
     /** This is an array saying which ids are currently in use. Its size is as great as is necessarry to store MAX_ASYNCH_ID bits.
         Same the maximum number of parallely occuring asynchronous actions is MAX_ASYNCH_ID. When changing this value,
         make sure that int type returned by \sa generateAsynchId() and used in clearAsynchId() are enough to store it.

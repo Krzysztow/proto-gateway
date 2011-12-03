@@ -7,8 +7,9 @@ DataModel *DataModel::_instance = 0;
 const int DataModel::UNUSED_TIME_VALUE = std::numeric_limits<int>::min();
 
 DataModel::DataModel(QObject *parent):
-        QObject(parent),
-        _internalTimeout_ms(DEFAULT_TIMEOUT)
+    QObject(parent),
+    _internalTimeout_ms(DEFAULT_TIMEOUT),
+    _untakenProperties(0)
 {
     initiateAsynchIds();
 
@@ -89,6 +90,30 @@ Property *DataModel::createProperty(QDomElement &propElement)
     return 0;
 }
 
+void DataModel::startFactory()
+{
+    if (0 == _untakenProperties)
+        _untakenProperties = new QMap<quint32, PropertySubject*>();
+}
+
+void DataModel::stopFactory()
+{
+    if (0 == _untakenProperties) {
+        qDebug("%s : method was called without start counterpart or many times!", __PRETTY_FUNCTION__);
+    } else {
+        if (!_untakenProperties->isEmpty()) {
+            qDebug("%s : factory stopped, but there are some property subjects left and not taken!", __PRETTY_FUNCTION__);
+            QMap<quint32, PropertySubject*>::Iterator it = _untakenProperties->begin();
+            for (; it != _untakenProperties->end(); ++it) {
+                qDebug("# Property subject of type %s and id %d is dangling.", QVariant::typeToName((*it)->type()), it.key());
+            }
+        } else {//all fine
+            delete _untakenProperties;
+            _untakenProperties = 0;
+        }
+    }
+}
+
 PropertySubject *DataModel::getProperty(quint32 propId)
 {
     return _properties.value(propId);
@@ -97,8 +122,16 @@ PropertySubject *DataModel::getProperty(quint32 propId)
 PropertyObserver *DataModel::createPropertyObserver(quint32 propId)
 {
     PropertySubject *propS = _properties.value(propId);
-    if (0 == propS)
-        return 0;
+    if (0 == propS) {
+        if (0 == _untakenProperties)
+            return 0;
+        //maybe property was already created!
+        propS = _untakenProperties->value(propId);
+        if (0 == propS) {//it was not, so create it
+            propS = new PropertySubject(0, QVariant::Invalid);
+            _untakenProperties->insert(propId, propS);
+        }
+    }
 
     PropertyObserver *propO = new PropertyObserver(0, propS);
     return propO;
@@ -201,3 +234,4 @@ void DataModel::timerEvent(QTimerEvent *)
     }
     qDebug()<<"Cleaning is started!";
 }
+

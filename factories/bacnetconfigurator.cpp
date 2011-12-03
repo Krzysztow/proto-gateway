@@ -85,7 +85,7 @@ void BacnetConfigurator::configureExternalHandler(QDomElement extPropsConfig, Da
     Q_CHECK_PTR(extHandler);
     InternalAddress extAddress = extPropsConfig.attribute(DeviceInternalAddressAttribute).toUInt(&ok);
     if (!ok) {
-#warning "External address not could be not set!";
+#warning "External address could not be set!";
         for (int i = 0; i < 10; ++i) {
             extAddress = qrand();
             if (!appLayer->internalHandler()->virtualDevices().contains(extAddress)) {
@@ -386,8 +386,10 @@ BacnetProperty *BacnetConfigurator::createInternalProxyProperty(QDomElement &pro
         return 0;
     }
     ::Property *intenralProperty = _dataModel->createProperty(propElem);
-    if (0 == intenralProperty)
+    if (0 == intenralProperty) {
+        elementError(propElem, PropertyBacnetTypeAttribute, "Property couldn't be created");
         return 0;
+    }
     
     return new ProxyInternalProperty(intenralProperty, typeIt->bacnetType, intenralProperty->type(), containerSupport);
 }

@@ -65,6 +65,7 @@ public:
     void releaseId(int asynchId);
 };
 
+class DataModel;
 class PropertySubject:
         public Property
 {
@@ -118,6 +119,12 @@ private:
         for the owner to approve the request.
       */
     void setValueInstantly(QVariant &inValue, PropertyObserver *observerToOmit);
+
+    /** This method is not to be called by anyone else but DataModel. It's used for setting types of PropertySubject when its watchers
+      were already taken.
+      */
+    friend class DataModel;
+    void setType(QVariant::Type propType);
 
     QList<PropertyObserver *>_observers;
     QVariant _value;

@@ -201,6 +201,12 @@ void PropertySubject::setValueInstantly(QVariant &inValue, PropertyObserver *obs
     }
 }
 
+void PropertySubject::setType(QVariant::Type propType)
+{
+    _value.setValue(QVariant(propType));
+}
+
+
 void PropertySubject::setValueSilent(QVariant &inValue)
 {
     Q_ASSERT(inValue.canConvert(_value.type()));

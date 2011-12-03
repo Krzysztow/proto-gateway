@@ -11,6 +11,8 @@
 #include "transportlayerconfigurator.h"
 #include "bacnetconfigurator.h" // configures application layer only
 
+#include "cdm.h"
+
 #define MAIN_BACNET
 #ifdef MAIN_BACNET
 
@@ -57,12 +59,15 @@ int main(int argc, char *argv[])
         return 3;
     }
 
+
+    DataModel::instance()->startFactory();
     element = mainElement.firstChildElement(AppLayerTag);
     Bacnet::BacnetApplicationLayerHandler *appLayer = Bacnet::BacnetConfigurator::createApplicationLayer(networkLayer, element);
     if (0 == appLayer) {
         qDebug("Application layer was not created, terminate!");
         return 3;
     }
+    DataModel::instance()->stopFactory();
     Q_CHECK_PTR(appLayer);
 
     //finish CDM initialization

@@ -63,7 +63,7 @@ ProxyInternalProperty::ProxyInternalProperty(::Property *data, AppTags::BacnetTa
     Q_ASSERT(_bacnetType != AppTags::LastAshraeTag);
     Q_ASSERT(_bacnetType != AppTags::ExtendedTagNumber);
 
-    Q_ASSERT(_internalType != QVariant::Invalid);
+    //Q_ASSERT(_internalType != QVariant::Invalid);
 
     if (0 != data)
         data->setOwner(this);

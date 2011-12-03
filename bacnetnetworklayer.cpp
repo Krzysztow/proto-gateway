@@ -482,7 +482,13 @@ BacnetTransportLayerHandler *BacnetNetworkLayerHandler::findDestinationForAddres
 {
     //first try to find direct network
     Q_ASSERT(destAddr->hasNetworkNumber());
-    QHash<TNetworkNum, RoutingEntry>::Iterator rIt = _routingTable.find(destAddr->networkNumber());
+    TNetworkNum dNet = destAddr->networkNumber();
+    if (dNet == _virtualNetNum) {
+        qDebug("%s : Request for my own virtual network number. Probably bad config.", __PRETTY_FUNCTION__);
+        Q_ASSERT(dNet != _virtualNetNum);
+        return 0;
+    }
+    QHash<TNetworkNum, RoutingEntry>::Iterator rIt = _routingTable.find(dNet);
     QHash<TNetworkNum, RoutingEntry>::Iterator rItEnd = _routingTable.end();
 
     if (rIt != rItEnd) {//got found
@@ -490,7 +496,6 @@ BacnetTransportLayerHandler *BacnetNetworkLayerHandler::findDestinationForAddres
         return rIt->port;
     } else {//not found, try indirect network addresses
         QHash<TNetworkNum, BacnetAddress>::Iterator indirectIt;
-        TNetworkNum dNet = destAddr->networkNumber();
         for (rIt = _routingTable.begin(); rIt != rItEnd; ++rIt) {
             indirectIt = rIt->indirectNetworkAccess.find(dNet);
             if (indirectIt != rIt->indirectNetworkAccess.end()) {
@@ -502,7 +507,7 @@ BacnetTransportLayerHandler *BacnetNetworkLayerHandler::findDestinationForAddres
 
     //we couldn't find neither port nor address. We should issue who is router to network to every port and wait
     Buffer buffer = BacnetBufferManager::instance()->getBuffer(BacnetBufferManager::NetworkLayer);
-    prepareBufferWhoIsRouterToNetwork_hlpr(&buffer, destAddr->networkNumber(), 0, 0);
+    prepareBufferWhoIsRouterToNetwork_hlpr(&buffer, dNet, 0, 0);
 
     QHash<TPortId, BacnetTransportLayerHandler*>::Iterator reIt = _allPorts.begin();
     QHash<TPortId, BacnetTransportLayerHandler*>::Iterator endIt = _allPorts.end();

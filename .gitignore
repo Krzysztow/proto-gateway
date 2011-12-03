@@ -8,3 +8,5 @@
 *Makefile
 #ignore user.pro files
 *.pro.user*
+#ignore cmake/sdk build files
+/tiny-build/
