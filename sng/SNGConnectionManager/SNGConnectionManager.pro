@@ -18,9 +18,9 @@ SOURCES += connectionmanager.cpp \
     groupaddress.cpp
 HEADERS += ../sng_include/global.h \
     connectionmanager.h \
-    connectionframe.h \
+    ../sng_include/connectionframe.h \
     ../sng_include/objectconnectionsupport.h \
-    groupaddress.h
+    ../sng_include/groupaddress.h
 
 DESTDIR = ./lib
 INCLUDEPATH += ./ \

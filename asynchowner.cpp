@@ -2,7 +2,8 @@
 
 #include "property.h"
 #include "cdm.h"
-
+#include "propertysubject.h"
+#include "propertyobserver.h"
 
 AsynchOwner::AsynchOwner(QObject *parent):
         QObject(parent)
@@ -29,6 +30,8 @@ int AsynchOwner::getPropertyRequested(PropertySubject *toBeGotten)
 
 void AsynchOwner::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)
 {
+    Q_UNUSED(actionResult);
+    Q_UNUSED(property);
     qDebug("This was invoked and action was %d!", asynchId);
 }
 
@@ -99,4 +102,5 @@ void AsynchOwner::setExtValue()
     Q_CHECK_PTR(tempProp);
     QVariant value(180.0);
     qint16 ret = tempProp->setValue(value);
+    Q_UNUSED(ret);
 }

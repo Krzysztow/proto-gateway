@@ -6,8 +6,9 @@
 
 #include "objectconnectionsupport.h"
 #include "groupaddress.h"
+#include "global.h"
 
-class ConnectionFrame
+class SNGCONNECTIONMANAGERSHARED_EXPORT ConnectionFrame
 {
 /**
   @attention All changes in addressing should to by implemented in ControllManager::Index too.

@@ -14,6 +14,7 @@ INCLUDEPATH += internal \
     external \
     applayer \
     factories \
+    datamodel \
     tests
 
 SOURCES += main.cpp \
@@ -32,12 +33,11 @@ SOURCES += main.cpp \
     buffer.cpp \
     bacnetpci.cpp \
     bacnetcoder.cpp \
-    services/bacnetreadproperty.cpp \
     bacnettagparser.cpp \
-    property.cpp \
+    datamodel/property.cpp \
     asynchowner.cpp \
     bacnettsm2.cpp \
-    cdm.cpp \
+    datamodel/cdm.cpp \
     bacnettsm.cpp \
     bacnetreadpropertyack.cpp \ # bacnetreadpropertyservice.cpp \
     bacnetcommon.cpp \
@@ -119,7 +119,14 @@ SOURCES += main.cpp \
     factories/bacnetconfigurator.cpp \
     factories/networklayerconfigurator.cpp \
     factories/transportlayerconfigurator.cpp \
-    factories/configuratorhelper.cpp
+    factories/configuratorhelper.cpp \
+    sng/snginternalproperty.cpp \
+    sng/sngexternalproperty.cpp \
+    sng/sngcommon.cpp \
+    datamodel/propertyconverter.cpp \
+    datamodel/propertywithconversionobserver.cpp \
+    datamodel/propertyobserver.cpp \
+    datamodel/propertysubject.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -139,14 +146,13 @@ HEADERS += bacnetvirtuallinklayer.h \
     buffer.h \
     bacnetpci.h \
     bacnetcoder.h \
-    services/bacnetreadproperty.h \
     bacnettagparser.h \
-    property.h \
+    datamodel/property.h \
     bacnettsm2.h \ # asynchronousconfirmedhandler.h \
     asynchsetter.h \
     bacnettsm.h \
     bacnetreadpropertyack.h \
-    cdm.h \
+    datamodel/cdm.h \
     bacnetservice.h \ # bacneterrorack.h \
 # bacnetreadpropertyservice.h \
     #bacnetexternalobjects.h \
@@ -169,7 +175,7 @@ HEADERS += bacnetvirtuallinklayer.h \
     bacnetconfirmedcov.h \
     bacnetdata.h \
     bacnetserviceack.h \
-    propertyowner.h \
+    datamodel/propertyowner.h \
     propertyfactory.h \ # check.h \
     cos.h \
     bacnetinternaladdresshelper.h \
@@ -232,13 +238,41 @@ HEADERS += bacnetvirtuallinklayer.h \
     factories/bacnetconfigurator.h \
     factories/networklayerconfigurator.h \
     factories/transportlayerconfigurator.h \
-    factories/configuratorhelper.h
+    factories/configuratorhelper.h \
+    sng/snginternalproperty.h \
+    sng/sngexternalproperty.h \
+    sng/sngcommon.h \
+    datamodel/propertyconverter.h \
+    datamodel/propertywithconversionobserver.h \
+    datamodel/propertyobserver.h \
+    datamodel/propertysubject.h
 
 OTHER_FILES +=
 
-INCLUDEPATH += ./sng
+INCLUDEPATH += ./sng \
+    ./sng/sng_include
 
 HEADERS += sng/snghandler.cpp
 SOURCES += sng/snghandler.h
 
 LIBS += -lSNGConnectionManager
+LIBS += -L./
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

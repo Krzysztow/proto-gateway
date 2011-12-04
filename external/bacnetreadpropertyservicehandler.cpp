@@ -4,7 +4,7 @@
 #include "bacnetdata.h"
 #include "error.h"
 #include "externalpropertymapping.h"
-#include "property.h"
+#include "propertysubject.h"
 #include "externalobjectreadstrategy.h"
 
 using namespace Bacnet;

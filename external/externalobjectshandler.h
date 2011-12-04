@@ -5,7 +5,7 @@
 #include <QObject>
 
 #include "propertyowner.h"
-#include "property.h"
+#include "propertysubject.h"
 #include "externalpropertymapping.h"
 #include "bacnetcommon.h"
 #include "bacnetinternaladdresshelper.h"

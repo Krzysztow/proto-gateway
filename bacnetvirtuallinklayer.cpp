@@ -280,6 +280,8 @@ quint8 BacnetBvllHandler::createForwardedMsg(quint8 *npduToForward, quint16 npdu
 void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority prio,
                                  const BacnetAddress *destAddress, const BacnetAddress *srcAddress)
 {
+    Q_UNUSED(prio);
+    Q_UNUSED(srcAddress);
     /* get safe start byte for this layer - it is calculated basing on the maximum header sizes for each layer
        We are sure that while creating correct header and inserting it's bytes we will not run onto bytes of NPDU
        which currently are at buffToSend->bodyStart().

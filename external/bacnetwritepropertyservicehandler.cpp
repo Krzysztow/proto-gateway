@@ -4,6 +4,7 @@
 #include "externalobjectshandler.h"
 #include "error.h"
 #include "externalobjectwritestrategy.h"
+#include "propertysubject.h"
 
 using namespace Bacnet;
 

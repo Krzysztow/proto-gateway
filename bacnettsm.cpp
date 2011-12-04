@@ -12,6 +12,8 @@ BacnetTSM::BacnetTSM()
 
 bool BacnetTSM::sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction *actionToSend)
 {
+    Q_UNUSED(receiver);
+    Q_UNUSED(actionToSend);
     const quint8 dataSize(64);
     quint8 outData[dataSize];
 
@@ -30,6 +32,7 @@ bool BacnetTSM::sendAction(BacnetAddress &receiver, AsynchronousBacnetTsmAction 
 
 bool BacnetTSM::send(ObjectIdStruct &destinedObject, ExternalConfirmedServiceHandler *serviceToSend, quint32 timeout_ms)
 {
+    Q_UNUSED(destinedObject);
     //find bacnetadderss to send.
 
 

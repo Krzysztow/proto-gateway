@@ -18,8 +18,7 @@ Buffer BacnetBufferManager::_nullBuff;
 
 BacnetBufferManager::BacnetBufferManager()
 {
-#warning "Uncomment it!"
-//    _buffersList.reserve(NominalElementsCount);
+    _buffersList.reserve(NominalElementsCount);
     for (int i = 0; i < NominalElementsCount; i++) {
         _buffersList.append(new BufferWrapper(MaximumBufferSize));
     }

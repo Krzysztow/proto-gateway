@@ -2,6 +2,8 @@
 
 #include "property.h"
 #include "propertyowner.h"
+#include "propertyobserver.h"
+#include "propertysubject.h"
 
 DataModel *DataModel::_instance = 0;
 const int DataModel::UNUSED_TIME_VALUE = std::numeric_limits<int>::min();
@@ -79,7 +81,6 @@ Property *DataModel::createProperty(QDomElement &propElement)
     }
 
     QString str = propElement.attribute(InternalPropertyTypeAttribute);
-    bool ok;
 
     if (ObserverAttributeValue == str) {
         return createPropertyObserver(propElement);
