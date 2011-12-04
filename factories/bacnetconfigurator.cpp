@@ -90,7 +90,7 @@ void BacnetConfigurator::configureExternalHandler(QDomElement extPropsConfig, Da
             extAddress = qrand();
             if (!appLayer->internalHandler()->virtualDevices().contains(extAddress)) {
                 QString info = QString("Did not got valid address, will use generated one %1").arg(extAddress);
-                elementError(extPropsConfig, DeviceInternalAddressAttribute, qPrintable(info));
+                ConfiguratorHelper::elementError(extPropsConfig, DeviceInternalAddressAttribute, qPrintable(info));
             }
         }
     }
@@ -114,7 +114,7 @@ void BacnetConfigurator::configureExternalHandler(QDomElement extPropsConfig, Da
         for (QDomElement objElement = childsElement.firstChildElement(BacnetObjectTagName); !objElement.isNull(); objElement = objElement.nextSiblingElement(BacnetObjectTagName)) {
             str = objElement.attribute(ObjectTypeAttribute);
             if (!_supportedObjectsTypes.contains(str)) {
-                elementError(objElement, ObjectTypeAttribute, "Unsupported type.");
+                ConfiguratorHelper::elementError(objElement, ObjectTypeAttribute, "Unsupported type.");
                 continue;
             }
             objectId.setObjectId(_supportedObjectsTypes[str],
@@ -134,7 +134,7 @@ void BacnetConfigurator::populatePropertyMappings(ObjectIdentifier &deviceId, Ob
             //get property ID - necessary
             propertyId = (BacnetPropertyNS::Identifier)pElem.attribute(PropertyIdentifierAttribute).toUInt(&ok);
             if (!ok) {
-                elementError(pElem, PropertyIdentifierAttribute);
+                ConfiguratorHelper::elementError(pElem, PropertyIdentifierAttribute);
                 continue;
             }
 
@@ -142,7 +142,7 @@ void BacnetConfigurator::populatePropertyMappings(ObjectIdentifier &deviceId, Ob
             if (pElem.hasAttribute(PropertyArrayIdxAttribute)) {
                 propArrayIdx = pElem.attribute(PropertyArrayIdxAttribute).toUInt(&ok);
                 if (!ok) {
-                    elementError(pElem, PropertyArrayIdxAttribute);
+                    ConfiguratorHelper::elementError(pElem, PropertyArrayIdxAttribute);
                     continue;
                 }
             } else
@@ -204,7 +204,7 @@ ExternalObjectReadStrategy *BacnetConfigurator::createReadStrategy(QDomElement &
         if (pElem.hasAttribute(ReadStrategyIntervalAttribute)) {
             interval = pElem.attribute(ReadStrategyIntervalAttribute).toUInt(&ok);
             if (!ok) {
-                elementError(pElem, ReadStrategyIntervalAttribute,"Will create simple strategy.");
+                ConfiguratorHelper::elementError(pElem, ReadStrategyIntervalAttribute,"Will create simple strategy.");
                 return new SimpleReadStrategy();
             }
         }
@@ -248,13 +248,13 @@ BacnetDeviceObject *BacnetConfigurator::createDevice(QDomElement &deviceElement)
     //get address
     BacnetAddress address = BacnetInternalAddressHelper::toBacnetAddress(deviceElement.attribute(DeviceInternalAddressAttribute).toUInt(&ok));
     if (!ok || !address.isAddrInitialized() ) {
-        elementError(deviceElement, DeviceInternalAddressAttribute, "Address can't be parsed.");
+        ConfiguratorHelper::elementError(deviceElement, DeviceInternalAddressAttribute, "Address can't be parsed.");
         return 0;
     }
     //get device instance number
     quint32 instanceNum = deviceElement.attribute(DeviceInstanceNumberAttribute).toUInt(&ok);
     if (!ok) {
-        elementError(deviceElement, DeviceInstanceNumberAttribute, "Can't create or reserved.");
+        ConfiguratorHelper::elementError(deviceElement, DeviceInstanceNumberAttribute, "Can't create or reserved.");
         return 0;
     }
     
@@ -291,7 +291,7 @@ void BacnetConfigurator::createObject(BacnetDeviceObject *toBeParentDevice, QDom
     bool ok;
     quint32 instanceNum = objectElement.attribute(ObjectInstanceNumberAttribute).toUInt(&ok);
     if (!ok ) {
-        elementError(objectElement, ObjectInstanceNumberAttribute);
+        ConfiguratorHelper::elementError(objectElement, ObjectInstanceNumberAttribute);
         return;
     }
     
@@ -323,14 +323,14 @@ void BacnetConfigurator::populateWithProperties(BacnetObject *object, QDomElemen
         //required attributes - property type and property identifier
         if ( !pElem.hasAttribute(PropertyPropertyTypeAttribute) ||
              !pElem.hasAttribute(PropertyIdentifierAttribute) ) {
-            elementError(pElem, PropertyPropertyTypeAttribute);
+            ConfiguratorHelper::elementError(pElem, PropertyPropertyTypeAttribute);
             continue;
         }
         
         //get property identifier
         BacnetPropertyNS::Identifier propId = (BacnetPropertyNS::Identifier)(pElem.attribute(PropertyIdentifierAttribute).toUInt(&ok));
         if (!ok) {
-            elementError(pElem, PropertyIdentifierAttribute);
+            ConfiguratorHelper::elementError(pElem, PropertyIdentifierAttribute);
             continue;
         }
         
@@ -367,7 +367,7 @@ BacnetProperty *BacnetConfigurator::createAbstractProperty(QDomElement &propElem
     } else if (BacnetPropertyIntProxy == propType) {
         
         if (!propElem.hasAttribute(PropertyBacnetTypeAttribute)) {
-            elementError(propElem, PropertyBacnetTypeAttribute);
+            ConfiguratorHelper::elementError(propElem, PropertyBacnetTypeAttribute);
             return 0;
         }
         return createInternalProxyProperty(propElem, containerSupport);
@@ -382,12 +382,12 @@ BacnetProperty *BacnetConfigurator::createInternalProxyProperty(QDomElement &pro
     //get BacnetApp tag
     QMap<QString, BacnetConfigurator::TagConversion>::Iterator typeIt = _typesMap.find(propElem.attribute(PropertyBacnetTypeAttribute));
     if (typeIt == _typesMap.end()) {
-        elementError(propElem, PropertyBacnetTypeAttribute);
+        ConfiguratorHelper::elementError(propElem, PropertyBacnetTypeAttribute);
         return 0;
     }
     ::Property *intenralProperty = _dataModel->createProperty(propElem);
     if (0 == intenralProperty) {
-        elementError(propElem, PropertyBacnetTypeAttribute, "Property couldn't be created");
+        ConfiguratorHelper::elementError(propElem, PropertyBacnetTypeAttribute, "Property couldn't be created");
         return 0;
     }
     
@@ -401,7 +401,7 @@ BacnetProperty *BacnetConfigurator::createSimpleProperty(QDomElement &propElem)
     //get BacnetApp tag
     QMap<QString, BacnetConfigurator::TagConversion>::Iterator typeIt = _typesMap.find(propElem.attribute(PropertyBacnetTypeAttribute));
     if (typeIt == _typesMap.end()) {
-        elementError(propElem, PropertyBacnetTypeAttribute);
+        ConfiguratorHelper::elementError(propElem, PropertyBacnetTypeAttribute);
         return 0;
     }
     
@@ -572,7 +572,7 @@ void BacnetConfigurator::configureDeviceMappings(QDomElement &mappings, Bacnet::
         //get device identifier
         devId = devElem.attribute(DeviceInstanceNumberAttribute).toUInt(&ok, 0);
         if (!ok) {
-            elementError(devElem, DeviceInstanceNumberAttribute);
+            ConfiguratorHelper::elementError(devElem, DeviceInstanceNumberAttribute);
             continue;
         }
         if (devId.type() != BacnetObjectTypeNS::Device)
@@ -581,7 +581,7 @@ void BacnetConfigurator::configureDeviceMappings(QDomElement &mappings, Bacnet::
         //get device bacnet mac address
         QString str = devElem.attribute(BacnetDeviceAddressAttribute);
         if (str.isEmpty() || !devAddress.macAddressFromString(str)) {
-            elementError(devElem, BacnetDeviceAddressAttribute);
+            ConfiguratorHelper::elementError(devElem, BacnetDeviceAddressAttribute);
             continue;
         }
 
@@ -589,14 +589,14 @@ void BacnetConfigurator::configureDeviceMappings(QDomElement &mappings, Bacnet::
         str = devElem.attribute(BacnetDeviceNetworkAttribute);
         if (!str.isEmpty())
                 if (!devAddress.networkNumFromString(str)) {
-                    elementError(devElem, BacnetDeviceNetworkAttribute);
+                    ConfiguratorHelper::elementError(devElem, BacnetDeviceNetworkAttribute);
                     continue;
                 }
 
         //get device max length accepted
         maxApduLength = devElem.attribute(BacnetDeviceMaxApduAttribute).toUInt(&ok);
         if (!ok) {
-            elementError(devElem, BacnetDeviceMaxApduAttribute);
+            ConfiguratorHelper::elementError(devElem, BacnetDeviceMaxApduAttribute);
             continue;
         }
 
@@ -605,7 +605,7 @@ void BacnetConfigurator::configureDeviceMappings(QDomElement &mappings, Bacnet::
         if (_segmentationDictionary.contains(str))
             devSegmentation = _segmentationDictionary[str];
         else {
-            elementError(devElem, BacnetDeviceSegmentationAttribute, "Using segmented-not!");
+            ConfiguratorHelper::elementError(devElem, BacnetDeviceSegmentationAttribute, "Using segmented-not!");
             devSegmentation = Bacnet::SegmentedNOT;
         }
 
@@ -640,7 +640,7 @@ BacnetApplicationLayerHandler *BacnetConfigurator::createApplicationLayer(Bacnet
     bool ok;
     quint32 netNumber = appCfg.attribute(AppLayerNetNumber).toUInt(&ok);
     if (!ok) {
-        elementError(appCfg, AppLayerNetNumber, "No network number set, exit.");
+        ConfiguratorHelper::elementError(appCfg, AppLayerNetNumber, "No network number set, exit.");
         return 0;
     }
 

@@ -38,19 +38,19 @@ BacnetNetworkLayerHandler *NetworkLayerConfigurator::createNetworkLayer(QHash<qu
         //get port id - required
         portId = routeElement.attribute(PortIdAttribute).toUInt(&ok);
         if (!ok) {
-            elementError(routeElement, PortIdAttribute);
+            ConfiguratorHelper::elementError(routeElement, PortIdAttribute);
             //discard, it's important
             continue;
         }
         //get network number - so far required, maybe later not
         network = routeElement.attribute(DirectNetworkNumberAttribute).toUInt(&ok);
         if (!ok) {
-            elementError(routeElement, DirectNetworkNumberAttribute);
+            ConfiguratorHelper::elementError(routeElement, DirectNetworkNumberAttribute);
             continue;
         }
         //check if network is not set to be accessible from some other port. Check if port was created and is not used.
         if (networksUsed.contains(network) || !ports.contains(portId)) {
-            elementError(routeElement, "", "Network already accessible or port already used");
+            ConfiguratorHelper::elementError(routeElement, "", "Network already accessible or port already used");
             continue;
         }
 
@@ -67,7 +67,7 @@ BacnetNetworkLayerHandler *NetworkLayerConfigurator::createNetworkLayer(QHash<qu
             //get network number.
             network = routeTabElem.attribute(NetworkNumberAttribute).toUInt(&ok);
             if (!ok) {
-                elementError(routeTabElem, NetworkNumberAttribute);
+                ConfiguratorHelper::elementError(routeTabElem, NetworkNumberAttribute);
                 continue;
             }
             //get router address
@@ -82,13 +82,13 @@ BacnetNetworkLayerHandler *NetworkLayerConfigurator::createNetworkLayer(QHash<qu
             }
 
             if (!ok) {
-                elementError(routeElement, NetworkRouterAddressAttr);
+                ConfiguratorHelper::elementError(routeElement, NetworkRouterAddressAttr);
                 continue;
             }
 
             //ensure we don't already have a route to this address
             if (networksUsed.contains(network)) {
-                qDebug("%s : There can't be more than one route to network (%s)", __PRETTY_FUNCTION__, qPrintable(elementString(routeTabElem)));
+                qDebug("%s : There can't be more than one route to network (%s)", __PRETTY_FUNCTION__, qPrintable(ConfiguratorHelper::elementString(routeTabElem)));
                 continue;
             }
             netLayer->updateRoutingTableIndirectAccess(portId, QVector<quint16>() << network, address);

@@ -29,7 +29,7 @@ QHash<quint8, BacnetTransportLayerHandler*> TransportLayerConfigurator::createTr
         //get port id
         portId = portElement.attribute(PortIdAttribute).toUInt(&ok);
         if (!ok) {
-            elementError(portElement, PortIdAttribute);
+            ConfiguratorHelper::elementError(portElement, PortIdAttribute);
             //skip
             continue;
         }
@@ -48,7 +48,7 @@ QHash<quint8, BacnetTransportLayerHandler*> TransportLayerConfigurator::createTr
             tLayer = createBipTransportLayer(portElement);
         } else {
             //there weas an error/. Don;t have to continue or break, since 0 != tLayer takes care of that.
-            elementError(portElement, TransportLayerTypeAttr);
+            ConfiguratorHelper::elementError(portElement, TransportLayerTypeAttr);
         }
 
         if (0 != tLayer) {
@@ -63,7 +63,7 @@ BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(QDo
 {
     QString addrStr = bipLayCfg.attribute(BacnetAddressAttribute);
     if (addrStr.isEmpty()) {
-        elementError(bipLayCfg, BacnetAddressAttribute, "No address provided!");
+        ConfiguratorHelper::elementError(bipLayCfg, BacnetAddressAttribute, "No address provided!");
         return 0;
     }
 
@@ -75,7 +75,7 @@ BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(QDo
         //expected format is xx:xx:xx:xx:pp:pp, all numbers in hexadecimal
         BacnetAddress address;
         if (!address.macAddressFromString(addrStr)) {
-            elementError(bipLayCfg, BacnetAddressTypeAttr);
+            ConfiguratorHelper::elementError(bipLayCfg, BacnetAddressTypeAttr);
             return 0;
         }
         ipAddress = BacnetBipAddressHelper::ipAddress(address);
@@ -84,7 +84,7 @@ BacnetBipTransportLayer *TransportLayerConfigurator::createBipTransportLayer(QDo
         //expected format is xxx.xxx.xxx.xxx:<port-num>, all numbers in decimal
 
         if (!BacnetBipAddressHelper::macAddressFromString(addrStr, &ipAddress, &port)) {
-            elementError(bipLayCfg, BacnetAddressTypeAttr);
+            ConfiguratorHelper::elementError(bipLayCfg, BacnetAddressTypeAttr);
             return 0;
         }
     }

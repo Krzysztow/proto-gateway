@@ -65,6 +65,10 @@ private:
     virtual ~DataModel();
 
     void initiateAsynchIds();
+    /** ReturnsPropertySubject instance for property with propId identifier. When not created creates one (only if startFactory() was earlier called).
+        Don't use this pointer to return to the application - it should be only for observer creation use.
+      */
+    PropertySubject *propertySubjectForId_helper(quint32 propId);
 
 private:
     static DataModel *_instance;

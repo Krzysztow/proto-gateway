@@ -40,8 +40,6 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    //start CMD initialization
-
     QDomElement mainElement = doc.documentElement();
     QDomElement element;
 
@@ -63,7 +61,8 @@ int main(int argc, char *argv[])
     }
 
 
-    DataModel::instance()->startFactory();
+    //set virtual network parameters.
+    DataModel::instance()->startFactory();  //it contains Property instances, so we start DataModel
     element = mainElement.firstChildElement(AppLayerTag);
     Bacnet::BacnetApplicationLayerHandler *appLayer = Bacnet::BacnetConfigurator::createApplicationLayer(networkLayer, element);
     if (0 == appLayer) {
@@ -71,9 +70,9 @@ int main(int argc, char *argv[])
         return 3;
     }
     DataModel::instance()->stopFactory();
-    Q_CHECK_PTR(appLayer);
 
-    //finish CDM initialization
+
+    Q_CHECK_PTR(appLayer);
 
     return a.exec();
 }

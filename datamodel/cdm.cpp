@@ -49,13 +49,70 @@ static const char *ObserverAttributeValue           = "observer";
 static const char *SubjectAttributeValue            = "subject";
 static const char *InternalVariantType              = "int-var-type";
 
+static const char InternalConverterType[]           = "int-conv-type";
+static const char InternalConverterNoneValue[]      = "none";
+static const char InternalConverterUniversalValue[] = "universal";
+static const char InternalConverterScalingValue[]   = "scaling";
+static const char InternalConverterScalingFactor[]  = "int-conv-factor"; //when we have scaling converter, it requires a factor to be set.
+static const char InternalConverterBitmaskValue[]   = "masking";
+static const char InternalConverterBitmaskMask[]    = "int-conv-mask";  //when we use BirmaskConverter, we have to be provided with mask.
+
+#include "configuratorhelper.h"
+#include "propertywithconversionobserver.h"
+#include "propertyconverter.h"
+
+enum ConverterTypes {
+    None,                   //corresponds to non-converting property -> PropertyObserver should be created
+    UniversalConverter,     //corresponds to PropertyUniversalConverter
+    ScalingConverter,       //corresponds to PropertyScalerConverter
+    BitMaskConverter        //correspodns to PropertyBitmaslConverter
+};
+
 PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement)
 {
     bool ok;
     quint32 internalId = observerElement.attribute(InternalPropertyId).toUInt(&ok);
-    if (!ok)
+
+    if (!internalId) {
+        ConfiguratorHelper::elementError(observerElement, InternalPropertyId);
         return 0;
-    return createPropertyObserver(internalId);
+    }
+
+    QString type = observerElement.attribute(InternalConverterType);
+    //! \todo Maybe some mapping of name to ConverterTypes would be nice
+
+    PropertySubject *observerSubject = propertySubjectForId_helper(internalId);
+    if (0 == observerSubject) {
+        qDebug("%s : Couldn't get propery Subject for id: %d", __PRETTY_FUNCTION__, internalId);
+        return 0;
+    }
+
+    if ("" == type || InternalConverterNoneValue == type)
+        return new PropertyObserver(0, observerSubject);
+    else {
+        if (InternalConverterUniversalValue == type) {          //universal conversion is needed
+            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, 0); //zero converter means using UniversalConverter by default. Thanks to that, we spare some memory
+        } else if (InternalConverterScalingValue == type) {     //conversion with scaling factor. We need the factor as well - it's obligatory.
+            float factor = observerElement.attribute(InternalConverterScalingFactor).toFloat(&ok);
+            if (!ok || 0 == factor) {
+                ConfiguratorHelper::elementError(observerElement, InternalConverterScalingFactor);
+                return 0;
+            }
+            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, new DataModelNS::PropertyScalerConverter(factor));
+        } else if (InternalConverterBitmaskValue == type) {
+            QString mask = observerElement.attribute(InternalConverterBitmaskMask);
+            QBitArray bitMask;
+            if (!mask.isEmpty())
+                bitMask = ConfiguratorHelper::bitArrayFromString(mask, &ok);
+            if (!ok || bitMask.isNull()) {
+                ConfiguratorHelper::elementError(observerElement, InternalConverterBitmaskMask);
+                return 0;
+            }
+            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, new DataModelNS::PropertyBitmaskConverter(bitMask));
+        }
+    }
+
+    return 0;
 }
 
 PropertySubject *DataModel::createPropertySubject(QDomElement &subjectElement)
@@ -81,7 +138,6 @@ Property *DataModel::createProperty(QDomElement &propElement)
     }
 
     QString str = propElement.attribute(InternalPropertyTypeAttribute);
-
     if (ObserverAttributeValue == str) {
         return createPropertyObserver(propElement);
     } else if (SubjectAttributeValue == str) {
@@ -120,12 +176,10 @@ PropertySubject *DataModel::getProperty(quint32 propId)
     return _properties.value(propId);
 }
 
-PropertyObserver *DataModel::createPropertyObserver(quint32 propId)
+PropertySubject *DataModel::propertySubjectForId_helper(quint32 propId)
 {
     PropertySubject *propS = _properties.value(propId);
-    if (0 == propS) {
-        if (0 == _untakenProperties)
-            return 0;
+    if ( (0 == propS) && (0 != _untakenProperties) ) {
         //maybe property was already created!
         propS = _untakenProperties->value(propId);
         if (0 == propS) {//it was not, so create it
@@ -133,6 +187,16 @@ PropertyObserver *DataModel::createPropertyObserver(quint32 propId)
             _untakenProperties->insert(propId, propS);
         }
     }
+
+    return propS;
+}
+
+
+PropertyObserver *DataModel::createPropertyObserver(quint32 propId)
+{
+    PropertySubject *propS = propertySubjectForId_helper(propId);
+    if (0 == propS)
+        return 0;
 
     PropertyObserver *propO = new PropertyObserver(0, propS);
     return propO;
@@ -210,8 +274,7 @@ void DataModel::releaseAsynchId(int id)
 
     setAsynchIdUnused(id);
 }
-#include <QDebug>
-//void internalTimeout()
+
 void DataModel::timerEvent(QTimerEvent *)
 {
     for (int id = 0; id<MAX_ASYNCH_ID; ++id) {
@@ -233,6 +296,5 @@ void DataModel::timerEvent(QTimerEvent *)
             _asynchIdStates[id].timeLeft -= _internalTimeout_ms;
         }
     }
-    qDebug()<<"Cleaning is started!";
+    qDebug("Cleaning is started!");
 }
-
