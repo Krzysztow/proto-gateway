@@ -126,7 +126,8 @@ SOURCES += main.cpp \
     datamodel/propertyconverter.cpp \
     datamodel/propertywithconversionobserver.cpp \
     datamodel/propertyobserver.cpp \
-    datamodel/propertysubject.cpp
+    datamodel/propertysubject.cpp \
+    datamodel/propertyconvertersowner.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -245,7 +246,8 @@ HEADERS += bacnetvirtuallinklayer.h \
     datamodel/propertyconverter.h \
     datamodel/propertywithconversionobserver.h \
     datamodel/propertyobserver.h \
-    datamodel/propertysubject.h
+    datamodel/propertysubject.h \
+    datamodel/propertyconvertersowner.h
 
 OTHER_FILES +=
 
@@ -257,6 +259,12 @@ SOURCES += sng/snghandler.h
 
 LIBS += -lSNGConnectionManager
 LIBS += -L./
+
+
+
+
+
+
 
 
 

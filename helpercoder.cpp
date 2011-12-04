@@ -138,11 +138,11 @@ quint8 HelperCoder::doubleToRaw(double &value, quint8 *destPtr)
 
 #ifndef QT_NO_DEBUG
 
-QDebug HelperCoder::operator<<(QDebug dbg, const QBitArray& z)
+QDebug operator<<(QDebug dbg, const QBitArray& z)
 {
     QString text;
     for (int i = 0; i < z.size(); ++i)
-        text += z.testBit(i) ? "1": "0";
+        text.prepend(z.testBit(i) ? "1": "0");
     dbg << text;
     return dbg;
 }

@@ -8,6 +8,9 @@ namespace DataModelNS {
 class PropertyConverter
 {
 public:
+    virtual ~PropertyConverter(){}
+
+public:
     virtual bool convertFromInternal(QVariant &internalValue, QVariant &externalValue) = 0;
     virtual bool convertToInternal(QVariant &internalValue, QVariant &externalValue) = 0;
 };
@@ -18,6 +21,9 @@ public:
 class PropertyUniversalConverter:
         public PropertyConverter
 {
+public:
+    ~PropertyUniversalConverter();
+
 public:
     virtual bool convertFromInternal(QVariant &internalValue, QVariant &externalValue) ;
     virtual bool convertToInternal(QVariant &internalValue, QVariant &externalValue) ;
@@ -49,8 +55,31 @@ private:
 private:
     float _multiplyFromInternalToExternal;
 };
+}
 
+#include <QBitArray>
+namespace DataModelNS {
 
+class PropertyBitmaskConverter:
+        public PropertyConverter
+{
+public:
+    PropertyBitmaskConverter(QBitArray &mask);
+
+public:
+    virtual bool convertFromInternal(QVariant &internalValue, QVariant &externalValue);
+    virtual bool convertToInternal(QVariant &internalValue, QVariant &externalValue);
+
+public:
+    const QBitArray &mask();
+    QList<QVariant::Type> allowableTypes();
+
+private:
+    bool applyMaskWithInValues_helper(QVariant &inVariant, QVariant &outVariant);
+
+private:
+    QBitArray &_bitmaskFromInternal;
+};
 
 } // namespace DataModel
 

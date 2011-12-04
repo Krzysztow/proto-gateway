@@ -55,27 +55,6 @@ int PropertyObserver::getValueInstant(QVariant *outValue)
     return _property->getValue(outValue);
 }
 
-
-//void PropertyObserver::asynchSetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
-//{
-//    Q_UNUSED(asynchId);
-//    Q_UNUSED(value);
-//    Q_UNUSED(success);
-//    Q_UNUSED(originRequester);
-//    if (0 != _owner)
-//        _owner->setRequestResult(asynchId, success);
-//}
-
-//void PropertyObserver::asynchGetValueResponse(int asynchId, QVariant &value, bool success, Property *originRequester)
-//{
-//    Q_UNUSED(asynchId);
-//    Q_UNUSED(value);
-//    Q_UNUSED(success);
-//    Q_UNUSED(originRequester);
-//    if (0 != _owner)
-//        _owner->getRequestResult(asynchId, success);
-//}
-
 void PropertyObserver::asynchActionFinished(int asynchId, Property::ActiontResult actionResult)
 {
     if (0 != _owner)

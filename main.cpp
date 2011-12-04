@@ -22,6 +22,9 @@ static const char *TransportLayerTag    = "transportLayer";
 static const char *NetworkLayerTag      = "networkLayer";
 static const char *AppLayerTag          = "appLayer";
 
+#include "propertyconverter.h"
+
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -74,5 +77,4 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
-
 #endif

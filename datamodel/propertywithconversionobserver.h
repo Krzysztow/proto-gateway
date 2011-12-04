@@ -1,15 +1,15 @@
 #ifndef DATAMODEL_PROPERTYWITHCONVERSIONOBSERVER_H
 #define DATAMODEL_PROPERTYWITHCONVERSIONOBSERVER_H
 
-#include "property.h"
+#include "propertyobserver.h"
 
 namespace DataModelNS {
 
 class PropertyWithConversionObserver:
-        public Property
+        public PropertyObserver
 {
 public:
-    PropertyWithConversionObserver();
+    PropertyWithConversionObserver(PropertyOwner *container, PropertySubject *property);
 };
 
 } // namespace DataModel
