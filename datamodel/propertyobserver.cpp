@@ -45,7 +45,8 @@ int PropertyObserver::setValue(QVariant &inValue)
 
 void PropertyObserver::propertyValueChanged()
 {
-    _owner->propertyValueChanged(this);
+    if (0 != _owner)
+        _owner->propertyValueChanged(this);
 }
 
 int PropertyObserver::getValueInstant(QVariant *outValue)

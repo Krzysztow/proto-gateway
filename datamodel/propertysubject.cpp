@@ -5,7 +5,7 @@
 #include "cdm.h"
 
 PropertySubject::PropertySubject(PropertyOwner *container, QVariant::Type propType):
-        _owner(container)
+    _owner(container)
 {
     _value.setValue(QVariant(propType));
 }

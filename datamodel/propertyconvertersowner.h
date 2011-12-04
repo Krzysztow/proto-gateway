@@ -3,19 +3,20 @@
 
 namespace DataModelNS {
 
+class PropertyUniversalConverter;
+
 class PropertyConvertersOwner
 {
-//public:
-//    static PropertyConvertersOwner *instance();
+public:
+    static PropertyConvertersOwner *instance();
 
+    PropertyUniversalConverter *universalConverter();
 
+private:
+    PropertyConvertersOwner();
+    static PropertyConvertersOwner *_instance;
 
-//private:
-//    PropertyConvertersOwner();
-//    static PropertyConvertersOwner *_instance;
-
-//    QList<PropertyConverter*> _staticConverters;
-
+    PropertyUniversalConverter *_universalConverter;
 };
 
 } // namespace DataModelNS

@@ -20,10 +20,10 @@ bool PropertyUniversalConverter::convertToInternal(QVariant &internalValue, QVar
 bool PropertyUniversalConverter::convertFromOneToTwohelper(QVariant &one, QVariant &two)
 {
     Q_ASSERT(!one.isNull());
-    Q_ASSERT(!two.isNull());
+    Q_ASSERT(two.isValid());
 
-    if (one.isNull() || !one.isValid() || //the property which value we take is not set, or has no type
-            !two.isValid()) {                         // the property to be set has no type
+    if (one.isNull() ||         //the property which value we take is not set, or has no type
+            !two.isValid()) {   // the property to be set has no type
         qDebug("%s : Property null or not valid %d, %d, %d", __PRETTY_FUNCTION__, one.isNull(), one.isValid(), two.isValid());
         Q_ASSERT(false);
         return false;
@@ -68,11 +68,11 @@ QList<QVariant::Type> PropertyScalerConverter::allowableTypes()
 
 bool PropertyScalerConverter::fromOneToTwo_helper(QVariant &one, QVariant &two, bool doMultiply)
 {
-    Q_ASSERT(!one.isNull());
-    Q_ASSERT(!two.isNull());
+    Q_ASSERT(!one.isNull());//value has to be set and has info type
+    Q_ASSERT(two.isValid());//we need type info
 
-    if (one.isNull() || !one.isValid() || //the property which value we take is not set, or has no type
-            !two.isValid()) {                         // the property to be set has no type
+    if (one.isNull() ||             // the property which value we take is not set, or has no type
+            !two.isValid()) {       // the property to be set has no type
         qDebug("%s : Property null or not valid %d, %d, %d", __PRETTY_FUNCTION__, one.isNull(), one.isValid(), two.isValid());
         Q_ASSERT(false);
         return false;
