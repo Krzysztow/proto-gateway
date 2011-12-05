@@ -12,7 +12,7 @@ class SngExternalProperty:
         public ObjectConnectionSupport
 {
 public:
-    SngExternalProperty();
+    SngExternalProperty(PropertySubject *subject, ConnectionFrame::DataType grAddrType, GroupAddress &address);
 
 protected://methods overridden from PropertyOwner - none is implemented
     //! In case of this class, we don't care about this hook method. In other, that implement acknowledging, one has to override it.
@@ -31,7 +31,7 @@ protected:
     void setExternalProperty_helper();
 
 protected:
-    Property *_property;
+    PropertySubject *_property;
 
     ConnectionFrame::DataType _extAddressType;
     GroupAddress _extAddressToCommand;

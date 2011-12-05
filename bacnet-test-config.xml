@@ -20,7 +20,7 @@
 			<devices>
 				<device name="BacnetTestDevice" int-address="1" dev-instance-number="1">
 					<properties>
-						<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="5" int-conv-type="masking" int-conv-mask="b'11101'" int-var-type="float" />
+						<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="1" int-conv-type="masking" int-conv-mask="b'11101'" int-var-type="uchar" />
 						<property prop-type="simple" id="84" bac-type="real" value="11.2" />
 						<property prop-type="array" id="76" >
 							<property prop-type="simple" bac-type="bacnetobjectidentifier" value="0x1234" />

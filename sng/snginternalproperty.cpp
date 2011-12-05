@@ -20,9 +20,16 @@ void SngInternalProperty::informWrongType(ConnectionFrame::DataType typeExpected
 #define Inform_Wrong_Type(a, b) ;
 #endif
 
-SngInternalProperty::SngInternalProperty():
-    _property(0)
+SngInternalProperty::SngInternalProperty(PropertyObserver *observer, ConnectionFrame::DataType grAddrType, GroupAddress &address):
+    _property(observer),
+    _setInternaCommandlType(grAddrType),
+    _setInternalCommandAddress(address)
 {
+    Q_CHECK_PTR(_property);
+    _property->setOwner(this);
+
+    if (_setInternalCommandAddress.isValid())
+        registerForAddress(_setInternalCommandAddress);
 }
 
 int SngInternalProperty::getPropertyRequested(PropertySubject *toBeGotten)

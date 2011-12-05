@@ -5,8 +5,13 @@
 
 using namespace Sng;
 
-SngExternalProperty::SngExternalProperty()
+SngExternalProperty::SngExternalProperty(PropertySubject *subject, ConnectionFrame::DataType grAddrType, GroupAddress &address):
+    _property(subject),
+    _extAddressType(grAddrType),
+    _extAddressToCommand(address)
 {
+    Q_CHECK_PTR(_property);
+    _property->setOwner(this);
 }
 
 void SngExternalProperty::asynchActionFinished(int asynchId, Property *property, Property::ActiontResult actionResult)

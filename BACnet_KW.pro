@@ -127,7 +127,10 @@ SOURCES += main.cpp \
     datamodel/propertywithconversionobserver.cpp \
     datamodel/propertyobserver.cpp \
     datamodel/propertysubject.cpp \
-    datamodel/propertyconvertersowner.cpp
+    datamodel/propertyconvertersowner.cpp \
+    tests/sngasynchvaluesetter.cpp \
+    sng/sngdefinitions.cpp \
+    factories/sngfactory.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -247,18 +250,27 @@ HEADERS += bacnetvirtuallinklayer.h \
     datamodel/propertywithconversionobserver.h \
     datamodel/propertyobserver.h \
     datamodel/propertysubject.h \
-    datamodel/propertyconvertersowner.h
+    datamodel/propertyconvertersowner.h \
+    tests/sngasynchvaluesetter.h \
+    sng/sngdefinitions.h \
+    factories/sngfactory.h
 
 OTHER_FILES +=
 
 INCLUDEPATH += ./sng \
     ./sng/sng_include
 
-HEADERS += sng/snghandler.cpp
-SOURCES += sng/snghandler.h
+HEADERS += sng/snghandler.h
+SOURCES += sng/snghandler.cpp
 
 LIBS += -lSNGConnectionManager
 LIBS += -L./
+
+
+
+
+
+
 
 
 

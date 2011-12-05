@@ -1,39 +1,19 @@
-#include "snghandler.h"
-#include "connectionmanager.h"
-
-using namespace Sng;
-
-SngHandler::SngHandler()
-{
-}
-
-void SngHandler::addPropertyMapping(::PropertyOwner *owner)
-{
-    Q_ASSERT(!_propertiesMappings.contains(owner));
-    _propertiesMappings.append(owner);
-}
-
-//#define SNGHANDLER_TEST
-#ifdef SNGHANDLER_TEST
-
-#include <QFile>
-#include <QDomElement>
-#include <QDebug>
+#include "sngfactory.h"
 
 #include "snginternalproperty.h"
 #include "sngexternalproperty.h"
 #include "cdm.h"
-#include "sngasynchvaluesetter.h"
 #include "propertysubject.h"
 #include "propertyobserver.h"
 #include "propertyconverter.h"
 #include "propertywithconversionobserver.h"
 #include "configuratorhelper.h"
 #include "sngdefinitions.h"
-#include "snginternalproperty.h"
-#include "sngexternalproperty.h"
+#include "snghandler.h"
+#include "connectionmanager.h"
 
-static const char SngPropertiesTagName[]            = "sngProperties";
+using namespace Sng;
+
 static const char SngPropertyDefinitionTagName[]    = "property";
 static const char SngTypeAttribute[]                = "sng-type";
 static const char SngAddressAttribute[]             = "gr-address";
@@ -41,33 +21,13 @@ static const char SngPropertyTypeAttribute[]        = "prop-type";
 static const char SngPropTypeInternalValue[]        = "internal";
 static const char SngPropTypeExternalValue[]        = "external";
 
-int main(int argc, char *argv[])
+SngHandler *SngFactory::createModule(QDomElement &sngConfig)
 {
-    QCoreApplication a(argc, argv);
-
-    QFile f("sng-test-config.xml");
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug("Can't open the configuration file.");
-        return 1;
-    }
-
-    QDomDocument doc;
-    if (!doc.setContent(&f)) {
-        qDebug("Malformed sng config!");
-        return 2;
-    }
-
-
-    DataModel::instance()->startFactory();
-
-
     SngHandler *handler = new SngHandler();
-    handler->setConfig(doc);
 
-    QDomElement el = doc.documentElement().firstChildElement(SngPropertiesTagName);
     GroupAddress address;
     bool ok;
-    for (QDomElement propertyElem = el.firstChildElement(SngPropertyDefinitionTagName); !propertyElem.isNull(); propertyElem = propertyElem.nextSiblingElement(SngPropertyDefinitionTagName)) {
+    for (QDomElement propertyElem = sngConfig.firstChildElement(SngPropertyDefinitionTagName); !propertyElem.isNull(); propertyElem = propertyElem.nextSiblingElement(SngPropertyDefinitionTagName)) {
         qDebug()<<"Got element"<<ConfiguratorHelper::elementString(propertyElem);
         //get sng type
         ConnectionFrame::DataType type = SngDefinitions::typeFromString(propertyElem.attribute(SngTypeAttribute), ok);
@@ -105,11 +65,5 @@ int main(int argc, char *argv[])
             handler->addPropertyMapping(createdOwner);
     }
 
-    DataModel::instance()->stopFactory();
-
-    return a.exec();
+    return handler;
 }
-
-
-#undef SNGHANDLER_TEST
-#endif //SNGHANDLER_TEST

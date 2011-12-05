@@ -20,7 +20,7 @@ class SngInternalProperty:
         public ObjectConnectionSupport
 {
 public:
-    SngInternalProperty();
+    SngInternalProperty(PropertyObserver *observer, ConnectionFrame::DataType grAddrType, GroupAddress &address);
 
 protected://methods overridden from PropertyOwner - none is implemented
     //! This method should never be called. Property is going to be only observer.

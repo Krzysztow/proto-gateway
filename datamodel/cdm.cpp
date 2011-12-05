@@ -33,21 +33,30 @@ DataModel *DataModel::instance()
 PropertySubject *DataModel::createPropertySubject(quint32 propId, QVariant::Type propertyType)
 {
     if (_properties.contains(propId)) {
+        qDebug("%s : Property subject with id: %d exists. this mapping is not goint to be created", __PRETTY_FUNCTION__, propId);
         Q_ASSERT_X(false, "DataModel::createProperty()", "The property subject may be created only once!");
         return 0;
     }
 
-    PropertySubject *propS = new PropertySubject(0, propertyType);
-    _properties.insert(propId, propS);
+    PropertySubject *propS(0);
+    if (0 != _untakenProperties) { //we have started factory. Maybe, the subject got already created!
+        propS = _untakenProperties->take(propId);
+        if (0 != propS)
+            propS->setType(propertyType);
+    }
 
+    if (0 == propS)
+        propS = new PropertySubject(0, propertyType);
+
+    _properties.insert(propId, propS);
     return propS;
 }
 
-static const char *InternalPropertyTypeAttribute    = "int-type";
-static const char *InternalPropertyId               = "int-id";
-static const char *ObserverAttributeValue           = "observer";
-static const char *SubjectAttributeValue            = "subject";
-static const char *InternalVariantType              = "int-var-type";
+static const char InternalPropertyTypeAttribute[]    = "int-type";
+static const char InternalPropertyId[]               = "int-id";
+static const char ObserverAttributeValue[]           = "observer";
+static const char SubjectAttributeValue[]            = "subject";
+static const char InternalVariantType[]              = "int-var-type";
 
 static const char InternalConverterType[]           = "int-conv-type";
 static const char InternalConverterNoneValue[]      = "none";

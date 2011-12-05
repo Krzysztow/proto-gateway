@@ -426,39 +426,10 @@ void ConnectionManager::configChanged(QDomDocument &config)
     quint16 port = config.documentElement().attribute("commserver-port",
                                                       config.documentElement().attribute("router-port")).toUShort();
 
-
-    quint8 main = 1;
-    quint8 middle = 0;
-    quint8 sub = 1;
-
-    QString phyAddrStr = config.documentElement().attribute("physical-address", "0.0.0");
-    QStringList pAParts = phyAddrStr.split(".");
-    bool ok = true;
-    if (pAParts.size()!=3)
-    {
+    QString phyAddrStr = config.documentElement().attribute("physical-address");
+    if (!_address.fromString(phyAddrStr))
         qDebug()<<"Cannot parse physical-address"<<phyAddrStr;
-        ok = false;
-    }
-    else
-    {
-        bool ok1= true;
-        main = pAParts.at(0).toInt(&ok1);
-        ok &=ok1;
-
-        middle = pAParts.at(1).toInt(&ok1);
-        ok &=ok1;
-
-        sub = pAParts.at(2).toInt(&ok1);
-        ok &=ok1;
-
-        if (!ok) {
-            main = 1;
-            middle = 0;
-            sub = 1;
-        }
-
-        qDebug()<<"Changed physical address:"<<main<<middle<<sub;
-    }
+    qDebug()<<"Changed physical address:"<<_address.toString();
 
 
     if (ip != _ip || port != _port)

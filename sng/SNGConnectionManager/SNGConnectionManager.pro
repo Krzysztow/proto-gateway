@@ -17,7 +17,7 @@ SOURCES += connectionmanager.cpp \
     objectconnectionsupport.cpp \
     groupaddress.cpp
 HEADERS += ../sng_include/global.h \
-    connectionmanager.h \
+    ../sng_include/connectionmanager.h \
     ../sng_include/connectionframe.h \
     ../sng_include/objectconnectionsupport.h \
     ../sng_include/groupaddress.h

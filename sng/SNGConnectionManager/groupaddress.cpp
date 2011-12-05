@@ -27,7 +27,7 @@ bool GroupAddress::fromString(QString &strAddr)
 
 QString GroupAddress::toString()
 {
-    return QString("%d/%d/%d").arg(main).arg(middle).arg(sub);
+    return QString("%1/%2/%3").arg(main).arg(middle).arg(sub);
 }
 
 GroupAddress GroupAddress::addrFromString(QString &address)
