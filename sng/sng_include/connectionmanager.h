@@ -26,7 +26,10 @@ private:
     ConnectionManager();
 
 public slots:
-    void sendFrame(ConnectionFrame &frameToSend);
+    /** \note in objectNotToDisposed to is set, so that the sender may request ConnectionManager not to send the frame back, if is registered for the address.
+      Otherwise infinite loops may occure
+      */
+    void sendFrame(ConnectionFrame &frameToSend, ObjectConnectionSupport *objectNotToDisposeTo);
     void configChanged(QDomDocument &config);
 
 private slots:
@@ -35,8 +38,8 @@ private slots:
     void error(QAbstractSocket::SocketError socketError);
 
 private:
-    void disposeFrame(const ConnectionFrame &frame);
-    void sendToAll(const ConnectionFrame &frame, const QVector<ObjectConnectionSupport*>* objects);
+    void disposeFrame(const ConnectionFrame &frame, ObjectConnectionSupport *objectNotToDisposeTo);
+    void sendToAll(const ConnectionFrame &frame, const QVector<ObjectConnectionSupport*>* objects, ObjectConnectionSupport *objectNotToDisposeTo);
     bool isKeepAliveFrame(const ConnectionFrame &frame);
 
 private:

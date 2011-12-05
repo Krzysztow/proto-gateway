@@ -40,76 +40,76 @@ void ObjectConnectionSupport::unregisterForAddress(const GroupAddress &address, 
     }
 }
 
-void ObjectConnectionSupport::sendOnOff(const GroupAddress &address, bool value)
+void ObjectConnectionSupport::sendOnOff(const GroupAddress &address, bool value, bool excludeMeFromDispose)
 {
     if (address.isValid()) {
         ConnectionFrame frameToSend;
         frameToSend.setGrAddress(address);
         frameToSend.setOnOff(value);
-        ConnectionManager::instance()->sendFrame(frameToSend);
+        ConnectionManager::instance()->sendFrame(frameToSend, excludeMeFromDispose ? this : 0);
     }
 }
 
-void ObjectConnectionSupport::sendDimm(const GroupAddress &address, DimmCommand value)
+void ObjectConnectionSupport::sendDimm(const GroupAddress &address, DimmCommand value, bool excludeMeFromDispose)
 {
     if (address.isValid())
     {
         ConnectionFrame frameToSend;
         frameToSend.setGrAddress(address);
         frameToSend.setDimm(value);
-        ConnectionManager::instance()->sendFrame(frameToSend);
+        ConnectionManager::instance()->sendFrame(frameToSend, excludeMeFromDispose ? this : 0);
     }
 }
 
-void ObjectConnectionSupport::sendTime(const GroupAddress &address, const QTime& value)
+void ObjectConnectionSupport::sendTime(const GroupAddress &address, const QTime &value, bool excludeMeFromDispose)
 {
     if (address.isValid())
     {
         ConnectionFrame frameToSend;
         frameToSend.setGrAddress(address);
         frameToSend.setTime(value);
-        ConnectionManager::instance()->sendFrame(frameToSend);
+        ConnectionManager::instance()->sendFrame(frameToSend, excludeMeFromDispose ? this : 0);
     }
 }
 
-void ObjectConnectionSupport::sendDate(const GroupAddress &address, const QDate& value)
+void ObjectConnectionSupport::sendDate(const GroupAddress &address, const QDate &value, bool excludeMeFromDispose)
 {
     if (address.isValid())
     {
         ConnectionFrame frameToSend;
         frameToSend.setGrAddress(address);
         frameToSend.setDate(value);
-        ConnectionManager::instance()->sendFrame(frameToSend);
+        ConnectionManager::instance()->sendFrame(frameToSend, excludeMeFromDispose ? this : 0);
     }
 }
 
-void ObjectConnectionSupport::sendTemp(const GroupAddress &address, float value)
+void ObjectConnectionSupport::sendTemp(const GroupAddress &address, float value, bool excludeMeFromDispose)
 {
     if (address.isValid())
     {
         ConnectionFrame frameToSend;
         frameToSend.setGrAddress(address);
         frameToSend.setTemp(value);
-        ConnectionManager::instance()->sendFrame(frameToSend);
+        ConnectionManager::instance()->sendFrame(frameToSend, excludeMeFromDispose ? this : 0);
     }
 }
 
-void ObjectConnectionSupport::sendValue(const GroupAddress &address, int value)
+void ObjectConnectionSupport::sendValue(const GroupAddress &address, int value, bool excludeMeFromDispose)
 {
     if (address.isValid())
     {
         ConnectionFrame frameToSend;
         frameToSend.setGrAddress(address);
         frameToSend.setValue(value);
-        ConnectionManager::instance()->sendFrame(frameToSend);
+        ConnectionManager::instance()->sendFrame(frameToSend, excludeMeFromDispose ? this : 0);
     }
 }
 
-void ObjectConnectionSupport::sendFrame(ConnectionFrame &frame)
+void ObjectConnectionSupport::sendFrame(ConnectionFrame &frame, bool excludeMeFromDispose)
 {
     qDebug()<<"Sends frame with group addr:"<<frame.address().toString()<<"phyAddr"<<frame.phyAddress().toString()<<"of type"<<frame.dataType()<<"value"<<frame.value();
     if (frame.isValid())
-        ConnectionManager::instance()->sendFrame(frame);
+        ConnectionManager::instance()->sendFrame(frame, excludeMeFromDispose ? this : 0);
 }
 
 void ObjectConnectionSupport::receiveOnOff(const GroupAddress &address, bool value)

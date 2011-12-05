@@ -196,7 +196,7 @@ ConnectionManager::ConnectionManager()
             this, SLOT(error(QAbstractSocket::SocketError)));
 }
 
-void ConnectionManager::sendFrame(ConnectionFrame& frameToSend)
+void ConnectionManager::sendFrame(ConnectionFrame &frameToSend, ObjectConnectionSupport *objectNotToDisposeTo)
 {
     //#define CONNMAN_DEBUG
 #ifdef CONNMAN_DEBUG
@@ -235,7 +235,7 @@ void ConnectionManager::sendFrame(ConnectionFrame& frameToSend)
     frameToSend.setPhyAddr(_address);
     //    qDebug()<<"Send"<<frameToSend.phyAddress()<<frameToSend.address()<<"type:"<<frameToSend.dataType()<<"value:"<<frameToSend.value();
     _socket->write(frameToSend.data(), frameToSend.sizeOfData());
-    disposeFrame(frameToSend);
+    disposeFrame(frameToSend, objectNotToDisposeTo);
 }
 
 void ConnectionManager::readFrame()
@@ -288,7 +288,7 @@ void ConnectionManager::readFrame()
 
 #endif
 
-        disposeFrame(frameToRead);
+        disposeFrame(frameToRead, 0);
     }
 }
 
@@ -319,7 +319,7 @@ bool ConnectionManager::isKeepAliveFrame(const ConnectionFrame &frame)
     return ((memcmp(keepAliveFrame, ptr, 7)==0));
 }
 
-void ConnectionManager::sendToAll(const ConnectionFrame &frame, const QVector<ObjectConnectionSupport*>* objects)
+void ConnectionManager::sendToAll(const ConnectionFrame &frame, const QVector<ObjectConnectionSupport *> *objects, ObjectConnectionSupport *objectNotToDisposeTo)
 {
     GroupAddress address(frame.address());
 
@@ -327,6 +327,9 @@ void ConnectionManager::sendToAll(const ConnectionFrame &frame, const QVector<Ob
     if (objects) {
         foreach(ObjectConnectionSupport* object, *objects)
         {
+            if (object == objectNotToDisposeTo)
+                continue;
+
             switch (frame.dataType())
             {
             case ConnectionFrame::OnOff:
@@ -354,16 +357,16 @@ void ConnectionManager::sendToAll(const ConnectionFrame &frame, const QVector<Ob
     }
 }
 
-void ConnectionManager::disposeFrame(const ConnectionFrame &frame)
+void ConnectionManager::disposeFrame(const ConnectionFrame &frame, ObjectConnectionSupport *objectNotToDisposeTo)
 {
     GroupAddress addr = frame.address();
 
     //send to objects interensted in particular address
     const QVector<ObjectConnectionSupport*>* objects = connObjects[addr];
-    sendToAll(frame, objects);
+    sendToAll(frame, objects, objectNotToDisposeTo);
     //send to objects interested in all addresses
     objects = connObjects.at(addr, true);
-    sendToAll(frame, objects);
+    sendToAll(frame, objects, objectNotToDisposeTo);
 
     //send to raw objects interested in particular adderss
     objects = rawConnObjects[addr];
@@ -375,7 +378,8 @@ void ConnectionManager::disposeFrame(const ConnectionFrame &frame)
     //send to raw objects interested in all frames
     objects = rawConnObjects.at(addr, true);
     foreach (ObjectConnectionSupport *obj, *objects) {
-        obj->receiveFrame(frame);
+        if (objectNotToDisposeTo != obj)
+            obj->receiveFrame(frame);
     }
 }
 

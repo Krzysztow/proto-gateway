@@ -53,13 +53,13 @@ protected:
 protected:
     friend class ConnectionManager;
 
-    void sendOnOff(const GroupAddress &address, bool value);
-    void sendDimm(const GroupAddress &address, DimmCommand value);
-    void sendTime(const GroupAddress &address, const QTime& value);
-    void sendDate(const GroupAddress &address, const QDate& value);
-    void sendTemp(const GroupAddress &address, float value);
-    void sendValue(const GroupAddress &address, int value);
-    void sendFrame(ConnectionFrame &frame);
+    void sendOnOff(const GroupAddress &address, bool value, bool excludeMeFromDispose = true);
+    void sendDimm(const GroupAddress &address, DimmCommand value, bool excludeMeFromDispose = true);
+    void sendTime(const GroupAddress &address, const QTime& value, bool excludeMeFromDispose = true);
+    void sendDate(const GroupAddress &address, const QDate& value, bool excludeMeFromDispose = true);
+    void sendTemp(const GroupAddress &address, float value, bool excludeMeFromDispose = true);
+    void sendValue(const GroupAddress &address, int value, bool excludeMeFromDispose = true);
+    void sendFrame(ConnectionFrame &frame, bool excludeMeFromDispose = true);
 
     virtual void receiveOnOff(const GroupAddress &address, bool value);
     virtual void receiveDimm(const GroupAddress &address, DimmCommand value);

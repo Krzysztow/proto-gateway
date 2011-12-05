@@ -22,6 +22,8 @@ bool GroupAddress::fromString(QString &strAddr)
         sub         = (quint8) g2;
         return true;
     }
+
+    setInvalid();
     return false;
 }
 

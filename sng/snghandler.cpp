@@ -20,8 +20,8 @@ void SngHandler::addPropertyMapping(::PropertyOwner *owner)
 #include <QDomElement>
 #include <QDebug>
 
-#include "snginternalproperty.h"
-#include "sngexternalproperty.h"
+#include "sngsimplesensorproperty.h"
+#include "sngsimpleactorproperty.h"
 #include "cdm.h"
 #include "sngasynchvaluesetter.h"
 #include "propertysubject.h"
@@ -30,16 +30,16 @@ void SngHandler::addPropertyMapping(::PropertyOwner *owner)
 #include "propertywithconversionobserver.h"
 #include "configuratorhelper.h"
 #include "sngdefinitions.h"
-#include "snginternalproperty.h"
-#include "sngexternalproperty.h"
+#include "sngsimplesensorproperty.h"
+#include "sngsimpleactorproperty.h"
 
 static const char SngPropertiesTagName[]            = "sngProperties";
 static const char SngPropertyDefinitionTagName[]    = "property";
 static const char SngTypeAttribute[]                = "sng-type";
 static const char SngAddressAttribute[]             = "gr-address";
 static const char SngPropertyTypeAttribute[]        = "prop-type";
-static const char SngPropTypeInternalValue[]        = "internal";
-static const char SngPropTypeExternalValue[]        = "external";
+static const char SngPropTypeSimpleSensorValue[]    = "simple-sensor";
+static const char SngPropTypeSimpleActorValue[]     = "simple-actor";
 
 int main(int argc, char *argv[])
 {
@@ -82,20 +82,20 @@ int main(int argc, char *argv[])
         //if all is fine, we can create a property.
         str = propertyElem.attribute(SngPropertyTypeAttribute);
         ::PropertyOwner *createdOwner(0);
-        if (SngPropTypeInternalValue == str) {
+        if (SngPropTypeSimpleSensorValue == str) {
             PropertyObserver *property = DataModel::instance()->createPropertyObserver(propertyElem);
             if (0 == property) {
                 ConfiguratorHelper::elementError(propertyElem, "", "Observer mapping not created!");
                 continue;
             }
-            createdOwner = new Sng::SngInternalProperty(property, type, address);
-        } else if (SngPropTypeExternalValue == str) {
+            createdOwner = new Sng::SngSimpleSensorProperty(property, type, address);
+        } else if (SngPropTypeSimpleActorValue == str) {
             PropertySubject *property = DataModel::instance()->createPropertySubject(propertyElem);
             if (0 == property) {
                 ConfiguratorHelper::elementError(propertyElem, "", "Subject not created!");
                 continue;
             }
-            createdOwner = new Sng::SngExternalProperty(property, type, address);
+            createdOwner = new Sng::SngSimpleActorProperty(property, type, address);
         } else {
             ConfiguratorHelper::elementError(propertyElem, SngPropertyTypeAttribute);
             continue;

@@ -120,8 +120,8 @@ SOURCES += main.cpp \
     factories/networklayerconfigurator.cpp \
     factories/transportlayerconfigurator.cpp \
     factories/configuratorhelper.cpp \
-    sng/snginternalproperty.cpp \
-    sng/sngexternalproperty.cpp \
+    sng/sngsimplesensorproperty.cpp \
+    sng/sngsimpleactorproperty.cpp \
     sng/sngcommon.cpp \
     datamodel/propertyconverter.cpp \
     datamodel/propertywithconversionobserver.cpp \
@@ -130,7 +130,9 @@ SOURCES += main.cpp \
     datamodel/propertyconvertersowner.cpp \
     tests/sngasynchvaluesetter.cpp \
     sng/sngdefinitions.cpp \
-    factories/sngfactory.cpp
+    factories/sngfactory.cpp \
+    sng/snginternalsupport.cpp \
+    datamodel/snginternaltypesmapper.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -243,8 +245,8 @@ HEADERS += bacnetvirtuallinklayer.h \
     factories/networklayerconfigurator.h \
     factories/transportlayerconfigurator.h \
     factories/configuratorhelper.h \
-    sng/snginternalproperty.h \
-    sng/sngexternalproperty.h \
+    sng/sngsimplesensorproperty.h \
+    sng/sngsimpleactorproperty.h \
     sng/sngcommon.h \
     datamodel/propertyconverter.h \
     datamodel/propertywithconversionobserver.h \
@@ -253,7 +255,9 @@ HEADERS += bacnetvirtuallinklayer.h \
     datamodel/propertyconvertersowner.h \
     tests/sngasynchvaluesetter.h \
     sng/sngdefinitions.h \
-    factories/sngfactory.h
+    factories/sngfactory.h \
+    sng/snginternalsupport.h \
+    datamodel/snginternaltypesmapper.h
 
 OTHER_FILES +=
 
@@ -265,6 +269,11 @@ SOURCES += sng/snghandler.cpp
 
 LIBS += -lSNGConnectionManager
 LIBS += -L./
+
+
+
+
+
 
 
 
