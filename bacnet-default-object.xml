@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bacnetDefaultConfig>
+	<objects>
+		<object obj-type="analog-input">
+			<properties>
+				<property prop-type="simple" id="222" bac-type="bitstring" value="b'1101'" />		
+				<property prop-type="simple" id="112" bac-type="enumerated" value="0" />
+				<property prop-type="simple" id="121" bac-type="characterstring" value="SNG" />
+				<property prop-type="simple" id="120" bac-type="unsignedinteger" value="99" />
+			</properties>
+		</object>
+	</objects>
+</bacnetDefaultConfig>
+

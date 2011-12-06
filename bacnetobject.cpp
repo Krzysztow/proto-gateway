@@ -197,7 +197,7 @@ void Bacnet::BacnetObject::propertyValueChanged(Bacnet::BacnetProperty *property
     Q_ASSERT( (0 != propertyArray) || (propertyIdendifier(property) != BacnetPropertyNS::UndefinedProperty) );
 
     BacnetPropertyNS::Identifier propId(BacnetPropertyNS::UndefinedProperty);
-    int propArrayIdx(ArrayIndexNotPresent);
+    quint32 propArrayIdx(ArrayIndexNotPresent);
     if (0 != propertyArray) {
         propArrayIdx = propertyArray->indexOfProperty(property);
         propId = propertyIdendifier(propertyArray);

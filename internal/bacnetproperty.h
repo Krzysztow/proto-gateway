@@ -111,7 +111,7 @@ public:
     ArrayProperty(QList<BacnetProperty*> &data, InternalPropertyContainerSupport *parentSupporter);
     virtual ~ArrayProperty();
 
-    int indexOfProperty(BacnetProperty *property) const;
+    quint32 indexOfProperty(BacnetProperty *property) const;
 
 public://overriden from Bacnet::Property
     virtual int getValue(BacnetDataInterfaceShared &data, quint32 BacnetPropertyArrayIdx = ArrayIndexNotPresent, Error *error = 0, bool tryInstantly = true);

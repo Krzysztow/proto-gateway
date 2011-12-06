@@ -245,7 +245,7 @@ void CovReadStrategy::notificationReceived(CovNotificationRequestData &data, boo
 {
     if (isConfirmed() != confirmed)
         qDebug("%s : Should be confirmed (%s), and is (%s)", __PRETTY_FUNCTION__, isConfirmed() ? "true" : "false", confirmed ? "true" : "false");
-    if ( (SubscrInfiniteTime != data._timeLeft) && (_timeToAction_ms > 1000 * data._timeLeft) )//we thought we had more time -> make an update
+    if ( (SubscrInfiniteTime != data._timeLeft) && (_timeToAction_ms > 1000 * (int)(data._timeLeft)) )//we thought we had more time -> make an update
         _timeToAction_ms = 1000 * data._timeLeft;
 }
 

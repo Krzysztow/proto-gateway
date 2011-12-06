@@ -27,7 +27,7 @@ SngInternalSupport::SngInternalSupport(GroupAddress rxAddress, ConnectionFrame::
     _txType(txType)
 {
     if (_rxAddress.isValid()) {
-        registerForAddress(_rxType);
+        registerForAddress(_rxAddress);
     }
 }
 
@@ -36,7 +36,8 @@ void SngInternalSupport::receiveOnOff(const GroupAddress &address, bool value)
     RETURN_IF_WRONG_TYPE(_rxType, ConnectionFrame::OnOff);
 
     Q_ASSERT(address == _rxAddress);
-    QVariant varValue(value);
+    QVariant varValue;
+    varValue.setValue((bool)value);
     frameWithVariantReceived_hook(varValue);
 }
 
@@ -45,7 +46,8 @@ void SngInternalSupport::receiveDimm(const GroupAddress &address, ObjectConnecti
     RETURN_IF_WRONG_TYPE(_rxType, ConnectionFrame::Dimm);
 
      Q_ASSERT(address == _rxAddress);
-     QVariant varValue((quint8)value);
+     QVariant varValue;
+     varValue.setValue((uchar)value);
      frameWithVariantReceived_hook(varValue);
 }
 
@@ -82,7 +84,9 @@ void SngInternalSupport::receiveValue(const GroupAddress &address, int value)
     RETURN_IF_WRONG_TYPE(_rxType, ConnectionFrame::Value);
 
      Q_ASSERT(address == _rxAddress);
-     QVariant varValue((quint8)value);
+     QVariant varValue;
+     varValue.setValue((uchar)value);
+
      frameWithVariantReceived_hook(varValue);
 }
 

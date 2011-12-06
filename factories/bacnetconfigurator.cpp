@@ -314,7 +314,42 @@ void BacnetConfigurator::createObject(BacnetDeviceObject *toBeParentDevice, QDom
     }
 }
 
+QMap<BacnetPropertyNS::Identifier, BacnetProperty*> BacnetConfigurator::createPropertiesMap(QDomElement &propertiesRootElement)
+{
+    bool ok;
+    QMap<BacnetPropertyNS::Identifier, BacnetProperty*> propList;
 
+    for (QDomElement pElem = propertiesRootElement.firstChildElement(ObjectPropertyTagName); !pElem.isNull(); pElem = pElem.nextSiblingElement(ObjectPropertyTagName)) {
+        //required attributes - property type and property identifier
+        if ( !pElem.hasAttribute(PropertyPropertyTypeAttribute) ||
+             !pElem.hasAttribute(PropertyIdentifierAttribute) ) {
+            ConfiguratorHelper::elementError(pElem, PropertyPropertyTypeAttribute);
+            continue;
+        }
+
+        if (BacnetPropertySimpleType != pElem.attribute(PropertyPropertyTypeAttribute)) {
+            ConfiguratorHelper::elementError(pElem, PropertyPropertyTypeAttribute, "Expected simple type");
+            Q_ASSERT(false);
+            continue;
+        }
+
+        //get property identifier
+        BacnetPropertyNS::Identifier propId = (BacnetPropertyNS::Identifier)(pElem.attribute(PropertyIdentifierAttribute).toUInt(&ok));
+        if (!ok) {
+            ConfiguratorHelper::elementError(pElem, PropertyIdentifierAttribute);
+            continue;
+        }
+
+        if (propList.contains(propId))
+            continue;
+
+        BacnetProperty *property = createAbstractProperty(pElem, 0);
+        if (0 != property)
+            propList.insert(propId, property);
+    }
+
+    return propList;
+}
 
 void BacnetConfigurator::populateWithProperties(BacnetObject *object, QDomElement &propertiesRootElement)
 {
@@ -419,7 +454,7 @@ BacnetProperty *BacnetConfigurator::createSimpleProperty(QDomElement &propElem)
         delete data;
         return 0;
     }
-    //wrapp into bacnetproperty
+    //wrap into bacnetproperty
     return new SimpleProperty(data);
 }
 
@@ -526,20 +561,21 @@ QVariant BacnetConfigurator::qvariantFromValue(QString value, TagConversion type
     }
         break;
     case (AppTags::BitString): {
-        QString::Iterator it = value.begin();
-        int bits = value.size();
-        if ('b' == *it || 'B' == *it) {
-            it++;
-            --bits;
-        }
-        QBitArray ba(bits);
-        --bits;
-        for (; it!=value.end(); ++it) {
-            if ('1' == *it)
-                ba.setBit(bits, true);
-            --bits;
-        }
-        var = ba;
+        var = ConfiguratorHelper::bitArrayFromString(value, &ok);
+//        QString::Iterator it = value.begin();
+//        int bits = value.size();
+//        if ('b' == *it || 'B' == *it) {
+//            it++;
+//            --bits;
+//        }
+//        QBitArray ba(bits);
+//        --bits;
+//        for (; it!=value.end(); ++it) {
+//            if ('1' == *it)
+//                ba.setBit(bits, true);
+//            --bits;
+//        }
+//        var = ba;
     }
         break;
     default:
@@ -631,6 +667,9 @@ static const char *DeviceMappingsTagName    = "deviceMappings";
 
 static const char *AppLayerNetNumber        = "net-num";
 
+static const char DefaultObjectsTag[]       = "objects";
+static const char DefaultSingleObjectTag[]  = "object";
+
 #include "bacnetnetworklayer.h"
 
 BacnetApplicationLayerHandler *BacnetConfigurator::createApplicationLayer(BacnetNetworkLayerHandler *netHandler, QDomElement &appCfg)
@@ -660,11 +699,41 @@ BacnetApplicationLayerHandler *BacnetConfigurator::createApplicationLayer(Bacnet
     el = appCfg.firstChildElement(DeviceMappingsTagName);
     BacnetConfigurator::instance()->configureDeviceMappings(el, appHandler);
 
+    QFile defaultFile("bacnet-default-object.xml");
+    if (!defaultFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug("%s : Can't open default object file!", __PRETTY_FUNCTION__);
+    } else {
+        QDomDocument defDom;
+        if (!defDom.setContent(&defaultFile)) {
+            qDebug("%s : Cannot read default object config", __PRETTY_FUNCTION__);
+        } else {
+            QDomElement defElem = defDom.documentElement().firstChildElement(DefaultObjectsTag);
+            BacnetConfigurator::instance()->configureDefaultDevice(defElem);
+        }
+    }
+
     BacnetConfigurator::releaseInstance();
-
-
 
     return appHandler;
 }
 
+void BacnetConfigurator::configureDefaultDevice(QDomElement &defDeviceElement)
+{
+    QString typeStr;
+    BacnetObjectTypeNS::ObjectType type;
+    QDomElement propsElem;
+    QMap<BacnetPropertyNS::Identifier, BacnetProperty*> createdProps;
+    for (QDomElement objElem = defDeviceElement.firstChildElement(DefaultSingleObjectTag); !objElem.isNull(); objElem = objElem.nextSiblingElement(DefaultSingleObjectTag)) {
+        typeStr = objElem.attribute(ObjectTypeAttribute);
+        if (!_supportedObjectsTypes.contains(typeStr)) {
+            ConfiguratorHelper::elementError(objElem, ObjectTypeAttribute, "Can't decode default object type.");
+            continue;
+        }
+        type = _supportedObjectsTypes[typeStr];
+        propsElem = objElem.firstChildElement(ObjectPropertiesTagName);
+        createdProps = createPropertiesMap(propsElem);
+        if (!createdProps.isEmpty())
+            BacnetDefaultObject::instance()->addDefaultProperties(type, createdProps);
+    }
 
+}

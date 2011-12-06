@@ -27,7 +27,7 @@ public:
 
 private:
     BacnetDataInterfaceShared _dataGotten;
-    int _arrayIdx;
+    quint32 _arrayIdx;
 };
 
 } // namespace Bacnet

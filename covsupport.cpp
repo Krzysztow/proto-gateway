@@ -243,7 +243,7 @@ void CovSupport::propertyChanged(BacnetPropertyNS::Identifier propId, quint32 pr
     }
 }
 
-bool CovSupport::timeout(int timePassed_s)
+bool CovSupport::timeout(quint32 timePassed_s)
 {
     QList<CovSubscriptionShared>::Iterator it = _subscriptions.begin();
     QList<CovSubscriptionShared>::Iterator endIt = _subscriptions.end();

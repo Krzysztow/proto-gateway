@@ -32,6 +32,7 @@ ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandl
 ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleError(Error &error)
 {
     //! \what to do? Unsubscribe?
+    Q_UNUSED(error);
     return DeleteServiceHandler;
 }
 
@@ -48,6 +49,7 @@ ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandl
 
 ExternalConfirmedServiceHandler::ActionToExecute CovConfNotificationServiceHandler::handleReject(BacnetRejectNS::RejectReason rejectReason)
 {
+    Q_UNUSED(rejectReason);
     return DeleteServiceHandler;
 }
 

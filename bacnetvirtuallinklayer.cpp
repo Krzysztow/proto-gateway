@@ -368,7 +368,7 @@ void BacnetBvllHandler::sendNpdu(Buffer *buffToSend, Bacnet::NetworkPriority pri
         //create original-broadcast and send it with local braodcast address
         //this time I can use original buffer.
         dataPtr = startByte;
-        qDebug("Network ptr 0x%p and apdu ptr 0x%p (No bbmd)", dataPtr, buffToSend->bodyPtr());
+        //qDebug("Network ptr 0x%p and apdu ptr 0x%p (No bbmd)", dataPtr, buffToSend->bodyPtr());
         dataPtr += setHeadersFields(dataPtr, Original_Broadcast_NPDU, buffToSend->bodyLength());
         appendedSize = dataPtr - startByte;
         Q_ASSERT(buffToSend->bodyPtr() - dataPtr >= 0);//otherwise we overlap - this shouldn't happen

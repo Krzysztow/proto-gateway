@@ -27,6 +27,7 @@ public:
 
 public:
     BacnetProperty *defaultProperty(BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId);
+    void addDefaultProperties(BacnetObjectTypeNS::ObjectType objType, QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &objectProperties);
     QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &defaultProperties(BacnetObjectTypeNS::ObjectType objType);
 
 private:

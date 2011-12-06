@@ -43,7 +43,7 @@ public:
     /** Method to execute time dependant operations, like unsubscription of unused elements. Returns true, if instance still needs time dependant invocations, otherwise false.
         If returned false, then to be timely invoked again, instance has to subscribe with CovSupportTimeHandler using its addCovSupporter() method.
       */
-    bool timeout(int timePassed_s);
+    bool timeout(quint32 timePassed_s);
 
 private:
     void updateWithTimeHandlerHelper();

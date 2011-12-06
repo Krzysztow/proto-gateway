@@ -68,7 +68,6 @@ int main(int argc, char *argv[])
     GroupAddress address;
     bool ok;
     for (QDomElement propertyElem = el.firstChildElement(SngPropertyDefinitionTagName); !propertyElem.isNull(); propertyElem = propertyElem.nextSiblingElement(SngPropertyDefinitionTagName)) {
-        qDebug()<<"Got element"<<ConfiguratorHelper::elementString(propertyElem);
         //get sng type
         ConnectionFrame::DataType type = SngDefinitions::typeFromString(propertyElem.attribute(SngTypeAttribute), ok);
         //get sng address

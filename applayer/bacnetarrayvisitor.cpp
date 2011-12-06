@@ -42,7 +42,7 @@ void BacnetArrayVisitor::visit(BacnetArray &data)
     if (0 == _arrayIdx) {
         _dataGotten = BacnetDataInterfaceShared(new UnsignedInteger(data.count()));
     } else if (0 != ArrayIndexNotPresent) {
-        if (data.count() >= _arrayIdx)
+        if ((quint32)data.count() >= _arrayIdx)
             _dataGotten = data.value().at(_arrayIdx - 1);
     }
 }

@@ -8,7 +8,7 @@ PROJECT( cmake_test )
 # here we define BACNET_SRCS variable that contains a list of all .cpp files
 # note that we don't need  at the end of line
 SET( BACNET_SRCS
-    main.cpp 
+main.cpp 
     bacnetvirtuallinklayer.cpp 
     bacnetnetworklayer.cpp 
     bacnetbbmdhandler.cpp 
@@ -24,20 +24,20 @@ SET( BACNET_SRCS
     buffer.cpp 
     bacnetpci.cpp 
     bacnetcoder.cpp 
-    services/bacnetreadproperty.cpp 
     bacnettagparser.cpp 
-    property.cpp 
+    datamodel/property.cpp 
     asynchowner.cpp 
     bacnettsm2.cpp 
-    cdm.cpp 
+    datamodel/cdm.cpp 
     bacnettsm.cpp 
-    bacnetreadpropertyack.cpp 
+    bacnetreadpropertyack.cpp  # bacnetreadpropertyservice.cpp 
     bacnetcommon.cpp 
     bacnetobjectinternalsupport.cpp 
+    #bacnetexternalobjects.cpp 
     analoginputobject.cpp 
     bacnetdeviceobject.cpp 
     bacnetobject.cpp 
-    bacnetprimitivedata.cpp
+    bacnetprimitivedata.cpp  # bacneterrorack.cpp 
     servicefactory.cpp 
     asynchronousbacnettsmaction.cpp 
     bacnetservice.cpp 
@@ -52,7 +52,7 @@ SET( BACNET_SRCS
     sequenceof.cpp 
     bacnetdata.cpp 
     bacnetserviceack.cpp 
-    propertyfactory.cpp 
+    propertyfactory.cpp  # check.cpp 
     bacnetinternaladdresshelper.cpp 
     covsupport.cpp 
     covconfnotificationservicehandler.cpp 
@@ -63,7 +63,7 @@ SET( BACNET_SRCS
     discoverywrapper.cpp 
     invokeidgenerator.cpp 
     routingtable.cpp 
-    #
+    
     internal/internalsubscribecovrequesthandler.cpp 
     internal/internalwprequesthandler.cpp 
     internal/internalunconfirmedrequesthandler.cpp 
@@ -78,12 +78,12 @@ SET( BACNET_SRCS
     internal/internalconfirmedrequesthandler.cpp 
     internal/multipleasynchhelper.cpp 
     internal/internalihaveservicehandler.cpp 
-    #
+    
     external/externalservicehandler.cpp 
     external/bacnetwritepropertyservicehandler.cpp 
     external/bacnetreadpropertyservicehandler.cpp 
     external/externalobjectshandler.cpp 
-    #
+    
     applayer/writepropertyservicedata.cpp 
     applayer/whoisservicedata.cpp 
     applayer/whohasservicedata.cpp 
@@ -110,19 +110,36 @@ SET( BACNET_SRCS
     factories/bacnetconfigurator.cpp 
     factories/networklayerconfigurator.cpp 
     factories/transportlayerconfigurator.cpp 
-    factories/configuratorhelper.cpp
-)
+    factories/configuratorhelper.cpp 
+    sng/sngsimplesensorproperty.cpp 
+    sng/sngsimpleactorproperty.cpp 
+    sng/sngcommon.cpp 
+    datamodel/propertyconverter.cpp 
+    datamodel/propertywithconversionobserver.cpp 
+    datamodel/propertyobserver.cpp 
+    datamodel/propertysubject.cpp 
+    datamodel/propertyconvertersowner.cpp 
+    tests/sngasynchvaluesetter.cpp 
+    sng/sngdefinitions.cpp 
+    factories/sngfactory.cpp 
+    sng/snginternalsupport.cpp 
+    datamodel/snginternaltypesmapper.cpp
+    ./sng/snghandler.cpp
+    )
 
 # another list, this time it includes all header files that should be treated with moc
 SET( BACNET_HEADERS
      bacnetvirtuallinklayer.h 
     bacnetnetworklayer.h 
     bacnetbbmdhandler.h 
-    bacnetbipaddress.h  
+    bacnetbipaddress.h 
+    bacnetudptransportlayer.h 
     bacnetcommon.h 
     bacnettransportlayer.h 
     bacnetbiptransportlayer.h 
-    bacnetaddress.h
+    bacnetaddress.h 
+    bacnetrouter.h 
+    bacnetapplicationlayer.h 
     bitfields.h 
     bacnetnpci.h 
     helpercoder.h 
@@ -130,13 +147,17 @@ SET( BACNET_HEADERS
     buffer.h 
     bacnetpci.h 
     bacnetcoder.h 
-    services/bacnetreadproperty.h 
     bacnettagparser.h 
-    property.h  
+    datamodel/property.h 
+    bacnettsm2.h  # asynchronousconfirmedhandler.h 
     asynchsetter.h 
     bacnettsm.h 
-    bacnetreadpropertyack.h
-    bacnetservice.h 
+    bacnetreadpropertyack.h 
+    datamodel/cdm.h 
+    bacnetservice.h  # bacneterrorack.h 
+# bacnetreadpropertyservice.h 
+    #bacnetexternalobjects.h 
+    asynchowner.h 
     analoginputobject.h 
     bacnetobjectinternalsupport.h 
     bacnetdeviceobject.h 
@@ -155,8 +176,8 @@ SET( BACNET_HEADERS
     bacnetconfirmedcov.h 
     bacnetdata.h 
     bacnetserviceack.h 
-    propertyowner.h 
-    propertyfactory.h 
+    datamodel/propertyowner.h 
+    propertyfactory.h  # check.h 
     cos.h 
     bacnetinternaladdresshelper.h 
     covsupport.h 
@@ -164,10 +185,11 @@ SET( BACNET_HEADERS
     datavisitor.h 
     covincrementhandlers.h 
     bacnetcovsubscription.h 
+    covsubscriptionstimehandler.h 
     discoverywrapper.h 
     invokeidgenerator.h 
     routingtable.h 
-    #
+    
     internal/internalconfirmedrequesthandler.h 
     internal/internalunconfirmedrequesthandler.h 
     internal/internalwhoisrequesthandler.h 
@@ -183,12 +205,13 @@ SET( BACNET_HEADERS
     internal/multipleasynchhelper.h 
     internal/internalpropertycontainersupport.h 
     internal/internalihaveservicehandler.h
-    #
+    
     external/externalservicehandler.h 
     external/externalconfirmedservicehandler.h 
-    external/bacnetwritepropertyservicehandler.h
+    external/bacnetwritepropertyservicehandler.h 
+    external/externalobjectshandler.h 
     external/bacnetreadpropertyservicehandler.h 
-    #
+    
     applayer/writepropertyservicedata.h 
     applayer/whoisservicedata.h 
     applayer/whohasservicedata.h 
@@ -204,15 +227,33 @@ SET( BACNET_HEADERS
     external/externalpropertymapping.h 
     external/externalobjectreadstrategy.h 
     external/subscribecovservicehandler.h 
+    tests/covanswerer.h 
     internal/internalconfirmedcovnotifhandler.h 
     applayer/bacnetarrayvisitor.h 
-    internal/internaluncfrdmcovnotifhandler.h
+    internal/internaluncfrdmcovnotifhandler.h 
+    tests/rpanswerer.h 
     external/externalobjectwritestrategy.h 
     external/externaltimedepjob.h 
+    tests/wprequester.h 
+    tests/wpacknowledger.h 
     factories/bacnetconfigurator.h 
     factories/networklayerconfigurator.h 
     factories/transportlayerconfigurator.h 
-    factories/configuratorhelper.h
+    factories/configuratorhelper.h 
+    sng/sngsimplesensorproperty.h 
+    sng/sngsimpleactorproperty.h 
+    sng/sngcommon.h 
+    datamodel/propertyconverter.h 
+    datamodel/propertywithconversionobserver.h 
+    datamodel/propertyobserver.h 
+    datamodel/propertysubject.h 
+    datamodel/propertyconvertersowner.h 
+    tests/sngasynchvaluesetter.h 
+    sng/sngdefinitions.h 
+    factories/sngfactory.h 
+    sng/snginternalsupport.h 
+    datamodel/snginternaltypesmapper.h
+    ./sng/snghandler.h
 	)
 
 SET( BACNET_MOC_HDRS
@@ -222,13 +263,14 @@ SET( BACNET_MOC_HDRS
     bacnetrouter.h
     bacnettsm2.h
     bacnetudptransportlayer.h 
-    cdm.h  
+    datamodel/cdm.h  
     covsubscriptionstimehandler.h 
     external/externalobjectshandler.h 
     tests/covanswerer.h  
     tests/rpanswerer.h 
     tests/wprequester.h 
     tests/wpacknowledger.h 
+    tests/sngasynchvaluesetter.h
 )
 
 # enable warnings
@@ -267,8 +309,15 @@ INCLUDE_DIRECTORIES( ${CMAKE_BINARY_DIR}
     									./external 
 											./applayer 
 											./factories 
+											./datamodel
 											./tests
+											./sng 
+    									./sng/sng_include
 											)
+											
+#Remember to specify paths before ADD_EXECUTABLE
+LINK_DIRECTORIES( ${LINK_DIRECTORIES} /home/krzys/Documents/BACnet/bacnet_new/BACProject/sng/SNGConnectionManager/tiny-build/ )
+
 
 # here we instruct CMake to build "BACProject" executable from all of the source files
 ADD_EXECUTABLE( BACProject ${BACNET_SRCS} ${BACNET_MOC_SRCS} ${BACNET_RC_SRCS} ${BACNET_UI_HDRS} )
@@ -276,3 +325,5 @@ ADD_EXECUTABLE( BACProject ${BACNET_SRCS} ${BACNET_MOC_SRCS} ${BACNET_RC_SRCS} $
 # last thing we have to do is to tell CMake what libraries our executable needs,
 # luckily FIND_PACKAGE prepared QT_LIBRARIES variable for us:
 TARGET_LINK_LIBRARIES( BACProject ${QT_LIBRARIES} )
+
+TARGET_LINK_LIBRARIES( BACProject SNGConnectionManager )

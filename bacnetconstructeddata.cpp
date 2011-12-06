@@ -818,6 +818,7 @@ qint32 RecipientProcess::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 
 bool RecipientProcess::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, __PRETTY_FUNCTION__, "Structured data types shouldn't be used for internal use!");
     return false;
 }

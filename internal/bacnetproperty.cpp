@@ -195,7 +195,7 @@ ArrayProperty::~ArrayProperty()
     _asynchHelper = 0;
 }
 
-int ArrayProperty::indexOfProperty(BacnetProperty *property) const
+quint32 ArrayProperty::indexOfProperty(BacnetProperty *property) const
 {
     int idx = _data.indexOf(property);
     if (idx < 0)
@@ -268,7 +268,7 @@ int ArrayProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyArr
     } else if (propertyArrayIdx == 0) {
         //return length
         data = BacnetDataInterfaceShared(new UnsignedInteger(_data.count()));
-    } else if (propertyArrayIdx <= _data.count()) {
+    } else if (propertyArrayIdx <= (quint32)_data.count()) {
         //read particular property
         Q_ASSERT(0 != _data[propertyArrayIdx - 1]);
         BacnetProperty *prop = _data[propertyArrayIdx - 1];
@@ -295,7 +295,7 @@ int ArrayProperty::setValue(BacnetDataInterfaceShared &data, quint32 propertyArr
           */
         if (0 != error)
             error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeWriteAccessDenied);
-    } else if ( (propertyArrayIdx > 0) && (propertyArrayIdx < _data.count()) ) {
+    } else if ( (propertyArrayIdx > 0) && (propertyArrayIdx < (quint32)_data.count()) ) {
         //read particular property
         Q_ASSERT(0 != _data[propertyArrayIdx - 1]);
         BacnetProperty *prop = _data[propertyArrayIdx - 1];

@@ -13,8 +13,8 @@ PropertySubject::PropertySubject(PropertyOwner *container, QVariant::Type propTy
 int PropertySubject::setValue(QVariant &inValue)
 {
     if (inValue.type() != _value.type()) {
-        Q_ASSERT(inValue.type() == _value.type());
         qDebug("%s : Property mismatch", __PRETTY_FUNCTION__);
+        Q_ASSERT(inValue.type() == _value.type());
         return Property::TypeMismatch;
     }
 

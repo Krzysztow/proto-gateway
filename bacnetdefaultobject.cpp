@@ -21,16 +21,6 @@ BacnetDefaultObject *BacnetDefaultObject::instance()
     return _instance;
 }
 
-BacnetProperty *BacnetDefaultObject::defaultProperty(BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId) {
-    QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &objDefaultProperties = _properties[objType];
-    return objDefaultProperties.value(propId);
-}
-
-QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &BacnetDefaultObject::defaultProperties(BacnetObjectTypeNS::ObjectType objType)
-{
-#warning "Add array index sensitiviness!"
-    return _properties[objType];
-}
 
 Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataProperty(AppTags::BacnetTags propertyType, QVariant *value, bool *ok)
 {
@@ -250,7 +240,7 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataForObjectProperty(Ba
             return new Bacnet::DataAbstract();
         }
         break;
-   case (BacnetObjectTypeNS::AnalogValue):
+    case (BacnetObjectTypeNS::AnalogValue):
         switch(propertyId)
         {
         case (BacnetPropertyNS::PresentValue):                return new Bacnet::Real();
@@ -292,7 +282,6 @@ quint32 BacnetDefaultObject::proeprtyType(BacnetObjectTypeNS::ObjectType type, B
             else
                 return DataType::BACnetObjectIdentifier;
         case (BacnetPropertyNS::MaxApduLengthAccepted):           return DataType::Unsigned;
-
         case (BacnetPropertyNS::SegmentationSupported):           return DataType::BACnetSegmentation;;
             //        case (BacnetProperty::MaxSegmentsAccepted):             return DataType::Unsigned;
             //        case (BacnetProperty::VtClassesSupported):              return DataType::BACnetList | DataType::BACnetVTClass;;
@@ -334,24 +323,152 @@ quint32 BacnetDefaultObject::proeprtyType(BacnetObjectTypeNS::ObjectType type, B
     case (BacnetObjectTypeNS::AnalogInput):
         switch (propertyId)
         {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Real;
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::DeviceType):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::UpdateInterval):                  return DataType::Unsigned;
+        case (BacnetPropertyNS::Units):                           return DataType::Unsigned;
+        case (BacnetPropertyNS::MinPresValue):                    return DataType::Real;
+        case (BacnetPropertyNS::MaxPresValue):                      return DataType::Real;
+        case (BacnetPropertyNS::Resolution):                        return DataType::Real;
+        case (BacnetPropertyNS::CovIncrement):                      return DataType::Real;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
         default: return DataType::InvalidType;
         }
         break;
     case (BacnetObjectTypeNS::AnalogOutput):
         switch (propertyId)
         {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Real;
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::DeviceType):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::Units):                           return DataType::Unsigned;
+        case (BacnetPropertyNS::MinPresValue):                    return DataType::Real;
+        case (BacnetPropertyNS::MaxPresValue):                      return DataType::Real;
+        case (BacnetPropertyNS::Resolution):                        return DataType::Real;
+        case (BacnetPropertyNS::CovIncrement):                      return DataType::Real;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
         default: return DataType::InvalidType;
         }
         break;
     case (BacnetObjectTypeNS::BinaryInput):
         switch (propertyId)
         {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Enumerated;//this is enumerated!!!! NOT BOOLEAN
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::DeviceType):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::Polarity):                          return DataType::Enumerated;
+        case (BacnetPropertyNS::InactiveText):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ActionText):                        return DataType::CharacterString;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
         default: return DataType::InvalidType;
         }
         break;
     case (BacnetObjectTypeNS::BinaryOutput):
         switch (propertyId)
         {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Enumerated;//this is enumerated!!!! NOT BOOLEAN
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::DeviceType):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::Polarity):                          return DataType::Enumerated;
+        case (BacnetPropertyNS::InactiveText):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ActionText):                        return DataType::CharacterString;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
+        default: return DataType::InvalidType;
+        }
+        break;
+    case (BacnetObjectTypeNS::MultiStateInput):
+        switch (propertyId)
+        {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Unsigned;
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::DeviceType):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::NumberOfStates):                    return DataType::Unsigned;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
+        default: return DataType::InvalidType;
+        }
+        break;
+    case (BacnetObjectTypeNS::MultiStateOutput):
+        switch (propertyId)
+        {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Unsigned;
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::DeviceType):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::NumberOfStates):                    return DataType::Unsigned;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
+        default: return DataType::InvalidType;
+        }
+        break;
+    case (BacnetObjectTypeNS::MultiStateValue):
+        switch (propertyId)
+        {
+
+        case (BacnetPropertyNS::ObjectIdentifier):                return DataType::BACnetObjectIdentifier;
+        case (BacnetPropertyNS::ObjectName):                      return DataType::CharacterString;
+        case (BacnetPropertyNS::ObjectType):                      return DataType::BACnetObjectType;
+        case (BacnetPropertyNS::PresentValue):                    return DataType::Unsigned;
+        case (BacnetPropertyNS::Description):                     return DataType::CharacterString;
+        case (BacnetPropertyNS::StatusFlags):                     return DataType::BitString;
+        case (BacnetPropertyNS::EventState):                      return DataType::Enumerated;
+        case (BacnetPropertyNS::Reliability):                     return DataType::Enumerated;
+        case (BacnetPropertyNS::OutOfService):                    return DataType::BOOLEAN;
+        case (BacnetPropertyNS::NumberOfStates):                    return DataType::Unsigned;
+        case (BacnetPropertyNS::ProfileName):                       return DataType::CharacterString;
+
         default: return DataType::InvalidType;
         }
         break;
@@ -385,10 +502,42 @@ QList<BacnetPropertyNS::Identifier> Bacnet::BacnetDefaultObject::covProperties(B
 {
     switch (type)
     {
-    case (BacnetObjectTypeNS::Device):      return QList<BacnetPropertyNS::Identifier>() << BacnetPropertyNS::StatusFlags;
+    case (BacnetObjectTypeNS::Device):
+        return QList<BacnetPropertyNS::Identifier>() << BacnetPropertyNS::StatusFlags;
+    case (BacnetObjectTypeNS::AnalogInput): //fall through
+    case (BacnetObjectTypeNS::AnalogOutput): //fall through
+    case (BacnetObjectTypeNS::AnalogValue): //fall through
+    case (BacnetObjectTypeNS::BinaryInput): //fall through
+    case (BacnetObjectTypeNS::BinaryOutput): //fall through
+    case (BacnetObjectTypeNS::BinaryValue): //fall through
+    case (BacnetObjectTypeNS::MultiStateInput): //fall through
+    case (BacnetObjectTypeNS::MultiStateOutput): //fall through
+    case (BacnetObjectTypeNS::MultiStateValue):
+        return QList<BacnetPropertyNS::Identifier>() << BacnetPropertyNS::StatusFlags <<BacnetPropertyNS::PresentValue;
     default:
         qDebug("%s : CovProperties not set for the object type %d", __PRETTY_FUNCTION__, type);
         Q_ASSERT(false);
         return QList<BacnetPropertyNS::Identifier>();
     }
+}
+
+void BacnetDefaultObject::addDefaultProperties(BacnetObjectTypeNS::ObjectType objType, QMap<BacnetPropertyNS::Identifier, BacnetProperty *> &objectProperties)
+{
+    //if there are already some properties for rhis object, delete them
+    if (_properties.contains(objType)) {
+        qDeleteAll(_properties[objType]);
+    }
+
+    //add new properties
+    _properties.insert(objType, objectProperties);
+}
+
+BacnetProperty *BacnetDefaultObject::defaultProperty(BacnetObjectTypeNS::ObjectType objType, BacnetPropertyNS::Identifier propId) {
+    QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &objDefaultProperties = _properties[objType];
+    return objDefaultProperties.value(propId);
+}
+
+QMap<BacnetPropertyNS::Identifier, BacnetProperty*> &BacnetDefaultObject::defaultProperties(BacnetObjectTypeNS::ObjectType objType)
+{
+    return _properties[objType];
 }

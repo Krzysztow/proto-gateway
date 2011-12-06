@@ -87,7 +87,16 @@ PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement
         return 0;
     }
 
-    QString type = observerElement.attribute(InternalConverterType);
+    //we are creating a subject. If there is InternalPropertyTypeAttribute it has to have "subject" value
+    QString str = observerElement.attribute(InternalPropertyTypeAttribute);
+    if ( ("" != str) && (ObserverAttributeValue != str) ) {
+        ConfiguratorHelper::elementError(observerElement, InternalPropertyTypeAttribute, "Creating observer, and attribute says something else.");
+        Q_ASSERT(false);
+        return 0;
+    }
+
+    //get type of observer
+    str = observerElement.attribute(InternalConverterType);
     //! \todo Maybe some mapping of name to ConverterTypes would be nice
 
     PropertySubject *observerSubject = propertySubjectForId_helper(internalId);
@@ -96,19 +105,19 @@ PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement
         return 0;
     }
 
-    if ("" == type || InternalConverterNoneValue == type)
+    if ("" == str || InternalConverterNoneValue == str)
         return new PropertyObserver(0, observerSubject);
     else {
-        if (InternalConverterUniversalValue == type) {          //universal conversion is needed
+        if (InternalConverterUniversalValue == str) {          //universal conversion is needed
             return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, 0); //zero converter means using UniversalConverter by default. Thanks to that, we spare some memory
-        } else if (InternalConverterScalingValue == type) {     //conversion with scaling factor. We need the factor as well - it's obligatory.
+        } else if (InternalConverterScalingValue == str) {     //conversion with scaling factor. We need the factor as well - it's obligatory.
             float factor = observerElement.attribute(InternalConverterScalingFactor).toFloat(&ok);
             if (!ok || 0 == factor) {
                 ConfiguratorHelper::elementError(observerElement, InternalConverterScalingFactor);
                 return 0;
             }
             return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, new DataModelNS::PropertyScalerConverter(factor));
-        } else if (InternalConverterBitmaskValue == type) {
+        } else if (InternalConverterBitmaskValue == str) {
             QString mask = observerElement.attribute(InternalConverterBitmaskMask);
             QBitArray bitMask;
             if (!mask.isEmpty())
@@ -127,13 +136,24 @@ PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement
 PropertySubject *DataModel::createPropertySubject(QDomElement &subjectElement)
 {
     bool ok;
+    //get subject internal id
     quint32 internalId = subjectElement.attribute(InternalPropertyId).toUInt(&ok);
     if (!ok)
         return 0;
-    QString variantType = subjectElement.attribute(InternalVariantType);
-    uint type = QMetaType::type(variantType.toLatin1());
+    //get Subject itnernal type
+    QString str = subjectElement.attribute(InternalVariantType);
+    uint type = QMetaType::type(str.toLatin1());
     if (QVariant::Invalid == type)
         return 0;
+
+    //we are creating a subject. If there is InternalPropertyTypeAttribute it has to have "subject" value
+    str = subjectElement.attribute(InternalPropertyTypeAttribute);
+    if ( ("" != str) && (SubjectAttributeValue != str) ) {
+        ConfiguratorHelper::elementError(subjectElement, InternalPropertyTypeAttribute, "Creating subject, and attribute says something else.");
+        Q_ASSERT(false);
+        return 0;
+    }
+
     return createPropertySubject(internalId, (QVariant::Type)type);
 }
 

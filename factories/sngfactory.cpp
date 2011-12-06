@@ -32,7 +32,6 @@ SngHandler *SngFactory::createModule(QDomElement &sngConfig)
     GroupAddress feedback;
     bool ok;
     for (QDomElement propertyElem = sngConfig.firstChildElement(SngPropertyDefinitionTagName); !propertyElem.isNull(); propertyElem = propertyElem.nextSiblingElement(SngPropertyDefinitionTagName)) {
-        qDebug()<<"Got element"<<ConfiguratorHelper::elementString(propertyElem);
         //get sng type
         ConnectionFrame::DataType type = SngDefinitions::typeFromString(propertyElem.attribute(SngTypeAttribute), ok);
         if (0 == type) {

@@ -33,6 +33,7 @@ private:
     void configureInternalHandler(QDomElement &devicesConfig, DataModel *dataModel, InternalObjectsHandler *intHandler);
     void configureExternalHandler(QDomElement extPropsConfig, DataModel *dataModel, BacnetApplicationLayerHandler *appLayer);
     void configureDeviceMappings(QDomElement &mappings, BacnetApplicationLayerHandler *appLayer);
+    void configureDefaultDevice(QDomElement &defDeviceElement);
 
     static BacnetConfigurator *instance();
     static void releaseInstance();
@@ -49,6 +50,7 @@ private:
     BacnetProperty *createInternalProxyProperty(QDomElement &propElem, InternalPropertyContainerSupport *containerSupport);
 
     void populatePropertyMappings(ObjectIdentifier &deviceId, ObjectIdentifier &objectId, QDomElement &objElement, BacnetApplicationLayerHandler *appLayer);
+    QMap<BacnetPropertyNS::Identifier, BacnetProperty*> createPropertiesMap(QDomElement &propertiesRootElement);
 
     class TagConversion
     {
