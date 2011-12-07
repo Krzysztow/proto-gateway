@@ -37,8 +37,8 @@
         return new Bacnet::InternalConfirmedCovNotifHandler(pciData, requester, destination, appLayer);
     }
     default:
-        Q_ASSERT(false);
-        return 0;//should
+//        Q_ASSERT(false);
+        return 0;//that's ok, we jsut don't implement the service
     }
 }
 
@@ -67,7 +67,7 @@ Bacnet::InternalUnconfirmedRequestHandler *ServiceFactory::createUnconfirmedHand
         return new Bacnet::InternalUncfrdmCovNotifHandler(appLayer);
     }
     default:
-        Q_ASSERT(false);
+//        Q_ASSERT(false);
         return 0;
     }
 }

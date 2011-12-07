@@ -370,7 +370,7 @@ namespace Bacnet
         int count() {return _value.count();}
         void setStoredType(DataType::DataType type);
         DataType::DataType storedType();
-        bool addElement(BacnetDataInterface *value);
+        bool addElement(BacnetDataInterfaceShared &value);
 
         QList<BacnetDataInterfaceShared> &value();
 

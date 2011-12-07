@@ -1288,17 +1288,17 @@ qint32 BacnetList::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 //! \todo The list should be translated to sequence and sequence of
 qint32 BacnetList::fromRaw(BacnetTagParser &parser)
 {
-#warning "Not implemented, yet. Must be!"
+#warning "Not implemented, yet. Doesn't have to be for our purposes!"
     return -1;
 }
 
 qint32 BacnetList::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 {
-#warning "Not implemented, yet. Must be!"
+#warning "Not implemented, yet. Doesn't have to be for our purposes!"
     return -1;
 }
 
-bool BacnetList::addElement(BacnetDataInterface *value)
+bool BacnetList::addElement(BacnetDataInterfaceShared &value)
 {
     Q_CHECK_PTR(value);
     if (DataType::InvalidType != _storedType) {
@@ -1309,7 +1309,7 @@ bool BacnetList::addElement(BacnetDataInterface *value)
     } else
         _storedType = value->typeId();
 
-    _value.append(BacnetDataInterfaceShared(value));
+    _value.append(value);
     return true;
 }
 

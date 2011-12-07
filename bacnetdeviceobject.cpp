@@ -69,9 +69,19 @@ bool BacnetDeviceObject::readClassDataHelper(BacnetPropertyNS::Identifier proper
         }
         return true;
     }
-    case (BacnetPropertyNS::ObjectList) :
-#warning "Not implemented yet!";
-        Q_ASSERT(false);
+    case (BacnetPropertyNS::ObjectList) : {
+        BacnetList *devList = new BacnetList();
+        foreach (BacnetObject *obj, _childObjects) {
+            devList->value().append(BacnetDataInterfaceShared(new ObjectIdentifier(obj->objectIdNum())));
+        }
+        data = BacnetDataInterfaceShared(devList);
+    }
+        return true;
+    case (BacnetPropertyNS::DeviceAddressBinding): {
+        //! \note we return here an empty list. Most probably this would be really long if we didn't do so.
+        data = BacnetDataInterfaceShared(new BacnetList());
+    }
+        return true;
     default:
         return false;
     }

@@ -81,7 +81,7 @@ qint32 BacnetReadPropertyAck::toRaw(quint8 *startPtr, quint16 buffLength)
 
     Q_CHECK_PTR(_data);
     ret = _data->toRaw(actualPtr, leftLength);
-    if (ret <= 0) {
+    if (ret < 0) {
         Q_ASSERT_X(false, "BacnetReadPropertyAck::toRaw()", "Cannot encode abstract data");
         qDebug("BacnetReadPropertyAck::toRaw() : cannot encode abstract data: : %d", ret);
         return ret;

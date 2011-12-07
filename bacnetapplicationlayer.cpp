@@ -52,7 +52,7 @@ void BacnetApplicationLayerHandler::processConfirmedRequest(BacnetAddress &remot
     BacnetDeviceObject *device = _internalHandler->virtualDevices().value(destination);
 
     InternalConfirmedRequestHandler *handler = ServiceFactory::createConfirmedHandler(remoteSource, localDestination, crData, device, this);
-    Q_CHECK_PTR(handler);
+    //Q_CHECK_PTR(handler);
     if (0 == handler) {
         _tsm->sendReject(remoteSource, localDestination, BacnetRejectNS::ReasonUnrecognizedService, crData->invokedId());
         delete crData;
@@ -84,7 +84,7 @@ void BacnetApplicationLayerHandler::processUnconfirmedRequest(BacnetAddress &rem
     //create appropriate handler. \note It takes ownership over ucrData!
 
     InternalUnconfirmedRequestHandler *handler = ServiceFactory::createUnconfirmedHandler(remoteSource, localDestination, ucrData, device, this);
-    Q_CHECK_PTR(handler);
+//    Q_CHECK_PTR(handler);
     if (0 == handler) {
         qDebug("InternalUnconfirmedRequestHandler not created, drop silently, it's unconfirmed service.");
         return;

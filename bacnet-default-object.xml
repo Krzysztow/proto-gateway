@@ -12,11 +12,13 @@
 				<property prop-type="simple" id="12" bac-type="characterstring" value="1.0.0" /> 					<!--app-soft-version-->						
 				<property prop-type="simple" id="98" bac-type="unsigned" value="1" /> 					<!--protocol-version-->						
 				<property prop-type="simple" id="139" bac-type="unsigned" value="1" /> 					<!--protocol-revision-->						
-				<property prop-type="simple" id="97" bac-type="bitstring" value="b'01001100001110000000001001000000100010'" /> 	<!--services-supported-->						
-				<property prop-type="simple" id="96" bac-type="bitstring" value="b'0000010000110000000111111'" /> 							<!--objects-supported-->						
+				<property prop-type="simple" id="97" bac-type="bitstring" value="b'0100010000001001000000000011100001100010'" /> 	<!--services-supported-->						
+				<property prop-type="simple" id="96" bac-type="bitstring" value="b'11111100000000110001000000'" /> 							<!--objects-supported-->						
 				<property prop-type="simple" id="62" bac-type="unsigned" value="1473" /> 				<!--max-APDU-size-->						
-				<property prop-type="simple" id="107" bac-type="unsigned" value="3" /> 					<!--apdu-timeout-->						
-				<property prop-type="simple" id="155" bac-type="unsigned" value="1" /> 				<!--database-revision-->
+				<property prop-type="simple" id="107" bac-type="enumerated" value="3" /> 				<!--segmentation-->						
+				<property prop-type="simple" id="11" bac-type="unsigned" value="1" /> 					<!--apdu-timeout-->						
+				<property prop-type="simple" id="73" bac-type="unsigned" value="3" /> 					<!--apdu-retries-->						
+				<property prop-type="simple" id="155" bac-type="unsigned" value="1" /> 					<!--database-revision-->
 			</properties>
 		</object>	
 		<object obj-type="analog-input">
