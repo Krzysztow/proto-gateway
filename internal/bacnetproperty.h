@@ -112,6 +112,8 @@ public:
     virtual ~ArrayProperty();
 
     quint32 indexOfProperty(BacnetProperty *property) const;
+    //! This is not safe to return non-constant reference. But it's used in case of creator.
+    QList<BacnetProperty*> &propertiesArray() {return _data;}
 
 public://overriden from Bacnet::Property
     virtual int getValue(BacnetDataInterfaceShared &data, quint32 BacnetPropertyArrayIdx = ArrayIndexNotPresent, Error *error = 0, bool tryInstantly = true);

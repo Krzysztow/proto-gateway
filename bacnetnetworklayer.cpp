@@ -620,7 +620,7 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
     actualBytePtr += ret;
     leftLength -= ret;
 
-    HelperCoder::printArray(actualBytePtr, leftLength, "Data passed to network message:");
+    HelperCoder::printArray(actualBytePtr, leftLength, "From transport to net:");
 
     ret = 0;
     if (npci.isNetworkLayerMessage()) {

@@ -92,7 +92,7 @@
 		<object obj-type="multistate-input">
 			<properties>
 				<property prop-type="simple" id="79" bac-type="enumerated" value="13" />			<!--object-type-->
-				<property prop-type="simple" id="85" bac-type="enumerated" value="1" />				<!--present-value-->
+				<property prop-type="simple" id="85" bac-type="unsigned" value="1" />					<!--present-value-->
 				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
 				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
 				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
@@ -105,7 +105,7 @@
 		<object obj-type="multistate-output">
 			<properties>
 				<property prop-type="simple" id="79" bac-type="enumerated" value="14" />			<!--object-type-->
-				<property prop-type="simple" id="85" bac-type="enumerated" value="1" />				<!--present-value-->
+				<property prop-type="simple" id="85" bac-type="unsigned" value="1" />					<!--present-value-->
 				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
 				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
 				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
@@ -119,14 +119,15 @@
 		</object>
 		<object obj-type="multistate-value">
 			<properties>
-				<property prop-type="simple" id="79" bac-type="enumerated" value="14" />			<!--object-type-->
-				<property prop-type="simple" id="85" bac-type="enumerated" value="1" />				<!--present-value-->
+				<property prop-type="simple" id="79" bac-type="enumerated" value="19" />			<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="unsigned" value="1" />					<!--present-value-->
 				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
 				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
 				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
 				<property prop-type="simple" id="74" bac-type="enumerated" value="1" /> 			<!--number-of-states-->
 				<property prop-type="array" id="110" > <!-- OPTIONAL, JUST TO CHECK IT -->		<!--state-text-->
 							<property prop-type="simple" bac-type="characterstring" value="The only state" />
+							<property prop-type="simple" bac-type="characterstring" value="That was not true" />
 				</property>	
 				<!-- PRIORITY ARRAY -->						
 				<property prop-type="simple" id="104" bac-type="enumerated" value="1" />			<!--relinquish-default-->

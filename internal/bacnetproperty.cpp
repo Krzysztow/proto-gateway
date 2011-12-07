@@ -222,7 +222,7 @@ int ArrayProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyArr
 
         qint32 ret(0);
         QList<BacnetProperty*>::Iterator it = _data.begin();
-        QList<BacnetProperty*>::Iterator itEnd = _data.begin();
+        QList<BacnetProperty*>::Iterator itEnd = _data.end();
         for (; it != itEnd; ++it) {
             ret = (*it)->getValue(readProperty, ArrayIndexNotPresent, error, tryInstantly);
             if (tryInstantly) {

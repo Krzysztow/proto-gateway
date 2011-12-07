@@ -265,7 +265,6 @@ BacnetDeviceObject *BacnetConfigurator::createDevice(QDomElement &deviceElement)
     if (deviceElement.hasAttribute(ObjectNameAttribute))
         device->setObjectName(deviceElement.attribute(ObjectNameAttribute));
     
-    BacnetObject *childObject(0);
     for (QDomElement el = deviceElement.firstChildElement(); !el.isNull(); el = el.nextSiblingElement()) {
         if (el.tagName() == ObjectPropertiesTagName) {          //add properties
             populateWithProperties(device, el);
@@ -273,11 +272,7 @@ BacnetDeviceObject *BacnetConfigurator::createDevice(QDomElement &deviceElement)
             QDomNodeList childObjectsList = el.elementsByTagName(BacnetObjectTagName);
             for (int i = 0; i < childObjectsList.count(); ++i) {
                 QDomElement objectElement = childObjectsList.at(i).toElement();
-                createObject(device, objectElement);
-                if (0 != childObject) {
-#warning "Do I have to make some checking against object instance number duplication?"
-                    device->addBacnetObject(childObject);
-                }
+                createObjectForDevice(device, objectElement);
             }
         }
     }
@@ -285,7 +280,7 @@ BacnetDeviceObject *BacnetConfigurator::createDevice(QDomElement &deviceElement)
     return device;
 }
 
-void BacnetConfigurator::createObject(BacnetDeviceObject *toBeParentDevice, QDomElement &objectElement)
+void BacnetConfigurator::createObjectForDevice(BacnetDeviceObject *toBeParentDevice, QDomElement &objectElement)
 {
     //get device instance number
     bool ok;
@@ -303,6 +298,7 @@ void BacnetConfigurator::createObject(BacnetDeviceObject *toBeParentDevice, QDom
     }
     
     BacnetObjectTypeNS::ObjectType objectType = _supportedObjectsTypes[objectTypeStr];
+    //object adds automatically itself to the device
     BacnetObject *object = new BacnetObject(objectType, instanceNum, toBeParentDevice);
     //! \todo \warning If by mistake there was another object with same id number (type + instance), we would have a memory leak, since will not be added to object.
     
@@ -391,8 +387,9 @@ BacnetProperty *BacnetConfigurator::createAbstractProperty(QDomElement &propElem
         
     } else if (BacnetPropertyArray == propType) {
         
-        QList<BacnetProperty*> _propertiesList;
-        ArrayProperty *property = new ArrayProperty(_propertiesList, containerSupport);
+        ArrayProperty *property = new ArrayProperty(containerSupport);
+        QList<BacnetProperty*> &_propertiesList = property->propertiesArray();
+
         for (QDomElement childPropElem = propElem.firstChildElement(ObjectPropertyTagName); !childPropElem.isNull(); childPropElem = childPropElem.nextSiblingElement(ObjectPropertyTagName)) {
             BacnetProperty *childProperty = createAbstractProperty(childPropElem, property);
             if (0 != childProperty)

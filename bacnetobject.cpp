@@ -14,14 +14,32 @@ BacnetObject::BacnetObject(ObjectIdentifier &id, BacnetDeviceObject *parentDevic
     _id(id),
     _parentDevice(parentDevice)
 {
-    _parentDevice->addBacnetObject(this);
+    Q_CHECK_PTR(_parentDevice);
+    if (0 != _parentDevice) {
+        if (!_parentDevice->addBacnetObject(this)) {
+            qDebug("%s : object not added", __PRETTY_FUNCTION__);
+            _parentDevice = 0;
+            Q_ASSERT(false);
+        }
+    }
+    else
+        qDebug("%s : Parent is NULL", __PRETTY_FUNCTION__);
 }
 
 BacnetObject::BacnetObject(BacnetObjectTypeNS::ObjectType objectType, quint32 instanceNumber, BacnetDeviceObject *parentDevice):
     _id(objectType, instanceNumber),
     _parentDevice(parentDevice)
 {
-    _parentDevice->addBacnetObject(this);
+    Q_CHECK_PTR(_parentDevice);
+    if (0 != _parentDevice) {
+        if (!_parentDevice->addBacnetObject(this)) {
+            qDebug("%s : object not added", __PRETTY_FUNCTION__);
+            _parentDevice = 0;
+            Q_ASSERT(false);
+        }
+    }
+    else
+        qDebug("%s : Parent is NULL", __PRETTY_FUNCTION__);
 }
 
 BacnetObject::~BacnetObject()

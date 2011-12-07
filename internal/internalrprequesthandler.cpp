@@ -36,7 +36,7 @@ bool InternalRPRequestHandler::asynchActionFinished(int asynchId, int result, Ba
     return false;
 }
 
-bool InternalRPRequestHandler::finishReading_helper(BacnetObject *readObject, int resultCode)
+bool InternalRPRequestHandler::finishReading_helper(BacnetObject *readObject, int resultCode, BacnetDataInterfaceShared *value)
 {
     _asynchId = 0;
     Q_ASSERT(resultCode <= 0);
@@ -46,15 +46,19 @@ bool InternalRPRequestHandler::finishReading_helper(BacnetObject *readObject, in
             //! \todo translate error to bacnet error
             _error.setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeUnknownProperty);
         } else {
-            BacnetDataInterfaceShared value = readObject->propertyReadInstantly(_data.propertyId, _data.arrayIndex, &_error);
-            if (value.isNull()) {
+            BacnetDataInterfaceShared val;
+            if (0 != value)
+                val = *value;
+            else
+                val = readObject->propertyReadInstantly(_data.propertyId, _data.arrayIndex, &_error);
+            if (val.isNull()) {
                 if (BacnetErrorNS::ClassNoError == _error.errorClass) {//if was not set by the object itself, this is probably due to memory reasons
                     _error.errorClass = BacnetErrorNS::ClassDevice;
                     _error.errorCode = BacnetErrorNS::CodeOperationalProblem;
                     qDebug("Error while instant device reading");
                 }
             } else {
-                _response = new BacnetReadPropertyAck(_data, value);
+                _response = new BacnetReadPropertyAck(_data, val);
             }
         }
     }
@@ -106,7 +110,7 @@ bool InternalRPRequestHandler::execute()
         return true;//am done, delete me
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
-        finishReading_helper(object, readyness);
+        finishReading_helper(object, readyness, &data);
         finalizeInstant(_appLayer);
         return true;
     }

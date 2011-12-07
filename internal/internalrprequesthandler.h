@@ -3,6 +3,7 @@
 
 #include "internalconfirmedrequesthandler.h"
 #include "readpropertyservicedata.h"
+#include "bacnetdata.h"
 
 namespace Bacnet {
 
@@ -32,7 +33,7 @@ class BacnetApplicationLayerHandler;
         virtual Bacnet::BacnetServiceData *takeResponseData();
 
     private:
-        bool finishReading_helper(BacnetObject *readObject, int resultCode);
+        bool finishReading_helper(BacnetObject *readObject, int resultCode, BacnetDataInterfaceShared *value = 0);
 
     private:
         BacnetDeviceObject *_device;

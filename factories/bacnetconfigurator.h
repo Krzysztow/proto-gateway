@@ -41,7 +41,7 @@ private:
 private:
     BacnetDeviceObject *createDevice(QDomElement &deviceElement);
     void populateWithProperties(BacnetObject *object, QDomElement &propertiesRootElement);
-    void createObject(BacnetDeviceObject *toBeParentDevice, QDomElement &objectElement);
+    void createObjectForDevice(BacnetDeviceObject *toBeParentDevice, QDomElement &objectElement);
     BacnetProperty *createAbstractProperty(QDomElement &propElem, InternalPropertyContainerSupport *containerSupport);
     BacnetProperty *createSimpleProperty(QDomElement &propElem);
     ExternalObjectReadStrategy *createReadStrategy(QDomElement &pElem);
