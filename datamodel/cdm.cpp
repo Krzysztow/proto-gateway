@@ -108,15 +108,24 @@ PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement
     if ("" == str || InternalConverterNoneValue == str)
         return new PropertyObserver(0, observerSubject);
     else {
+        //get type for converter. It's obligatory
+        QVariant::Type type = (QVariant::Type)QMetaType::type(observerElement.attribute(InternalVariantType).toLatin1());
+        if (QVariant::Invalid == type) {
+            ConfiguratorHelper::elementError(observerElement, InternalVariantType);
+            Q_ASSERT(false);
+            //we don't delete observerSubject, we don't own it.
+            return 0;
+        }
+
         if (InternalConverterUniversalValue == str) {          //universal conversion is needed
-            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, 0); //zero converter means using UniversalConverter by default. Thanks to that, we spare some memory
+            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, type, 0); //zero converter means using UniversalConverter by default. Thanks to that, we spare some memory
         } else if (InternalConverterScalingValue == str) {     //conversion with scaling factor. We need the factor as well - it's obligatory.
             float factor = observerElement.attribute(InternalConverterScalingFactor).toFloat(&ok);
             if (!ok || 0 == factor) {
                 ConfiguratorHelper::elementError(observerElement, InternalConverterScalingFactor);
                 return 0;
             }
-            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, new DataModelNS::PropertyScalerConverter(factor));
+            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, type, new DataModelNS::PropertyScalerConverter(factor));
         } else if (InternalConverterBitmaskValue == str) {
             QString mask = observerElement.attribute(InternalConverterBitmaskMask);
             QBitArray bitMask;
@@ -126,7 +135,7 @@ PropertyObserver *DataModel::createPropertyObserver(QDomElement &observerElement
                 ConfiguratorHelper::elementError(observerElement, InternalConverterBitmaskMask);
                 return 0;
             }
-            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, new DataModelNS::PropertyBitmaskConverter(bitMask));
+            return new DataModelNS::PropertyWithConversionObserver(0, observerSubject, type, new DataModelNS::PropertyBitmaskConverter(bitMask));
         }
     }
 

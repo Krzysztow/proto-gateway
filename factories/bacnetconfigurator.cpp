@@ -424,7 +424,7 @@ BacnetProperty *BacnetConfigurator::createInternalProxyProperty(QDomElement &pro
         return 0;
     }
     
-    return new ProxyInternalProperty(intenralProperty, typeIt->bacnetType, intenralProperty->type(), containerSupport);
+    return new ProxyInternalProperty(intenralProperty, typeIt->bacnetType, containerSupport);
 }
 
 BacnetProperty *BacnetConfigurator::createSimpleProperty(QDomElement &propElem)

@@ -6,11 +6,12 @@
 
 using namespace DataModelNS;
 
-PropertyWithConversionObserver::PropertyWithConversionObserver(PropertyOwner *container, PropertySubject *property, PropertyConverter *converter):
+PropertyWithConversionObserver::PropertyWithConversionObserver(PropertyOwner *container, PropertySubject *property, QVariant::Type unconvertedType, PropertyConverter *converter):
     PropertyObserver(container, property),
-    _converter(converter)
+    _converter(converter),
+    _unconvertedType(unconvertedType)
 {
-
+    Q_ASSERT(QVariant::Invalid != _unconvertedType);
 }
 
 int PropertyWithConversionObserver::getValue(QVariant *outValue)
@@ -76,6 +77,16 @@ int PropertyWithConversionObserver::getValueInstant(QVariant *outValue)
         return Property::ResultOk;
 
     return Property::UnknownError;
+}
+
+QVariant::Type PropertyWithConversionObserver::subjectProperty()
+{
+    return PropertyObserver::type();
+}
+
+QVariant::Type DataModelNS::PropertyWithConversionObserver::type()
+{
+    return _unconvertedType;
 }
 
 

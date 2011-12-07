@@ -65,7 +65,7 @@ public:
     /**
       Proxy constructor. DataType::DataType type has to be specified, so that we know what type internal property is to be converted to.
       */
-    ProxyInternalProperty(::Property *data, AppTags::BacnetTags bacnetType, QVariant::Type intenralType, InternalPropertyContainerSupport *parentSupporter);
+    ProxyInternalProperty(::Property *data, AppTags::BacnetTags bacnetType, InternalPropertyContainerSupport *parentSupporter);
 
 public://overriden from Bacnet::Property
     virtual int getValue(BacnetDataInterfaceShared &data, quint32 BacnetPropertyArrayIdx = ArrayIndexNotPresent, Error *error = 0, bool tryInstantly = true);
@@ -86,7 +86,6 @@ private:
     //! \todo We know that we use only BacnetPropertyListener here.
     ::Property *_data;
     AppTags::BacnetTags _bacnetType;
-    QVariant::Type _internalType;
 
     InternalPropertyContainerSupport *_parentSupporter;
 };

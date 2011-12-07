@@ -92,7 +92,7 @@ bool InternalRPRequestHandler::execute()
     Q_ASSERT(!_error.hasError());
 
     BacnetObject *object = _device->bacnetObject(objIdToNum(_data.objId));
-    Q_CHECK_PTR(object);
+//    Q_CHECK_PTR(object);
     if (0 == object) {
         _asynchId = 0;
         _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);

@@ -50,10 +50,9 @@ int SimpleProperty::setValue(BacnetDataInterfaceShared &data, quint32 propertyAr
 //////////////////ProxyInternalProperty/////////////////////////
 ////////////////////////////////////////////////////////////////
 
-ProxyInternalProperty::ProxyInternalProperty(::Property *data, AppTags::BacnetTags bacnetType, QVariant::Type intenralType, InternalPropertyContainerSupport *parentSupporter):
+ProxyInternalProperty::ProxyInternalProperty(::Property *data, AppTags::BacnetTags bacnetType, InternalPropertyContainerSupport *parentSupporter):
     _data(data),
     _bacnetType(bacnetType),
-    _internalType(intenralType),
     _parentSupporter(parentSupporter)
 {
     Q_ASSERT(_bacnetType != AppTags::InvalidTag);
@@ -75,17 +74,8 @@ int ProxyInternalProperty::getValue(BacnetDataInterfaceShared &data, quint32 pro
 {
     //we are just singular property - there should be no arrayIdx specified
     if (ArrayIndexNotPresent == propertyArrayIdx) {
-        if (QVariant::Invalid == _internalType) {
-            _internalType = _data->type();
-            if (QVariant::Invalid == _internalType) {
-            qDebug("%s : property translation type is not specified", __PRETTY_FUNCTION__);
-            Q_ASSERT(false);
-            if (0 != error)
-                error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
-            return ::Property::ResultOk;//no asynchronous waiting
-            }
-        }
-        QVariant value(_internalType);
+        QVariant value(_data->type());
+        Q_ASSERT(value.type() != QVariant::Invalid);
         qint32 ret(0);
         if (tryInstantly) {
             ret = _data->getValueInstant(&value);
@@ -99,8 +89,12 @@ int ProxyInternalProperty::getValue(BacnetDataInterfaceShared &data, quint32 pro
             ret = _data->getValue(&value);
             if (ret < 0) {//something wrong
                 qDebug("%s : Cannot access property - ret code %d", __PRETTY_FUNCTION__, ret);
-                if (0 != error)
-                    error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
+                if (0 != error) {
+                    if (Property::NotSetYet == ret)
+                        error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeReadAccessDenied);
+                    else
+                        error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
+                }
                 return ret;
             } else if (ret > 0) //being read asynchronously, that's ok
                 return ret;
@@ -129,17 +123,6 @@ int ProxyInternalProperty::setValue(BacnetDataInterfaceShared &data, quint32 pro
 {
     //we are just singular property - there should be no arrayIdx specified
     if (ArrayIndexNotPresent == propertyArrayIdx) {
-        if (QVariant::Invalid == _internalType) {
-            _internalType = _data->type();
-            if (QVariant::Invalid == _internalType) {
-                qDebug("%s : property translation type is not specified", __PRETTY_FUNCTION__);
-                Q_ASSERT(false);
-                if (0 != error)
-                    error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
-                return ::Property::ResultOk;//no asynchronous waiting
-            }
-        }
-
         qint32 ret(0);
         QVariant value(data->toInternal());
         ret = _data->setValue(value);
