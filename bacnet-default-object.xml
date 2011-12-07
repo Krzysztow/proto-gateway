@@ -1,14 +1,208 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bacnetDefaultConfig>
 	<objects>
+		<object obj-type="device">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="8" />						<!--object-type-->
+				<property prop-type="simple" id="112" bac-type="enumerated" value="0" />				<!--system-status-->
+				<property prop-type="simple" id="121" bac-type="characterstring" value="SNG" /> <!--vendor-name-->		
+				<property prop-type="simple" id="120" bac-type="unsigned" value="99" /> 				<!--vendor-id-->		
+				<property prop-type="simple" id="70" bac-type="characterstring" value="GW 1.0.0" />	<!--model-name-->
+				<property prop-type="simple" id="44" bac-type="characterstring" value="1.0.0" />					<!--firmware-version-->
+				<property prop-type="simple" id="12" bac-type="characterstring" value="1.0.0" /> 					<!--app-soft-version-->						
+				<property prop-type="simple" id="98" bac-type="unsigned" value="1" /> 					<!--protocol-version-->						
+				<property prop-type="simple" id="139" bac-type="unsigned" value="1" /> 					<!--protocol-revision-->						
+				<property prop-type="simple" id="97" bac-type="bitstring" value="b'01001100001110000000001001000000100010'" /> 	<!--services-supported-->						
+				<property prop-type="simple" id="96" bac-type="bitstring" value="b'0000010000110000000111111'" /> 							<!--objects-supported-->						
+				<property prop-type="simple" id="62" bac-type="unsigned" value="1473" /> 				<!--max-APDU-size-->						
+				<property prop-type="simple" id="107" bac-type="unsigned" value="3" /> 					<!--apdu-timeout-->						
+				<property prop-type="simple" id="155" bac-type="unsigned" value="1" /> 				<!--database-revision-->
+			</properties>
+		</object>	
 		<object obj-type="analog-input">
 			<properties>
-				<property prop-type="simple" id="222" bac-type="bitstring" value="b'1101'" />		
-				<property prop-type="simple" id="112" bac-type="enumerated" value="0" />
-				<property prop-type="simple" id="121" bac-type="characterstring" value="SNG" />
-				<property prop-type="simple" id="120" bac-type="unsignedinteger" value="99" />
+				<property prop-type="simple" id="79" bac-type="enumerated" value="0" />				<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="real" value="0" />							<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="117" bac-type="enumerated" value="95" /> 		<!--units - no-units-->						
+			</properties>
+		</object>
+		<object obj-type="analog-output">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="1" />				<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="real" value="0" />							<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="117" bac-type="enumerated" value="95" /> 		<!--units - no-units-->
+				<!-- PRIORITY ARRAY -->						
+				<property prop-type="simple" id="104" bac-type="real" value="0" />						<!--relinquish-default-->
+				<property prop-type="simple" id="22" bac-type="real" value="1" /> 						<!--COV-increment-->
+			</properties>			
+		</object>
+		<object obj-type="analog-value">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="2" />				<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="real" value="0" />							<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="117" bac-type="enumerated" value="95" /> 		<!--units - no-units-->
+				<!-- PRIORITY ARRAY -->						
+				<property prop-type="simple" id="104" bac-type="real" value="0" />						<!--relinquish-default-->
+				<property prop-type="simple" id="22" bac-type="real" value="1" /> 						<!--COV-increment-->
+			</properties>			
+		</object>
+		<object obj-type="binary-input">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="3" />				<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="enumerated" value="0" />				<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="84" bac-type="enumerated" value="0" /> 			<!--polarity-->							
+			</properties>
+		</object>
+		<object obj-type="binary-output">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="4" />				<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="enumerated" value="0" />				<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="84" bac-type="enumerated" value="0" /> 			<!--polarity-->
+				<!-- PRIORITY ARRAY -->						
+				<property prop-type="simple" id="104" bac-type="enumerated" value="0" />			<!--relinquish-default-->						
+			</properties>
+		</object>
+		<object obj-type="binary-value">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="5" />				<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="enumerated" value="0" />				<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="84" bac-type="enumerated" value="0" /> 			<!--polarity-->
+				<!-- PRIORITY ARRAY -->						
+				<property prop-type="simple" id="104" bac-type="enumerated" value="0" />			<!--relinquish-default-->						
+			</properties>
+		</object>
+		<object obj-type="multistate-input">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="13" />			<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="enumerated" value="1" />				<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="74" bac-type="enumerated" value="1" /> 			<!--number-of-states-->
+				<property prop-type="array" id="110" > <!-- OPTIONAL, JUST TO CHECK IT -->		<!--state-text-->
+							<property prop-type="simple" bac-type="characterstring" value="The only state" />
+				</property>	
+			</properties>
+		</object>
+		<object obj-type="multistate-output">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="14" />			<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="enumerated" value="1" />				<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="74" bac-type="enumerated" value="1" /> 			<!--number-of-states-->
+				<property prop-type="array" id="110" > <!-- OPTIONAL, JUST TO CHECK IT -->		<!--state-text-->
+							<property prop-type="simple" bac-type="characterstring" value="The only state" />
+				</property>	
+				<!-- PRIORITY ARRAY -->						
+				<property prop-type="simple" id="104" bac-type="enumerated" value="1" />			<!--relinquish-default-->
+			</properties>
+		</object>
+		<object obj-type="multistate-value">
+			<properties>
+				<property prop-type="simple" id="79" bac-type="enumerated" value="14" />			<!--object-type-->
+				<property prop-type="simple" id="85" bac-type="enumerated" value="1" />				<!--present-value-->
+				<property prop-type="simple" id="111" bac-type="bitstring" value="b'0000'" /> <!--status-flags-->		
+				<property prop-type="simple" id="36" bac-type="enumerated" value="0" />				<!--event-state-->
+				<property prop-type="simple" id="81" bac-type="boolean" value="false" />			<!--out-of-service-->
+				<property prop-type="simple" id="74" bac-type="enumerated" value="1" /> 			<!--number-of-states-->
+				<property prop-type="array" id="110" > <!-- OPTIONAL, JUST TO CHECK IT -->		<!--state-text-->
+							<property prop-type="simple" bac-type="characterstring" value="The only state" />
+				</property>	
+				<!-- PRIORITY ARRAY -->						
+				<property prop-type="simple" id="104" bac-type="enumerated" value="1" />			<!--relinquish-default-->
 			</properties>
 		</object>
 	</objects>
 </bacnetDefaultConfig>
 
+<!--
+         analog-input         (0),
+         analog-output        (1),
+         analog-value         (2),
+         binary-input         (3),
+         binary-output        (4),
+         binary-value         (5),
+         calendar             (6),
+         command              (7),
+         device               (8),
+         event-enrollment     (9),
+         file                 (10),
+         group                (11),
+         loop                 (12),
+         multi-state-input    (13),
+         multi-state-output   (14),
+         notification-class   (15),
+         program              (16),
+         schedule             (17),
+         averaging            (18),
+         multi-state-value    (19),
+         trend-log            (20),
+         life-safety-point    (21),
+         life-safety-zone     (22),
+         accumulator          (23),
+         pulse-converter      (24)
+  
+  *****
+  
+          acknowledgeAlarm             (0),
+          confirmedCOVNotification     (1),
+          confirmedEventNotification   (2),
+          getAlarmSummary              (3),
+          getEnrollmentSummary         (4),
+          subscribeCOV                 (5),
+          atomicReadFile               (6),
+          atomicWriteFile              (7),
+          addListElement               (8),
+          removeListElement            (9),
+          createObject                 (10),
+          deleteObject                 (11),
+          readProperty                 (12),
+          readPropertyConditional      (13),
+          readPropertyMultiple         (14),
+          writeProperty                (15),
+          writePropertyMultiple        (16),
+          deviceCommunicationControl   (17),
+          confirmedPrivateTransfer     (18),
+          confirmedTextMessage         (19),
+          reinitializeDevice           (20),
+          vtOpen                       (21),
+          vtClose                      (22),
+          vtData                       (23),
+          authenticate                 (24),
+          requestKey                   (25),
+          i-Am                         (26),
+          i-Have                       (27),
+          unconfirmedCOVNotification   (28),
+          unconfirmedEventNotification (29),
+          unconfirmedPrivateTransfer   (30),
+  unconfirmedTextMessage    (31),
+  timeSynchronization       (32),
+  who-Has                   (33),
+  who-Is                    (34),
+  readRange                 (35), - - Object Access Service
+  utcTimeSynchronization    (36), - - Remote Device Management Service
+  lifeSafetyOperation       (37), - - Alarm and Event Service
+  subscribeCOVProperty      (38), - - Alarm and Event Service
+  getEventInformation       (39) - - Alarm and Event Service
+
+-->

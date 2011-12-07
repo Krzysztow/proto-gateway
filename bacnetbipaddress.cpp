@@ -61,7 +61,7 @@ quint16 BacnetBipAddressHelper::ipPort(const BacnetAddress &inAddress)
     Q_ASSERT(inAddress.macAddrLength() == (BipAddrLength));
 
     const quint8 *ptr = &(inAddress.macPtr()[BipIpLength]);
-    qDebug("Values 0x%x, 0x%x", *ptr, *(ptr+1));
+    qDebug("Destination ip: 0x%x, 0x%x", *ptr, *(ptr+1));
 
     if (inAddress.macAddrLength() == BipAddrLength) {
         return qFromBigEndian(*(quint16*)(&inAddress.macPtr()[BipIpLength]));

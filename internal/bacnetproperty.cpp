@@ -20,7 +20,7 @@ int SimpleProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyAr
 {
     Q_UNUSED(tryInstantly);
     //we are just simple property - there should be no arrayIdx specified
-    if (propertyArrayIdx == ArrayIndexNotPresent) {
+    if (ArrayIndexNotPresent == propertyArrayIdx) {
         data = _data;
     } else if (0 != error) {
         //index was specified
@@ -32,7 +32,7 @@ int SimpleProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyAr
 int SimpleProperty::setValue(BacnetDataInterfaceShared &data, quint32 propertyArrayIdx, Error *error)
 {
     //we are just simple property - there should be no arrayIdx specified
-    if (propertyArrayIdx == ArrayIndexNotPresent) {
+    if (ArrayIndexNotPresent == propertyArrayIdx) {
         Q_ASSERT(data->typeId() == _data->typeId());
         if (data->typeId() == _data->typeId()) {
             data = _data;//due to being shared, if no one uses the old property, it will be deleted automatically.
@@ -74,13 +74,16 @@ ProxyInternalProperty::ProxyInternalProperty(::Property *data, AppTags::BacnetTa
 int ProxyInternalProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyArrayIdx, Error *error, bool tryInstantly)
 {
     //we are just singular property - there should be no arrayIdx specified
-    if (propertyArrayIdx == ArrayIndexNotPresent) {
-        if (_internalType == QVariant::Invalid) {
+    if (ArrayIndexNotPresent == propertyArrayIdx) {
+        if (QVariant::Invalid == _internalType) {
+            _internalType = _data->type();
+            if (QVariant::Invalid == _internalType) {
             qDebug("%s : property translation type is not specified", __PRETTY_FUNCTION__);
             Q_ASSERT(false);
             if (0 != error)
                 error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
             return ::Property::ResultOk;//no asynchronous waiting
+            }
         }
         QVariant value(_internalType);
         qint32 ret(0);
@@ -125,13 +128,16 @@ int ProxyInternalProperty::getValue(BacnetDataInterfaceShared &data, quint32 pro
 int ProxyInternalProperty::setValue(BacnetDataInterfaceShared &data, quint32 propertyArrayIdx, Error *error)
 {
     //we are just singular property - there should be no arrayIdx specified
-    if (propertyArrayIdx == ArrayIndexNotPresent) {
-        if (_internalType == QVariant::Invalid) {
-            qDebug("%s : property translation type is not specified", __PRETTY_FUNCTION__);
-            Q_ASSERT(false);
-            if (0 != error)
-                error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
-            return ::Property::ResultOk;//no asynchronous waiting
+    if (ArrayIndexNotPresent == propertyArrayIdx) {
+        if (QVariant::Invalid == _internalType) {
+            _internalType = _data->type();
+            if (QVariant::Invalid == _internalType) {
+                qDebug("%s : property translation type is not specified", __PRETTY_FUNCTION__);
+                Q_ASSERT(false);
+                if (0 != error)
+                    error->setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeOther);
+                return ::Property::ResultOk;//no asynchronous waiting
+            }
         }
 
         qint32 ret(0);
@@ -208,7 +214,7 @@ quint32 ArrayProperty::indexOfProperty(BacnetProperty *property) const
 
 int ArrayProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyArrayIdx, Error *error, bool tryInstantly)
 {
-    if (propertyArrayIdx == ArrayIndexNotPresent) {
+    if (ArrayIndexNotPresent == propertyArrayIdx) {
         //return entire array \note remember that some properties may be observers of internal ones
         QList<int> asynchIds;
         QList<BacnetDataInterfaceShared> readProperties;
@@ -288,7 +294,7 @@ int ArrayProperty::getValue(BacnetDataInterfaceShared &data, quint32 propertyArr
 
 int ArrayProperty::setValue(BacnetDataInterfaceShared &data, quint32 propertyArrayIdx, Error *error)
 {
-    if (propertyArrayIdx == ArrayIndexNotPresent) {
+    if (ArrayIndexNotPresent == propertyArrayIdx) {
         /** we can't allow for writing entire array - imagine what would happen if one writes less parameters than there were originally?
             We could check for that, but for the time being, disallow it!
             \note Consider implementation.

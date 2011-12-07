@@ -705,6 +705,12 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
             //handle local message!
         }
 
+        if (!npci.srcAddress().isAddrInitialized()) {// the message comes straight from direct network. Enrich address with network number
+            int netNum = portDirectNetNum(port);
+            Q_ASSERT(netNum >= 0);
+            dlSrcAddress.setNetworkNum(netNum);
+        }
+
         if (0 != appHndlr) {
             appHndlr->indication(actualBytePtr, leftLength,
                                  npci.srcAddress().isAddrInitialized() ? npci.srcAddress() : dlSrcAddress,

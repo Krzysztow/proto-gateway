@@ -71,6 +71,7 @@ bool InternalWPRequestHandler::execute()
     BacnetObject *object = _device->bacnetObject(_data._objectId.objectIdNum());
     Q_CHECK_PTR(object);
     if (0 == object) {
+        _asynchId = 0;
         _error.setError(BacnetErrorNS::ClassObject, BacnetErrorNS::CodeUnknownObject);
         finalizeInstant(_appLayer);
         return true;
@@ -79,6 +80,7 @@ bool InternalWPRequestHandler::execute()
     int readyness = object->propertySet(_data._propValue._propertyId, _data._propValue._arrayIndex,
                                         _data._propValue._value, &_error);
     if (readyness < 0) {
+        _asynchId = 0;
         if (!_error.hasError())
             _error.setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeUnknownProperty);
     } else if (Property::ResultOk == readyness) {

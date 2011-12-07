@@ -22,6 +22,7 @@ QString ConfiguratorHelper::elementString(QDomElement &el) {
 void ConfiguratorHelper::elementError(QDomElement &el, const char* attrWithError, const char *addInfo) {
     QString errorElement = elementString(el);
     qDebug("Error occured while parsing attribute *%s* of element \n\t%s.\n%s\n", attrWithError, qPrintable(errorElement), addInfo);
+    Q_ASSERT(false);
 }
 
 QBitArray ConfiguratorHelper::bitArrayFromString(QString &array, bool *ok)
@@ -77,9 +78,9 @@ QBitArray ConfiguratorHelper::bitArrayFromChar(const char *data, int size, bool 
             ++bitPtr;
         }
         return result;
-    } else
+    } else {
         if (0 != ok) *ok = false;
-
-    return QBitArray();
+        return QBitArray();
+    }
 }
 

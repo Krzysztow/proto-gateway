@@ -72,6 +72,8 @@ qint32 Error::appPartToRaw(quint8 *startPtr, quint16 bufferLength)
     if (ret < 0)
         return ret;
 
+    actualPtr += ret;
+
     return actualPtr - startPtr;
 }
 

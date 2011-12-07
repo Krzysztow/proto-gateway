@@ -327,7 +327,8 @@ QMap<BacnetPropertyNS::Identifier, BacnetProperty*> BacnetConfigurator::createPr
             continue;
         }
 
-        if (BacnetPropertySimpleType != pElem.attribute(PropertyPropertyTypeAttribute)) {
+        QString propType = pElem.attribute(PropertyPropertyTypeAttribute);
+        if ( (BacnetPropertySimpleType != propType) && (BacnetPropertyArray != propType) )  {//allow only for simple and array properties
             ConfiguratorHelper::elementError(pElem, PropertyPropertyTypeAttribute, "Expected simple type");
             Q_ASSERT(false);
             continue;
@@ -462,6 +463,7 @@ QMap<QString, BacnetObjectTypeNS::ObjectType> BacnetConfigurator::supportedObjec
 {
     QMap<QString, BacnetObjectTypeNS::ObjectType> supportedObjects;
     
+    supportedObjects.insert("device", BacnetObjectTypeNS::Device);
     supportedObjects.insert("analog-input", BacnetObjectTypeNS::AnalogInput);
     supportedObjects.insert("analog-output", BacnetObjectTypeNS::AnalogOutput);
     supportedObjects.insert("analog-value", BacnetObjectTypeNS::AnalogValue);
@@ -481,8 +483,8 @@ QMap<QString, BacnetConfigurator::TagConversion> BacnetConfigurator::typesMap()
     
     tm.insert("null", TagConversion(AppTags::Null, 0));
     tm.insert("boolean", TagConversion(AppTags::Boolean, QVariant::Bool));
-    tm.insert("unsignedinteger", TagConversion(AppTags::UnsignedInteger, QVariant::UInt));
-    tm.insert("signedinteger", TagConversion(AppTags::SignedInteger, QVariant::Int));
+    tm.insert("unsigned", TagConversion(AppTags::UnsignedInteger, QVariant::UInt));
+    tm.insert("signed", TagConversion(AppTags::SignedInteger, QVariant::Int));
     tm.insert("real", TagConversion(AppTags::Real, QMetaType::Float));
     tm.insert("double", TagConversion(AppTags::Double, QVariant::Double));
     tm.insert("octetstring", TagConversion(AppTags::OctetString, QVariant::ByteArray));
@@ -702,10 +704,12 @@ BacnetApplicationLayerHandler *BacnetConfigurator::createApplicationLayer(Bacnet
     QFile defaultFile("bacnet-default-object.xml");
     if (!defaultFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug("%s : Can't open default object file!", __PRETTY_FUNCTION__);
+        Q_ASSERT(false);
     } else {
         QDomDocument defDom;
         if (!defDom.setContent(&defaultFile)) {
             qDebug("%s : Cannot read default object config", __PRETTY_FUNCTION__);
+            Q_ASSERT(false);
         } else {
             QDomElement defElem = defDom.documentElement().firstChildElement(DefaultObjectsTag);
             BacnetConfigurator::instance()->configureDefaultDevice(defElem);

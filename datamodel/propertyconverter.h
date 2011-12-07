@@ -78,7 +78,7 @@ private:
     bool applyMaskWithInValues_helper(QVariant &inVariant, QVariant &outVariant);
 
 private:
-    QBitArray &_bitmaskFromInternal;
+    const QBitArray _bitmaskFromInternal;
 };
 
 } // namespace DataModel

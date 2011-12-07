@@ -100,7 +100,7 @@ void BacnetTSM2::sendReject(BacnetAddress &destination, BacnetAddress &source, B
     }
     buffer.setBodyLength(ret);
 
-    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending reject message with:");
+    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "TSM : Sending reject message with:");
     _netHandler->sendApdu(&buffer, false, &destination, &source);
 }
 
@@ -313,8 +313,8 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
             return;
         }
         buffer.setBodyLength(ret);
+        HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "TSM : Sending simple ack message with:");
         _netHandler->sendApdu(&buffer, false,  &destination, &source);
-        HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending simple ack message with:");
         return;
     }
 
@@ -337,8 +337,8 @@ void BacnetTSM2::sendAck(BacnetAddress &destination, BacnetAddress &source, Bacn
     actualPtr += ret;
     buffer.setBodyLength(actualPtr - buffer.bodyPtr());
 
+    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "TSM : Sending ack message with:");
     _netHandler->sendApdu(&buffer, false, &destination, &source);
-    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending ack message with:");
 #else
 #error "Not implemented, segmentation!"
 #endif
@@ -362,8 +362,8 @@ void BacnetTSM2::sendAbort(BacnetAddress &remoteDestination, BacnetAddress &loca
     }
 
     buffer.setBodyLength(ret);
+    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "TSM : Sending abort message with:");
     _netHandler->sendApdu(&buffer, false, &remoteDestination, &localSsource);
-    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending abort message with:");
 }
 
 void BacnetTSM2::sendError(BacnetAddress &remoteDestination, BacnetAddress &localSource, quint8 invokeId,
@@ -396,8 +396,8 @@ void BacnetTSM2::sendError(BacnetAddress &remoteDestination, BacnetAddress &loca
     actualPtr += ret;
 
     buffer.setBodyLength(actualPtr - buffer.bodyPtr());
+    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "TSM : Sending error message with:");
     _netHandler->sendApdu(&buffer, false, &remoteDestination, &localSource);
-    HelperCoder::printArray(buffer.bodyPtr(), buffer.bodyLength(), "Sending error message with:");
 }
 
 void BacnetTSM2::sendUnconfirmed(const BacnetAddress &destination, BacnetAddress &source, BacnetServiceData &data, quint8 serviceChoice)

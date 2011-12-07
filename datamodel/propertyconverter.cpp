@@ -237,6 +237,7 @@ bool PropertyBitmaskConverter::applyMaskWithInValues_helper(QVariant &inVariant,
     qDebug()<<"Out value \t"<<outBitRepres;
     if (!ok)
         return ok;
+    Q_ASSERT(!_bitmaskFromInternal.isNull());
     QBitArray maskCopy = _bitmaskFromInternal;
     maskCopy.truncate(outBitRepres.size());
     qDebug()<<"Mask (mod)\t"<<maskCopy;

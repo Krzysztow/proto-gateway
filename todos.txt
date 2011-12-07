@@ -9,4 +9,6 @@ LOOK: InternalConfirmedCovNotificationHandler - there is no need to support all 
 
 ? generateAsynchId() should be done via PropertySubject!
 
+# bacnet || bvlc || bacapp
+# udp port 47808
 

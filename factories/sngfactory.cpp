@@ -67,7 +67,7 @@ SngHandler *SngFactory::createModule(QDomElement &sngConfig)
                 ConfiguratorHelper::elementError(propertyElem, "", "Subject not created!");
                 continue;
             }
-            createdOwner = new Sng::SngSimpleActorProperty(property, type, address, type, address);
+            createdOwner = new Sng::SngSimpleActorProperty(property, type, address, type, feedback);
         } else {
             ConfiguratorHelper::elementError(propertyElem, SngPropertyTypeAttribute);
             continue;
