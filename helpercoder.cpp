@@ -1,6 +1,6 @@
 #include "helpercoder.h"
 
-quint8 HelperCoder::sint32fromVarLengthRaw(quint8 *ptr, qint32 *result, quint8 varLength)
+quint8 HelperCoder::sint32fromVarLengthRaw(const quint8 *ptr, qint32 *result, quint8 varLength)
 {
     Q_CHECK_PTR(ptr);
     Q_CHECK_PTR(result);
@@ -16,7 +16,7 @@ quint8 HelperCoder::sint32fromVarLengthRaw(quint8 *ptr, qint32 *result, quint8 v
         *result = -1 << (8*varLength);//-1 makes all ones in two complement
     }
 
-    quint8 *dataPtr = ptr;
+    const quint8 *dataPtr = ptr;
     for (int i = varLength-1; i >= 0; --i) {
         *result |= ((*dataPtr) << i*8);
         dataPtr++;
@@ -73,13 +73,13 @@ quint8 HelperCoder::sint32ToVarLengthRaw(quint8 *dstPtr, qint32 value)
     return actualPtr - dstPtr;
 }
 
-quint8 HelperCoder::uint32fromVarLengthRaw(quint8 *ptr, quint32 *result, quint8 varLength)
+quint8 HelperCoder::uint32fromVarLengthRaw(const quint8 *ptr, quint32 *result, quint8 varLength)
 {
     Q_CHECK_PTR(ptr);
     Q_CHECK_PTR(result);
 
     *result = 0;//initialize to 0
-    quint8 *dataPtr = ptr;
+    const quint8 *dataPtr = ptr;
     for (int i = varLength-1; i >= 0; --i) {
         *result |= ((*dataPtr) << i*8);
         dataPtr++;
@@ -88,7 +88,7 @@ quint8 HelperCoder::uint32fromVarLengthRaw(quint8 *ptr, quint32 *result, quint8 
     return dataPtr - ptr;
 }
 
-quint8 HelperCoder::doubleFromRaw(quint8 *ptr, double *result)
+quint8 HelperCoder::doubleFromRaw(const quint8 *ptr, double *result)
 {
     Q_ASSERT(8 == sizeof(double));
     Q_CHECK_PTR(ptr);
@@ -136,7 +136,7 @@ quint8 HelperCoder::doubleToRaw(double &value, quint8 *destPtr)
     return 8;
 }
 
-#ifndef QT_NO_DEBUG
+//#ifndef QT_NO_DEBUG
 
 QDebug operator<<(QDebug dbg, const QBitArray& z)
 {
@@ -175,4 +175,4 @@ void HelperCoder::printBin(int value, int lsbBitsNum, const char *prestring="B'"
 
 }
 
-#endif
+//#endif

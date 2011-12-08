@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config commserver-port="8888" commserver-ip="192.168.2.109" physical-address="1/2/3" >
 	<sngProperties>
-		<property int-id="1" int-var-type="uchar" int-type="subject" int-conv-type="scaling" sng-type="value" int-conv-factor="2" prop-type="simple-actor" gr-address="1/2/3" gr-address-fback="1/2/4" />
+		<property int-id="1" int-var-type="uchar" int-type="subject" sng-type="value" prop-type="simple-actor" gr-address="1/2/3" gr-address-fback="1/2/4" />
 		<property int-id="10" int-var-type="uchar" int-type="observer" sng-type="value" prop-type="simple-sensor" gr-address="3/3/3" gr-address-fback="3/3/4" />
+		<property int-id="3" int-var-type="uchar" int-type="subject" sng-type="value" prop-type="simple-actor" int-conv-factor="2" gr-address="1/2/10" gr-address-fback="1/2/11	" />
 	</sngProperties>
 </config>
-

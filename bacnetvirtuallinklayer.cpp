@@ -1,7 +1,6 @@
 #include "bacnetvirtuallinklayer.h"
 
 #include <QtGlobal>
-#include <QtEndian>
 #include <QByteArray>
 
 #include "bacnetbbmdhandler.h"
@@ -34,7 +33,7 @@ void BacnetBvllHandler::setTransportProxy(BacnetTransportLayerHandler *transport
     _transportProxyPtr = transportProxy;
 }
 
-void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddress srcAddr, qint64 srcPort)
+void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddress srcAddr, quint64 srcPort)
 {
     //decode BVLL information
     //first assert there is enough data to encode this message
@@ -49,7 +48,7 @@ void BacnetBvllHandler::consumeDatagram(quint8 *data, quint32 length, QHostAddre
     }
 
     //read length from BVLC
-    quint16 dataLength/* = qFromBigEndian(*(quint16*)&data[BvlcLengthField])*/;
+    quint16 dataLength;
     HelperCoder::uint16FromRaw(&data[BvlcLengthField], &dataLength);
     //assert length is really the one intended
     Q_ASSERT(dataLength == length);

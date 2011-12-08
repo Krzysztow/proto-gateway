@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bacnetConfig>
 	<transportLayer>
-		<port  type="bip" address="192.168.2.107:47808" bac-addr-type="ip" port-id="2" />
-		<!-- <port  type="bip" address="192.168.2.107:47809" bac-addr-type="ip" port-id="1" /> -->
+		<port  type="bip" address="192.168.2.107:47808" bac-addr-type="ip" port-id="1" />
+		<!-- <port  type="bip" address="192.168.2.107:47809" bac-addr-type="ip" port-id="2" /> -->
 	</transportLayer>
 	<networkLayer>
 		<routingTable>
 			<route port-id="1" direct-net-num="3" >
 				<reachableNet net-num="10" net-router-address="192.168.2.120:47809" bac-addr-type="ip"/>
 			</route>
-			<route port-id="2" direct-net-num="4" >
-				<reachableNet net-num="10" net-router-address="192.168.2.122:47809" bac-addr-type="ip"/> <!-- ERROR --> 
+			<!--  <route port-id="2" direct-net-num="4" >
+				<reachableNet net-num="10" net-router-address="192.168.2.122:47809" bac-addr-type="ip"/>  < ERROR > 
 				<reachableNet net-num="11" net-router-address="192.168.2.123:47809" bac-addr-type="ip"/>
-			</route>
+			</route> -->
 		</routingTable>
 	</networkLayer>
 	<appLayer net-num="2">
@@ -30,8 +30,10 @@
 					<childObjects>
 						<object name="OATemp" instance-number="5" obj-type="analog-input" >
 							<properties>
-								<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-var-type="double" int-id="3" />
+								<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-var-type="float" int-conv-type="scaling" int-conv-factor="2" int-id="3" />
 							</properties>
+						</object>	
+						<object instance-number="1" obj-type="multistate-value" >
 						</object>	
 					</childObjects>
 				</device>

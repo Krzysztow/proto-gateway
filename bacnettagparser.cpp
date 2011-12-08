@@ -48,8 +48,9 @@ qint16 BacnetTagParser::parseNext()
 
 quint16 BacnetTagParser::actualTagAndDataLength()
 {
+    qDebug("Data Ptrs 0x%p, 0x%p, and length 0x%d", _valuePtr, _actualTagPtr, _valueLength);
     Q_ASSERT(isOpeningOrClosingTag() ?
-             (_valueLength + (_valuePtr - _actualTagPtr) == 0) : true);
+             (_valueLength + (_valuePtr - _actualTagPtr) == 1) : true);
     return _valueLength + (_valuePtr - _actualTagPtr);
 }
 
@@ -355,7 +356,7 @@ quint32 BacnetTagParser::toEumerated(bool *ok) {
 float BacnetTagParser::toFloat(bool *ok) {
     Q_CHECK_PTR(_valuePtr);
     Q_ASSERT(4 == _valueLength);
-    float ret;
+    float ret(0);
     if (checkCorrectAppOrCtxTagHelper(AppTags::Real) &&
         checkCorrectLengthHelper(4)) {
         if (ok) *ok = true;
@@ -433,8 +434,8 @@ Bacnet::ObjectIdStruct BacnetTagParser::toObjectId(bool *ok)
     Bacnet::ObjectIdStruct ret = {BacnetObjectTypeNS::Undefined, 0};
     if (checkCorrectAppOrCtxTagHelper(AppTags::BacnetObjectIdentifier) &&
         checkCorrectLengthHelper(4)) {
-        quint32 objType = *(quint32*)_valuePtr;
-        objType = qFromBigEndian(objType);
+        quint32 objType(0);
+        HelperCoder::uint32FromRaw(_valuePtr, &objType);
         ret.instanceNum = objType & 0x3fffff;//get rid of the part of object type
         objType >>= 22;//get rid of the part from the instance number
         ret.objectType = (BacnetObjectTypeNS::ObjectType)objType;

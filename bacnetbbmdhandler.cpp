@@ -1,8 +1,8 @@
 #include "bacnetbbmdhandler.h"
 
-#include <QtEndian>
-
 #include "bacnetudptransportlayer.h"
+#include "helpercoder.h"
+#include "bacnetbipaddress.h"
 
 #if (BIP_IP_LENGTH != 4)
 #error "IPv6 is not handled in this file"
@@ -19,7 +19,7 @@ bool BacnetBbmdHandler::setBroadcastTableFromRaw(quint8 *data, quint16 length)
     Q_ASSERT(0 != data);
     //first check if the lenght is of proper value
     //according to specifications (IPv6) is not handled here the data should be N*10octets
-    quint8 bdtEntryLength = BacnetBipAddressHelper::BipAddrLength + BacnetBipAddressHelper::BipMaskLength;
+    const quint8 bdtEntryLength = BacnetBipAddressHelper::BipAddrLength + BacnetBipAddressHelper::BipMaskLength;
     if (length%bdtEntryLength != 0) {
         return false;
         Q_ASSERT(false);
@@ -32,11 +32,11 @@ bool BacnetBbmdHandler::setBroadcastTableFromRaw(quint8 *data, quint16 length)
     _bbmdTable.resize(numOfEntries);
     for (int i=0; i<numOfEntries; i++) {
         //read the address (IPv4 address and port)
-        fieldStart += _bbmdTable[i].address.macAddressToRaw(fieldStart);
+        fieldStart += BacnetBipAddressHelper::macAddressFromRaw(fieldStart, &(_bbmdTable[i].address));
         //read the mask (length the same as IPvt4 port)
         //! \todo refactor these lines to functions to be independent of endianess
-        *(quint16*)fieldStart = qFromBigEndian(_bbmdTable[i].mask);
-        fieldStart += BacnetBipAddressHelper::BipMaskLength;
+        Q_ASSERT(BacnetBipAddressHelper::BipMaskLength == sizeof(quint32));
+        fieldStart += HelperCoder::uint32FromRaw(fieldStart, &(_bbmdTable[i].mask));
     }
 
     return true;
@@ -63,8 +63,8 @@ bool BacnetBbmdHandler::setBroatcastTableToRaw(quint8 *data, quint16 maxLength)
         //pass ip address & ip port
         fieldStart += _bbmdTable[i].address.macAddressToRaw(fieldStart);
         //pass ip broadcast mask
-        *(quint16*)fieldStart = qToBigEndian(_bbmdTable[i].mask);
-        fieldStart += BacnetBipAddressHelper::BipMaskLength;
+        Q_ASSERT(BacnetBipAddressHelper::BipMaskLength == sizeof(quint32));
+        fieldStart += HelperCoder::uint32ToRaw(_bbmdTable[i].mask, fieldStart);
     }
 
     return true;

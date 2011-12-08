@@ -1,7 +1,5 @@
 #include "bacnetinternaladdresshelper.h"
 
-#include <QtEndian>
-
 #include "helpercoder.h"
 
 using namespace BacnetInternalAddressHelper;
@@ -26,7 +24,10 @@ InternalAddress BacnetInternalAddressHelper::internalAddress(const BacnetAddress
              inAddress.isRemoteBroadcast() ||
              inAddress.isLocalBraodacst());
     if (inAddress.macAddrLength() == InternalAddressLength) {
-        return qFromBigEndian(*(quint32*)inAddress.macPtr());
+        Q_ASSERT(InternalAddressLength == sizeof(quint32));
+        quint32 internalAddress;
+        HelperCoder::uint32FromRaw(inAddress.macPtr(), &internalAddress);
+        return internalAddress;
     }
     else return InvalidInternalAddress;
 }

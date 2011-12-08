@@ -48,13 +48,14 @@ void BacnetUdpTransportLayerHandler::readDatagrams()
     }
 }
 
-bool BacnetUdpTransportLayerHandler::send(quint8 *data, qint64 length, QHostAddress destAddr, qint16 destPort)
+bool BacnetUdpTransportLayerHandler::send(quint8 *data, qint64 length, QHostAddress destAddr, quint16 destPort)
 {
     return (_socket->writeDatagram((char*)data, length, destAddr, destPort) == length);
 }
 
-void BacnetUdpTransportLayerHandler::sendBuffer(Buffer *buffer, QHostAddress &destAddr, qint16 destPort)
+void BacnetUdpTransportLayerHandler::sendBuffer(Buffer *buffer, QHostAddress &destAddr, quint16 destPort)
 {
+    qDebug()<<"Data is being sent to"<<destAddr<<destPort;
     Buffer::printArray(buffer->bodyPtr(), buffer->bodyLength(), "Sending data:");
 
     if (buffer->bodyLength() != _socket->writeDatagram((char*)buffer->bodyPtr(), buffer->bodyLength(), destAddr, destPort)) {

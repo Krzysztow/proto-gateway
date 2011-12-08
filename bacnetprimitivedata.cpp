@@ -1288,12 +1288,14 @@ qint32 BacnetList::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumber)
 //! \todo The list should be translated to sequence and sequence of
 qint32 BacnetList::fromRaw(BacnetTagParser &parser)
 {
+    Q_UNUSED(parser);
 #warning "Not implemented, yet. Doesn't have to be for our purposes!"
     return -1;
 }
 
 qint32 BacnetList::fromRaw(BacnetTagParser &parser, quint8 tagNum)
 {
+    Q_UNUSED(parser); Q_UNUSED(tagNum);
 #warning "Not implemented, yet. Doesn't have to be for our purposes!"
     return -1;
 }

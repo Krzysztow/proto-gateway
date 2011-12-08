@@ -32,10 +32,10 @@ public:
     void setBvlc(BacnetBvllHandler *bvllHndlr);
 
     //! Used by higher layers to send data over UDP
-    bool send(quint8 *data, qint64 length, QHostAddress destAddr, qint16 destPort);
+    bool send(quint8 *data, qint64 length, QHostAddress destAddr, quint16 destPort);
 
     //! Newer version of above.
-    void sendBuffer(Buffer *buffer, QHostAddress &destAddr, qint16 destPort);
+    void sendBuffer(Buffer *buffer, QHostAddress &destAddr, quint16 destPort);
 
     /**
       Returns actual ip address of the device

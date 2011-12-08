@@ -1,6 +1,6 @@
 #include "bacnetaddress.h"
 #include <string.h>
-#include <QtEndian>
+#include "helpercoder.h"
 
 BacnetAddress::BacnetAddress()
 {
@@ -54,6 +54,8 @@ void BacnetAddress::macAddressFromRaw(quint8 *data, quint8 length)
 {
     _macAddrLength = length;
     memcpy(_macAddress, data, _macAddrLength);
+//    HelperCoder::printArray(data, length, "*** Address being copied:");
+//    HelperCoder::printArray(_macAddress, length, "*** Address copied:");
 }
 
 quint8 BacnetAddress::macAddressToRaw(quint8 *data)
@@ -80,8 +82,7 @@ const quint8 *BacnetAddress::macPtr() const
 quint8 BacnetAddress::networkNumToRaw(quint8 *data)
 {
     if (hasNetworkNumber()) {
-        *(quint16*)data = qToBigEndian((quint16)_networkNumber);
-        return 2;
+        return HelperCoder::uin16ToRaw(_networkNumber, data);
     }
     else
         return 0;
@@ -89,8 +90,10 @@ quint8 BacnetAddress::networkNumToRaw(quint8 *data)
 
 quint8 BacnetAddress::setNetworkNumFromRaw(quint8 *data)
 {
-    _networkNumber = qFromBigEndian(*(quint16*)data);
-    return 2;
+    quint16 tempNetNum;
+    quint8 ret = HelperCoder::uint16FromRaw(data, &tempNetNum);
+    _networkNumber = tempNetNum;//I copy it here, since I use qint32 not quint16
+    return ret;
 }
 
 void BacnetAddress::setNetworkNum(quint16 netNum)

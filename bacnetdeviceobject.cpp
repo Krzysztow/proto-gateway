@@ -264,7 +264,7 @@ Bacnet::BacnetObject *BacnetDeviceObject::bacnetObject(quint32 instanceNumber)
     //otherwise check children or return default value 0
     if (objectIdNum() == instanceNumber)
         return this;
-    return _childObjects[instanceNumber];
+    return _childObjects.value(instanceNumber);
 }
 
 bool BacnetDeviceObject::addBacnetObject(BacnetObject *object)

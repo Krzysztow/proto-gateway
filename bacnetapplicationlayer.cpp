@@ -366,9 +366,9 @@ void BacnetApplicationLayerHandler::registerObjectFromDiscovery(BacnetAddress &d
 {
     ObjIdNum devNum = devId.objectIdNum();
     ObjIdNum objNum = objId.objectIdNum();
-    ObjectIdStruct check = numToObjId(devNum);
-    Q_ASSERT(check.instanceNum == devId.instanceNumber());
-    Q_ASSERT(check.objectType == devId.type());
+
+    Q_ASSERT(numToObjId(devNum).instanceNum == devId.instanceNumber());
+    Q_ASSERT(numToObjId(devNum).objectType == devId.type());
     qDebug("%s : Gotten response from device 0x%x, ovject 0x%x of name %s", __PRETTY_FUNCTION__, devNum, objNum, qPrintable(objName));
 
     bool isResponseForUs(false);

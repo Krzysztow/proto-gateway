@@ -27,7 +27,7 @@ InternalWPRequestHandler::~InternalWPRequestHandler()
 bool InternalWPRequestHandler::asynchActionFinished(int asynchId, int result, BacnetObject *object, BacnetDeviceObject *device)
 {
     Q_UNUSED(object);
-    Q_ASSERT((quint32)asynchId == _asynchId);
+    Q_ASSERT(asynchId == _asynchId);
     if ((quint32)asynchId == _asynchId) {//this is response to our querry
         return finishWriting_helper(device, result);
     }

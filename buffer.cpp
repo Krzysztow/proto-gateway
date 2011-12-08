@@ -86,7 +86,7 @@ bool Buffer::isShared() const
     return (1 != (*_refCount));
 }
 
-void Buffer::printArray(quint8 *ptr, int size, const char *pretext)
+void Buffer::printArray(const quint8 *ptr, int size, const char *pretext)
 {
     printf("%s 0x", pretext);
     for (int i=0; i<size; i++) {

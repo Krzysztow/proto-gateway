@@ -22,8 +22,8 @@ void BacnetNetworkLayerHandler::sendRejectMessageToNetwork(RejectMessageToRouter
         qDebug("BacnetNetworkLayerHandler: can't send reject message - no valid buffer!");
         return;
     }
-    quint16 buffLength = buffer.bodyLength();
-    Q_ASSERT(buffLength > 0);
+
+    Q_ASSERT(buffer.bodyLength() > 0);
     quint8 *buffPtr = buffer.bodyPtr();
     BacnetNpci npci;
     npci.setNetworkMessage(BacnetNpci::RejectMessageToNetwork);
@@ -65,10 +65,11 @@ qint32 BacnetNetworkLayerHandler::processIAmRouterToNetwork(quint8 *actualBytePt
     QVector<TNetworkNum> nets;
     nets.resize(netsNum);
     for (int i = 0; i < netsNum; ++i) {
+        qDebug()<<"Passing 0x"<<*actualBytePtr<<*(actualBytePtr+1);
         actualBytePtr += HelperCoder::uint16FromRaw(actualBytePtr, &itNet);
         nets[i] = itNet;
     }
-
+    qDebug()<<"Inserting networks available through port"<<nets;
     //! \note optimization required? Think not, since used not often
     updateRoutingTableIndirectAccess(port, nets, srcAddress);
 
@@ -298,6 +299,8 @@ qint32 BacnetNetworkLayerHandler::processInitializeRoutingTable(quint8 *actualBy
 qint32 BacnetNetworkLayerHandler::processRejectMessageToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port)
 {
     Q_UNUSED(port);
+    Q_UNUSED(length);
+
     quint8 *dataPtr = actualBytePtr;
     Q_ASSERT(length == 3);
     RejectMessageToRouterReason reasonCode = (RejectMessageToRouterReason)*dataPtr;
@@ -450,8 +453,8 @@ void BacnetNetworkLayerHandler::sendIAmRouterToNetwork_helper(QList<TNetworkNum>
         return;
 
     //we should be paying attention not to overrun buffer - write no more bytes than buffLength
-    quint16 buffLength = buffer.bodyLength();
-    Q_ASSERT(buffLength > 0);
+
+    Q_ASSERT(buffer.bodyLength() > 0);
     quint8 *buffPtr = buffer.bodyPtr();
 
     BacnetNpci npci;
@@ -463,7 +466,7 @@ void BacnetNetworkLayerHandler::sendIAmRouterToNetwork_helper(QList<TNetworkNum>
     buffPtr += npci.setToRaw(buffPtr);
 
     //after npci is set, fill the buffer with the list of available networks
-    Q_ASSERT( (buffLength - (buffPtr - buffer.bodyPtr())) >= (sizeof(quint16)*networks.count()));//assert we have enough place in the buffer
+    Q_ASSERT( (buffer.bodyLength() - (buffPtr - buffer.bodyPtr())) >= (uint)(sizeof(quint16)*networks.count()));//assert we have enough place in the buffer
     QList<TNetworkNum>::iterator netIt = networks.begin();
     for (; netIt != networks.end(); ++netIt) {
         buffPtr += HelperCoder::uin16ToRaw(*netIt, buffPtr);
@@ -600,7 +603,6 @@ void BacnetNetworkLayerHandler::sendBuffer(Buffer *bufferToSend, Bacnet::Network
 void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAddress &dlSrcAddress, BacnetTransportLayerHandler *port)
 {
     Buffer::printArray(npdu, length, "NPDU data: ");
-
     quint8 *actualBytePtr = npdu;
     quint16 leftLength = length;
     qint32 ret(0);

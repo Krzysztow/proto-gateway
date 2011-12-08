@@ -67,7 +67,7 @@ public:
     };
 
     //! Used when reading the data from underlying transport layer.
-    void consumeDatagram(quint8 *data, quint32 datagramLength, QHostAddress srcAddr, qint64 srcPort);
+    void consumeDatagram(quint8 *data, quint32 datagramLength, QHostAddress srcAddr, quint64 srcPort);
 
     /**
       Used to send data from network layer.

@@ -37,6 +37,7 @@ qint32 DataAbstract::toRaw(quint8 *ptrStart, quint16 buffLength, quint8 tagNumbe
 
 qint32 DataAbstract::fromRaw(BacnetTagParser &parser)
 {
+    Q_UNUSED(parser);
     Q_ASSERT_X(false, "DataAbstract::fromRaw()",
                "DataAbstract::fromRaw() - this class should be only used for constructed datatypes.");
     return -1;
@@ -76,6 +77,7 @@ qint32 DataAbstract::fromRaw(BacnetTagParser &parser, quint8 tagNumber)
 
 bool DataAbstract::setInternal(QVariant &value)
 {
+    Q_UNUSED(value);
     Q_ASSERT_X(false, "DataAbstract", "No general way to convert variant to abstract data.");
     return false;
 }

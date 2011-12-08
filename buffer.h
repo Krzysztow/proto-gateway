@@ -62,7 +62,7 @@ public:
       */
     bool isShared() const;
 
-    static void printArray(quint8 *ptr, int size, const char *pretext = "");
+    static void printArray(const quint8 *ptr, int size, const char *pretext = "");
 
 private:
     Buffer(quint8 *refCount, quint16 buffLength):
