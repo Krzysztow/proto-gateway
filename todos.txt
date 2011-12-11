@@ -12,3 +12,11 @@ LOOK: InternalConfirmedCovNotificationHandler - there is no need to support all 
 # bacnet || bvlc || bacapp
 # udp port 47808
 
+cyclic, acyclic
+scaling and conversion
+flexible for physical layer changes
+logging, mainenance
+debug information
+Bridging the gap between Modbus/TCP and Foundation Fieldbus - http://www.softing.com/home/en/industrial-automation/products/foundation-fieldbus/professional-article.php?navanchor=3010271
+
+http://www.csimn.com/CSI_pages/Gateways.html

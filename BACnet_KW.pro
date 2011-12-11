@@ -10,6 +10,8 @@ CONFIG += console
 CONFIG -= app_bundle
 TEMPLATE = app
 
+INCLUDEPATH += gateway_common
+
 INCLUDEPATH += internal \
     external \
     applayer \
@@ -132,7 +134,10 @@ SOURCES += main.cpp \
     sng/sngdefinitions.cpp \
     factories/sngfactory.cpp \
     sng/snginternalsupport.cpp \
-    datamodel/snginternaltypesmapper.cpp
+    datamodel/snginternaltypesmapper.cpp \
+    gateway_common/bacnetprotocolinterface.cpp \
+    gateway_common/sngprotocolinterface.cpp \
+    gateway_common/protocolsmanager.cpp
 
 HEADERS += bacnetvirtuallinklayer.h \
     bacnetnetworklayer.h \
@@ -257,7 +262,11 @@ HEADERS += bacnetvirtuallinklayer.h \
     sng/sngdefinitions.h \
     factories/sngfactory.h \
     sng/snginternalsupport.h \
-    datamodel/snginternaltypesmapper.h
+    datamodel/snginternaltypesmapper.h \
+    gateway_common/protocolinterface.h \
+    gateway_common/bacnetprotocolinterface.h \
+    gateway_common/sngprotocolinterface.h \
+    gateway_common/protocolsmanager.h
 
 OTHER_FILES +=
 
@@ -269,6 +278,13 @@ SOURCES += sng/snghandler.cpp
 
 LIBS += -lSNGConnectionManager
 LIBS += -L./
+
+
+
+
+
+
+
 
 
 

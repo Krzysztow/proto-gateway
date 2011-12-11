@@ -44,6 +44,7 @@ ADD_DEFINITIONS(-DQT_SHARED)
 # by default only QtCore and QtGui modules are enabled
 # other modules must be enabled like this:
 SET( QT_USE_QTGUI FALSE )
+SET( QT_DONT_USE_QTGUI TRUE ) 
 SET( QT_USE_QTNETWORK TRUE )
 SET( QT_USE_QTXML TRUE )
 #SET( QT_USE_QT3SUPPORT TRUE )
