@@ -64,6 +64,8 @@ public:
     //! Associates direct network num with portId. If there was such association, gets  deleted.
     void setPortDirectNetwork(TPortId portId, TNetworkNum networkNum);
 
+    void broadcastAvailableNetworks();
+
 private:
     /**
       Returns number of bytes used to process the message. If not successfully - negative.
@@ -73,6 +75,9 @@ private:
       physical (or BVLL logical) ports.
       */
     qint32 processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &originAddress, BacnetNpci &npci, BacnetTransportLayerHandler *port);
+    //! Helper function; returns all the router accessible networks except thos from port.
+    QList<TNetworkNum> networksAccessibleExcludePort_helper(BacnetTransportLayerHandler *port);
+
     qint32 processRejectMessageToNetwork(quint8 *actualBytePtr, quint16 length, BacnetTransportLayerHandler *port);
     qint32 processInitializeRoutingTable(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddr, BacnetTransportLayerHandler *port);
     qint32 processIAmRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &srcAddress, BacnetTransportLayerHandler *port);

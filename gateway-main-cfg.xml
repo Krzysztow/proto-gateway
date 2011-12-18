@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<protocols>
+		<protocol name="bacnet" config="bacnet-test-config.xml" config-validation="123" proto-version="1.0.0"/>
+		<protocol name="sng" config="sng-test-config.xml" config-validation="123" proto-version="1.0.0"/>
+	</protocols>
+</config>

@@ -21,6 +21,8 @@ static const char *AppLayerTag          = "appLayer";
 
 bool BacnetProtocolInterface::createProtocol(QString &configPath, QString &validation) const
 {
+    Q_UNUSED(validation);
+
     QFile f(configPath);
     if (!f.open(QIODevice::ReadOnly)) {
         qDebug("Can't open a config file %s!", qPrintable(configPath));
@@ -53,7 +55,6 @@ bool BacnetProtocolInterface::createProtocol(QString &configPath, QString &valid
         return false;
     }
 
-
     //set virtual network parameters.
     element = mainElement.firstChildElement(AppLayerTag);
     Bacnet::BacnetApplicationLayerHandler *appLayer = Bacnet::BacnetConfigurator::createApplicationLayer(networkLayer, element);
@@ -64,8 +65,10 @@ bool BacnetProtocolInterface::createProtocol(QString &configPath, QString &valid
         delete networkLayer;
         return false;
     }
-
     Q_CHECK_PTR(appLayer);
+
+    //send I-Am router to network to all ports.
+    networkLayer->broadcastAvailableNetworks();
 
     return true;
 }

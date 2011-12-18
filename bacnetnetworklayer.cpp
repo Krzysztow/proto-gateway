@@ -334,6 +334,38 @@ qint32 BacnetNetworkLayerHandler::processRejectMessageToNetwork(quint8 *actualBy
     return (dataPtr - actualBytePtr);
 }
 
+void BacnetNetworkLayerHandler::broadcastAvailableNetworks()
+{
+    QList<TNetworkNum> networksAccessible;
+
+    QHash<TPortId, BacnetTransportLayerHandler*>::Iterator portIt = _allPorts.begin();
+    QHash<TPortId, BacnetTransportLayerHandler*>::Iterator portItEnd = _allPorts.end();
+
+    for (; portIt != portItEnd; ++portIt) {
+        networksAccessible = networksAccessibleExcludePort_helper(portIt.value());
+        sendIAmRouterToNetwork_helper(networksAccessible, portIt.value());
+    }
+}
+
+QList<BacnetNetworkLayerHandler::TNetworkNum> BacnetNetworkLayerHandler::networksAccessibleExcludePort_helper(BacnetTransportLayerHandler *port)
+{
+    QList<TNetworkNum> networksToReturn;
+    //firts, show access to our virtual network...
+    networksToReturn.append(_virtualNetNum);
+    //...and for all the others
+    QHash<TNetworkNum, RoutingEntry>::Iterator reIt = _routingTable.begin();
+    QHash<TNetworkNum, RoutingEntry>::Iterator endIt = _routingTable.end();
+    for (; reIt != endIt; ++reIt) {
+        if (reIt->port != port) {//add routing information, exclude that connected to port where the message came from
+            networksToReturn.append(reIt.key());
+            networksToReturn.append(reIt->indirectNetworkAccess.keys());
+        }
+    }
+
+    return networksToReturn;
+}
+
+
 qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualBytePtr, quint16 length, BacnetAddress &dlSrcAddress, BacnetNpci &npci, BacnetTransportLayerHandler *port)
 {
     /**
@@ -367,7 +399,8 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
             QHash<TNetworkNum, RoutingEntry>::Iterator endIt = _routingTable.end();
             for (; reIt != endIt; ++reIt) {
                 if ( (port != reIt->port) && //we don't want to investigate information from the same port
-                     reIt->indirectNetworkAccess.contains(reqDnet) ) {
+                     ((reIt.key() == reqDnet) ||    //network directly connected
+                     (reIt->indirectNetworkAccess.contains(reqDnet))) ) { // network indirectly connected
                     networksToReturn.append(reqDnet);
                     break;
                 }
@@ -387,22 +420,7 @@ qint32 BacnetNetworkLayerHandler::processWhoIsRouterToNetwork(quint8 *actualByte
             }
         }
     } else { //wants to read our reachable networks (excluding those that may be reached via this port)
-        /*
-         Normally we should consult the routing table and extract networks not being on the port. Here we know
-         that question could come only come from the only one port - thus we don't care, pass all the virtual
-         networks.
-         */
-        //firts, show access to our virtual network...
-        networksToReturn.append(_virtualNetNum);
-        //...and for all the others
-        QHash<TNetworkNum, RoutingEntry>::Iterator reIt = _routingTable.begin();
-        QHash<TNetworkNum, RoutingEntry>::Iterator endIt = _routingTable.end();
-        for (; reIt != endIt; ++reIt) {
-            if (reIt->port != port) {//add routing information, exclude that connected to port where the message came from
-                networksToReturn.append(reIt.key());
-                networksToReturn.append(reIt->indirectNetworkAccess.keys());
-            }
-        }
+        networksToReturn = networksAccessibleExcludePort_helper(port);
     }
 
     if (!networksToReturn.isEmpty())
@@ -618,7 +636,7 @@ void BacnetNetworkLayerHandler::readNpdu(quint8 *npdu, quint16 length, BacnetAdd
         return;
     }
 
-    //we are pointning either at APDU or Network Message content - it depends what kind is this message of.
+    //we are pointning either at APDU or Network Message content - it depends what kind of message this data is.
     actualBytePtr += ret;
     leftLength -= ret;
 
