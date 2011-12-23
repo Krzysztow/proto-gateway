@@ -125,6 +125,10 @@ main.cpp
     sng/snginternalsupport.cpp 
     datamodel/snginternaltypesmapper.cpp
     ./sng/snghandler.cpp
+    
+    gateway_common/bacnetprotocolinterface.cpp
+    gateway_common/sngprotocolinterface.cpp
+    gateway_common/protocolsmanager.cpp
     )
 
 # another list, this time it includes all header files that should be treated with moc
@@ -254,6 +258,11 @@ SET( BACNET_HEADERS
     sng/snginternalsupport.h 
     datamodel/snginternaltypesmapper.h
     ./sng/snghandler.h
+    
+    gateway_common/protocolinterface.h
+    gateway_common/bacnetprotocolinterface.h
+    gateway_common/sngprotocolinterface.h 
+    gateway_common/protocolsmanager.h
 	)
 
 SET( BACNET_MOC_HDRS
@@ -314,6 +323,7 @@ INCLUDE_DIRECTORIES( ${CMAKE_BINARY_DIR}
 											./tests
 											./sng 
     									./sng/sng_include
+    									./gateway_common
 											)
 											
 #Remember to specify paths before ADD_EXECUTABLE

@@ -196,6 +196,13 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataForObjectProperty(Ba
             return new Bacnet::DataAbstract();
         }
         break;
+    case (BacnetObjectTypeNS::AnalogValue):
+        switch(propertyId)
+        {
+        case (BacnetPropertyNS::PresentValue):                return new Bacnet::Real();
+        default:
+            return new Bacnet::DataAbstract();
+        }
     case (BacnetObjectTypeNS::BinaryInput):
         switch (propertyId)
         {
@@ -217,6 +224,8 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataForObjectProperty(Ba
         case (BacnetPropertyNS::TimeOfStateCountReset):           return new Bacnet::DateTime();
         case (BacnetPropertyNS::ElapsedActiveTime):               return new Bacnet::UnsignedInteger();
         case (BacnetPropertyNS::TimeOfActiveTimeReset):           return new Bacnet::DateTime();
+        case (BacnetPropertyNS::MinimumOffTime):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::MinimumOnTime):                    return new Bacnet::UnsignedInteger();
         case (BacnetPropertyNS::TimeDelay):                       return new Bacnet::UnsignedInteger();
         case (BacnetPropertyNS::NotificationClass):               return new Bacnet::UnsignedInteger();
         case (BacnetPropertyNS::AlarmValue):                      return new Bacnet::Enumerated();
@@ -236,17 +245,201 @@ Bacnet::BacnetDataInterface *BacnetDefaultObject::createDataForObjectProperty(Ba
     case (BacnetObjectTypeNS::BinaryOutput):
         switch (propertyId)
         {
+        case (BacnetPropertyNS::ObjectIdentifier):                return new Bacnet::ObjectIdentifier();
+        case (BacnetPropertyNS::ObjectName):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ObjectType):                      return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::PresentValue):                    return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Description):                     return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::DeviceType):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::StatusFlags):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::EventState):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Reliability):                     return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::OutOfService):                    return new Bacnet::Boolean();
+        case (BacnetPropertyNS::Polarity):                        return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::InactiveText):                    return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ActiveText):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ChangeOfStateTime):               return new Bacnet::DateTime();
+        case (BacnetPropertyNS::ChangeOfStateCount):              return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::TimeOfStateCountReset):           return new Bacnet::DateTime();
+        case (BacnetPropertyNS::ElapsedActiveTime):               return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::TimeOfActiveTimeReset):           return new Bacnet::DateTime();
+        case (BacnetPropertyNS::MinimumOffTime):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::MinimumOnTime):                    return new Bacnet::UnsignedInteger();
+//        case (BacnetProperty::PriorityArray):                   return new Bacnet::PRIORITYARRAY
+        case (BacnetPropertyNS::RelinquishDefault):               return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::TimeDelay):                       return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::NotificationClass):               return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::FeedbackValue):                     return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventEnable):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::AckedTransitions):                return new Bacnet::BitString();
+        case (BacnetPropertyNS::NotifyType):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventTimeStamps):
+            if (arrayIndex == ArrayIndexNotPresent)
+                return new Bacnet::BacnetArray(/*DataType::BACnetTimeStamp*/);
+            else
+                return new Bacnet::TimeStamp();
+        case (BacnetPropertyNS::ProfileName):                     return new Bacnet::CharacterString();
         default:
             return new Bacnet::DataAbstract();
         }
         break;
-    case (BacnetObjectTypeNS::AnalogValue):
-        switch(propertyId)
+    case (BacnetObjectTypeNS::BinaryValue):
+        switch (propertyId)
         {
-        case (BacnetPropertyNS::PresentValue):                return new Bacnet::Real();
+        case (BacnetPropertyNS::ObjectIdentifier):                return new Bacnet::ObjectIdentifier();
+        case (BacnetPropertyNS::ObjectName):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ObjectType):                      return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::PresentValue):                    return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Description):                     return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::StatusFlags):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::EventState):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Reliability):                     return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::OutOfService):                    return new Bacnet::Boolean();
+        case (BacnetPropertyNS::InactiveText):                    return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ActiveText):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ChangeOfStateTime):               return new Bacnet::DateTime();
+        case (BacnetPropertyNS::ChangeOfStateCount):              return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::TimeOfStateCountReset):           return new Bacnet::DateTime();
+        case (BacnetPropertyNS::ElapsedActiveTime):               return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::TimeOfActiveTimeReset):           return new Bacnet::DateTime();
+        case (BacnetPropertyNS::MinimumOffTime):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::MinimumOnTime):                    return new Bacnet::UnsignedInteger();
+//        case (BacnetProperty::PriorityArray):                   return new Bacnet::PRIORITYARRAY
+        case (BacnetPropertyNS::RelinquishDefault):               return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::TimeDelay):                       return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::NotificationClass):               return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::AlarmValue):                        return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventEnable):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::AckedTransitions):                return new Bacnet::BitString();
+        case (BacnetPropertyNS::NotifyType):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventTimeStamps):
+            if (arrayIndex == ArrayIndexNotPresent)
+                return new Bacnet::BacnetArray(/*DataType::BACnetTimeStamp*/);
+            else
+                return new Bacnet::TimeStamp();
+        case (BacnetPropertyNS::ProfileName):                     return new Bacnet::CharacterString();
         default:
             return new Bacnet::DataAbstract();
         }
+        break;
+    case (BacnetObjectTypeNS::MultiStateInput):
+        switch (propertyId)
+        {
+        case (BacnetPropertyNS::ObjectIdentifier):                return new Bacnet::ObjectIdentifier();
+        case (BacnetPropertyNS::ObjectName):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ObjectType):                      return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::PresentValue):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::Description):                     return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::DeviceType):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::StatusFlags):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::EventState):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Reliability):                     return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::OutOfService):                    return new Bacnet::Boolean();
+        case (BacnetPropertyNS::NumberOfStates):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::StateText):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetArray(/*Bacnet::CharacterString*/);
+            else
+                return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::TimeDelay):                         return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::NotificationClass):                 return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::AlarmValues):   //fall through
+        case (BacnetPropertyNS::FaultValues):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetList(/*DataType::Unsigned*/);
+            else
+                return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::EventEnable):                   return new Bacnet::BitString();
+        case (BacnetPropertyNS::AckedTransitions):              return new Bacnet::BitString();
+        case (BacnetPropertyNS::NotifyType):                    return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventTimeStamps):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetArray(/*BacnetTimeStamp*/);
+            else
+                return new Bacnet::TimeStamp();
+        case (BacnetPropertyNS::ProfileName):                   return new Bacnet::CharacterString();
+        default:
+            return new Bacnet::DataAbstract();
+        }
+        break;
+    case (BacnetObjectTypeNS::MultiStateOutput):
+        switch (propertyId)
+        {
+        case (BacnetPropertyNS::ObjectIdentifier):                return new Bacnet::ObjectIdentifier();
+        case (BacnetPropertyNS::ObjectName):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ObjectType):                      return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::PresentValue):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::Description):                     return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::DeviceType):                        return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::StatusFlags):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::EventState):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Reliability):                     return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::OutOfService):                    return new Bacnet::Boolean();
+        case (BacnetPropertyNS::NumberOfStates):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::StateText):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetArray(/*Bacnet::CharacterString*/);
+            else
+                return new Bacnet::CharacterString();
+//        case (BacnetPropertyNS::PriorityArray):
+        case (BacnetPropertyNS::RelinquishDefault):                 return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::TimeDelay):                         return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::NotificationClass):                 return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::FeedbackValue):                     return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::EventEnable):                   return new Bacnet::BitString();
+        case (BacnetPropertyNS::AckedTransitions):              return new Bacnet::BitString();
+        case (BacnetPropertyNS::NotifyType):                    return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventTimeStamps):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetArray(/*BacnetTimeStamp*/);
+            else
+                return new Bacnet::TimeStamp();
+        case (BacnetPropertyNS::ProfileName):                   return new Bacnet::CharacterString();
+        default:
+            return new Bacnet::DataAbstract();
+        }
+        break;
+    case (BacnetObjectTypeNS::MultiStateValue):
+        switch (propertyId)
+        {
+        case (BacnetPropertyNS::ObjectIdentifier):                return new Bacnet::ObjectIdentifier();
+        case (BacnetPropertyNS::ObjectName):                      return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::ObjectType):                      return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::PresentValue):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::Description):                     return new Bacnet::CharacterString();
+        case (BacnetPropertyNS::StatusFlags):                     return new Bacnet::BitString();
+        case (BacnetPropertyNS::EventState):                      return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::Reliability):                     return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::OutOfService):                    return new Bacnet::Boolean();
+        case (BacnetPropertyNS::NumberOfStates):                    return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::StateText):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetArray(/*Bacnet::CharacterString*/);
+            else
+                return new Bacnet::CharacterString();
+ //        case (BacnetPropertyNS::PriorityArray):
+        case (BacnetPropertyNS::RelinquishDefault):                 return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::TimeDelay):                         return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::NotificationClass):                 return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::AlarmValues):   //fall through
+        case (BacnetPropertyNS::FaultValues):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetList(/*DataType::Unsigned*/);
+            else
+                return new Bacnet::UnsignedInteger();
+        case (BacnetPropertyNS::EventEnable):                   return new Bacnet::BitString();
+        case (BacnetPropertyNS::AckedTransitions):              return new Bacnet::BitString();
+        case (BacnetPropertyNS::NotifyType):                    return new Bacnet::Enumerated();
+        case (BacnetPropertyNS::EventTimeStamps):
+            if (ArrayIndexNotPresent == arrayIndex)
+                return new Bacnet::BacnetArray(/*BacnetTimeStamp*/);
+            else
+                return new Bacnet::TimeStamp();
+        case (BacnetPropertyNS::ProfileName):                   return new Bacnet::CharacterString();
+        default:
+            return new Bacnet::DataAbstract();
+        }
+        break;
     default:
         return 0;
     }

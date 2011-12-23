@@ -83,6 +83,9 @@ bool InternalWPRequestHandler::execute()
         _asynchId = 0;
         if (!_error.hasError())
             _error.setError(BacnetErrorNS::ClassProperty, BacnetErrorNS::CodeUnknownProperty);
+        finishWriting_helper(_device, readyness);
+        finalizeInstant(_appLayer);
+        return true;
     } else if (Property::ResultOk == readyness) {
         _asynchId = 0;
         finishWriting_helper(_device, readyness);

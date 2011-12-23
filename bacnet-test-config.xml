@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bacnetConfig>
 	<transportLayer>
-		<port  type="bip" address="192.168.2.107:47808" bac-addr-type="ip" port-id="1" />
+		<port  type="bip" address="192.168.2.102:47808" bac-addr-type="ip" port-id="1" />
 		<!-- <port  type="bip" address="192.168.2.107:47809" bac-addr-type="ip" port-id="2" /> -->
 	</transportLayer>
 	<networkLayer>
@@ -20,21 +20,41 @@
 			<devices>
 				<device name="BacnetTestDevice" int-address="1" dev-instance-number="1">
 					<properties>
-						<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="1" int-conv-type="masking" int-conv-mask="b'11101'" int-var-type="uchar" />
-						<property prop-type="simple" id="84" bac-type="real" value="11.2" />
-						<property prop-type="array" id="76" >
-							<property prop-type="simple" bac-type="bacnetobjectidentifier" value="0x1234" />
-						</property>
-						<property prop-type="internal" id="83" bac-type="real" int-id="1" int-type="observer" int-var-type="double" />		
 					</properties>
 					<childObjects>
-						<object name="OATemp" instance-number="5" obj-type="analog-input" >
+						<object name="AnalogInput" instance-number="1" obj-type="analog-input">  <!-- analog-input == 0 -->
 							<properties>
-								<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-var-type="float" int-conv-type="scaling" int-conv-factor="2" int-id="3" />
+								<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="1" int-conv-type="universal" int-var-type="uchar" />
 							</properties>
 						</object>	
-						<object instance-number="1" obj-type="multistate-value" >
+						<object name="AnalogOutput" instance-number="1" obj-type="analog-output"> <!--analog-output == 1 -->
+							<properties>
+								<property prop-type="internal" id="85" bac-type="real" int-type="subject" int-id="2" int-conv-type="universal" int-var-type="float" />
+							</properties>
 						</object>	
+						<object name="AnalogValue" instance-number="1" obj-type="analog-value">	<!-- analog-value == 2 -->
+							<properties>
+								<property prop-type="internal" id="85" bac-type="real" int-type="observer" int-id="3" int-conv-type="scaling" int-conv-factor="3" int-var-type="uchar" />
+							</properties>						
+						</object>
+						
+						<object name="BinaryInput" instance-number="1" obj-type="binary-input" > <!-- binary-input == 3-->
+							<properties>
+								<property prop-type="internal" id="85" bac-type="enumerated" int-type="observer" int-id="4" int-conv-type="universal" int-var-type="bool" />
+							</properties>	
+						</object>
+						<object name="BinaryOutput" instance-number="1" obj-type="binary-output" ><!-- binary-output == 4-->
+							<properties>
+								<property prop-type="internal" id="85" bac-type="enumerated" int-type="subject" int-id="5" int-var-type="uint" />
+								<property prop-type="internal" id="111" bac-type="bitstring" int-type="observer" int-id="6" int-conv-type="masking" int-conv-mask="b'1000'" int-var-type="bool" />
+							</properties>	
+						</object>	
+						<object name="BinaryValue" instance-number="1" obj-type="binary-value"/>	
+
+						<object name="MultiStateInput"instance-number="1" obj-type="multistate-input" />
+						<object name="MultiStateOutput"instance-number="1" obj-type="multistate-output" />
+						<object name="MultiStateValue"instance-number="1" obj-type="multistate-value" />
+
 					</childObjects>
 				</device>
 				<device name="BestDeviceEver" int-address="3" dev-instance-number="8">
@@ -47,8 +67,8 @@
 					<childObjects>
 						<object instance-number="1" obj-type="analog-input">
 							<properties>	
-									<property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
 									<!--
+									<property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
 									<property id="85" array-idx="2" prop-type="internal" read-strategy="simple" read-interval="1000" write-strategy="simple-time" int-var-type="float" int-id="7"/>
 									-->
 							</properties>
