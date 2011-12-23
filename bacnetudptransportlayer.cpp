@@ -42,6 +42,8 @@ void BacnetUdpTransportLayerHandler::readDatagrams()
                 qDebug("BacnetUdpTransportLayerHandler:readDatagrams() : Discard message received from myself!");
                 continue;
             }
+            qDebug("Got message from %s, %d. My settings: %s, %d", qPrintable(srcAddr.toString()), srcPort,
+                    qPrintable(_myAddress.toString()), _myPort);
             //pass it to the higher layer if any data read
             _bvllHndlr->consumeDatagram((quint8*)(_datagram.data()), length, srcAddr, srcPort);
         }

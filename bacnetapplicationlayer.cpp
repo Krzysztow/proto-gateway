@@ -453,9 +453,8 @@ void BacnetApplicationLayerHandler::timerEvent(QTimerEvent *)
             qDebug("%s : Confirmed request timeout (InvokeId: %d)", __PRETTY_FUNCTION__, it.key());
             action = (*it)->handleTimeout(this);
             if (DiscoveryWrapper::DeleteMe == action) {
-                it = _awaitingDiscoveries.erase(it);
-
                 delete (*it);
+                it = _awaitingDiscoveries.erase(it);
             } else {
                 Q_ASSERT(DiscoveryWrapper::LeaveMeInQueue == action);
                 ++it;

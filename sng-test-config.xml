@@ -8,5 +8,8 @@
 		<property int-id="4" int-var-type="bool" int-type="subject" sng-type="onoff" prop-type="simple-actor" gr-address="0/4/0" gr-address-fback="0/4/1" />
 		<property int-id="5" int-var-type="uint" int-type="observer" int-conv-type="universal" sng-type="onoff" prop-type="simple-sensor" gr-address="0/5/0" gr-address-fback="0/5/1" />
 		<property int-id="6" int-var-type="bool" int-type="subject" sng-type="onoff" prop-type="simple-actor" gr-address="0/6/0" gr-address-fback="0/6/1" />
+		
+		<property int-id="10" int-var-type="float" int-type="observer" int-conv-type="universal" sng-type="value" prop-type="simple-sensor" gr-address="0/10/0" gr-address-fback="0/10/1" />
+		<property int-id="11" int-var-type="float" int-type="observer" int-conv-type="universal" sng-type="value" prop-type="simple-sensor" gr-address="0/11/0" gr-address-fback="0/11/1" />
 	</sngProperties>
 </config>

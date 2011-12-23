@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bacnetConfig>
 	<transportLayer>
-		<port  type="bip" address="192.168.2.102:47808" bac-addr-type="ip" port-id="1" />
+		<port  type="bip" address="192.168.2.107:47808" bac-addr-type="ip" port-id="1" />
 		<!-- <port  type="bip" address="192.168.2.107:47809" bac-addr-type="ip" port-id="2" /> -->
 	</transportLayer>
 	<networkLayer>
@@ -63,14 +63,19 @@
 		</internalHandler>
 		<externalHandler int-address="14" >
 			<devices>
-				<device dev-instance-number="64" >
+				<device dev-instance-number="1234" >
 					<childObjects>
-						<object instance-number="1" obj-type="analog-input">
+						<object instance-number="3" obj-type="analog-input">
 							<properties>	
 									<!--
-									<property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-var-type="float" int-id="5"/>
+									<property id="85" prop-type="internal" read-strategy="simple-time" read-interval="10000" write-strategy="simple" int-type="subject" int-var-type="float" int-id="10"/>
 									<property id="85" array-idx="2" prop-type="internal" read-strategy="simple" read-interval="1000" write-strategy="simple-time" int-var-type="float" int-id="7"/>
 									-->
+							</properties>
+						</object>
+						<object instance-number="0" obj-type="analog-input">
+							<properties>	
+									<property id="85" prop-type="internal" read-strategy="cov" read-interval="10000" write-strategy="simple" int-type="subject" int-var-type="float" int-id="11"/>
 							</properties>
 						</object>
 					</childObjects>
