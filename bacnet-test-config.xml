@@ -46,7 +46,7 @@
 						<object name="BinaryOutput" instance-number="1" obj-type="binary-output" ><!-- binary-output == 4-->
 							<properties>
 								<property prop-type="internal" id="85" bac-type="enumerated" int-type="subject" int-id="5" int-var-type="uint" />
-								<property prop-type="internal" id="111" bac-type="bitstring" int-type="observer" int-id="6" int-conv-type="masking" int-conv-mask="b'1000'" int-var-type="bool" />
+								<property prop-type="internal" id="111" bac-type="bitstring" int-type="observer" int-id="6" int-conv-type="masking" int-conv-mask="b'1011'" int-var-type="QBitArray" />
 							</properties>	
 						</object>	
 						<object name="BinaryValue" instance-number="1" obj-type="binary-value"/>	

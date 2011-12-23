@@ -100,7 +100,7 @@ bool InternalRPRequestHandler::execute()
         return true;//am done, delete me
     }
 
-    BacnetDataInterfaceShared data;
+    BacnetDataInterfaceShared data(0);
     int readyness = object->propertyReadTry(_data.propertyId, _data.arrayIndex, data, &_error);
     if (readyness < 0) {
         _asynchId = 0;

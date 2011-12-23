@@ -715,6 +715,7 @@ void CharacterString::setValue(QString &value)
 //BIT STRING
 void BitString::toRaw_helper(quint8 *dataStart)
 {
+    //encode number of unused bits
     *dataStart = 8 - _value.size()%8;
     quint8 mask = 0x00;
     //encode bits
@@ -737,7 +738,7 @@ qint32 BitString::toRaw(quint8 *ptrStart, quint16 buffLength)
 
     quint8 bytesNeeded = _value.size();//in this line, we set bits needed. Later bytes number is computed.
     if (0 != bytesNeeded) {
-        bytesNeeded = bytesNeeded/8 + 1;
+        bytesNeeded = (bytesNeeded - 1)/8 + 1;
     }
     ++bytesNeeded;//apart from data bytes there is unused-bits-number field
     qint8 ret = BacnetCoder::encodeAppTagAndLength(ptrStart, buffLength, AppTags::BitString,
