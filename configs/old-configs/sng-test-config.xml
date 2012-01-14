@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config commserver-port="8888" commserver-ip="192.168.2.111" physical-address="1/2/3" >
+	<sngProperties>
+		<property int-id="1" int-var-type="uchar" int-type="subject" sng-type="value" prop-type="simple-actor" gr-address="0/1/0" gr-address-fback="0/1/1" />
+		<property int-id="2" int-var-type="float" int-type="observer" sng-type="temp" prop-type="simple-sensor" gr-address="0/2/0" gr-address-fback="0/2/1" />
+		<property int-id="3" int-var-type="uchar" int-type="subject" sng-type="value" prop-type="simple-actor" gr-address="0/3/0" gr-address-fback="0/3/1" />
+		
+		<property int-id="4" int-var-type="bool" int-type="subject" sng-type="onoff" prop-type="simple-actor" gr-address="0/4/0" gr-address-fback="0/4/1" />
+		<property int-id="5" int-var-type="uint" int-type="observer" int-conv-type="universal" sng-type="onoff" prop-type="simple-sensor" gr-address="0/5/0" gr-address-fback="0/5/1" />
+		<property int-id="6" int-var-type="bool" int-type="subject" sng-type="onoff" prop-type="simple-actor" gr-address="0/6/0" gr-address-fback="0/6/1" />
+		
+		<property int-id="10" int-var-type="float" int-type="observer" int-conv-type="universal" sng-type="value" prop-type="simple-sensor" gr-address="0/10/0" gr-address-fback="0/10/1" />
+		<property int-id="11" int-var-type="float" int-type="observer" int-conv-type="universal" sng-type="value" prop-type="simple-sensor" gr-address="0/11/0" gr-address-fback="0/11/1" />
+	</sngProperties>
+</config>

@@ -327,7 +327,7 @@ INCLUDE_DIRECTORIES( ${CMAKE_BINARY_DIR}
 											)
 											
 #Remember to specify paths before ADD_EXECUTABLE
-LINK_DIRECTORIES( ${LINK_DIRECTORIES} /home/krzys/Documents/BACnet/bacnet_new/BACProject/sng/SNGConnectionManager/tiny-build/ )
+LINK_DIRECTORIES( ${LINK_DIRECTORIES} ./sng/SNGConnectionManager/tiny-build/ )
 
 
 # here we instruct CMake to build "BACProject" executable from all of the source files

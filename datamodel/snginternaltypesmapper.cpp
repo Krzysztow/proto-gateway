@@ -14,7 +14,7 @@ QVariant::Type SngInternalTypesMapper::sngTypeToInternal(ConnectionFrame::DataTy
     case (ConnectionFrame::OnOff):
         return QVariant::Bool;
     case (ConnectionFrame::Dimm):
-        return (QVariant::Type)QMetaType::UChar;
+        return (QVariant::Type)QMetaType::UInt;
     case (ConnectionFrame::Time):
         return QVariant::Time;
     case (ConnectionFrame::Date):
@@ -22,7 +22,7 @@ QVariant::Type SngInternalTypesMapper::sngTypeToInternal(ConnectionFrame::DataTy
     case (ConnectionFrame::Temp):
         return (QVariant::Type)QMetaType::Float;
     case (ConnectionFrame::Value):
-        return (QVariant::Type)::QMetaType::UChar;
+        return (QVariant::Type)::QMetaType::UInt;
     default:
         Q_ASSERT(false);
         return QVariant::Invalid;

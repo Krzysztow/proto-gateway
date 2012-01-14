@@ -47,7 +47,7 @@ void SngInternalSupport::receiveDimm(const GroupAddress &address, ObjectConnecti
 
      Q_ASSERT(address == _rxAddress);
      QVariant varValue;
-     varValue.setValue((uchar)value);
+     varValue.setValue((uint)value);
      frameWithVariantReceived_hook(varValue);
 }
 
@@ -85,7 +85,7 @@ void SngInternalSupport::receiveValue(const GroupAddress &address, int value)
 
      Q_ASSERT(address == _rxAddress);
      QVariant varValue;
-     varValue.setValue((uchar)value);
+     varValue.setValue((uint)value);
 
      frameWithVariantReceived_hook(varValue);
 }
